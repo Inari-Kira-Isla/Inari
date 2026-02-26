@@ -1,0 +1,104 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>INARI - 登入</title>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="login-box">
+        <h1>INARI</h1>
+        <p>請輸入密碼以繼續</p>
+        <form id="login-form">
+          <input id="password" type="password" placeholder="請輸入密碼" autocomplete="off" />
+          <button type="submit">進入</button>
+        </form>
+        <p id="error" class="error"></p>
+      </div>
+    </div>
+
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: Inter, sans-serif;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f9fafb;
+      }
+      .login-container {
+        width: 100%;
+        max-width: 400px;
+        padding: 16px;
+      }
+      .login-box {
+        background: #fff;
+        border-radius: 16px;
+        padding: 40px 32px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        text-align: center;
+      }
+      h1 {
+        font-size: 28px;
+        background: linear-gradient(135deg, #3245ff 0%, #bc52ee 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+      }
+      p { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+      form { display: flex; flex-direction: column; gap: 12px; }
+      input {
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 15px;
+        outline: none;
+        text-align: center;
+      }
+      input:focus { border-color: #3245ff; }
+      button {
+        background: linear-gradient(135deg, #3245ff 0%, #bc52ee 100%);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 15px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      button:hover { opacity: 0.9; }
+      .error { color: #ef4444; min-height: 20px; margin-bottom: 0; }
+    </style>
+
+    <script>
+      const form = document.getElementById("login-form");
+      const passwordInput = document.getElementById("password");
+      const errorMsg = document.getElementById("error");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorMsg.textContent = "";
+
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: passwordInput.value }),
+        });
+
+        if (res.ok) {
+          window.location.href = "/";
+        } else {
+          errorMsg.textContent = "密碼錯誤，請再試一次";
+          passwordInput.value = "";
+          passwordInput.focus();
+        }
+      });
+    </script>
+  </body>
+</html>

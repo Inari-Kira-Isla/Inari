@@ -1,11 +1,14 @@
 const MINIMAX_API_URL = "https://api.minimax.io/v1/chat/completions";
 
-const SYSTEM_PROMPT = `你是 INARI 網站的客服助手。你的職責是：
+const BASE_PROMPT = `你是 INARI 網站的客服助手。你的職責是：
 - 幫助訪客了解網站內容和服務
 - 回答關於 INARI 的問題
 - 提供友善、專業的對話體驗
 - 如果不確定的問題，誠實告知並建議訪客直接聯繫我們
-請用繁體中文回答，保持簡潔有禮。`;
+請用繁體中文回答，保持簡潔有禮。
+
+以下是你的知識庫，請根據這些資訊回答問題：
+`;
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -27,11 +30,26 @@ export async function onRequestPost(context) {
       );
     }
 
+    // 讀取知識庫
+    let knowledge = "";
+    try {
+      const url = new URL("/api/knowledge.json", context.request.url);
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        knowledge = data.content || "";
+      }
+    } catch {
+      // 知識庫讀取失敗時繼續運作
+    }
+
+    const systemPrompt = BASE_PROMPT + knowledge;
+
     const body = await context.request.json();
     const userMessages = body.messages || [];
 
     const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
+      { role: "system", content: systemPrompt },
       ...userMessages,
     ];
 
