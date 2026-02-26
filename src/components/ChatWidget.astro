@@ -1,0 +1,268 @@
+<!-- Chat Toggle Button -->
+<button id="chat-toggle" aria-label="開啟聊天助手">
+  <svg id="chat-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+  </svg>
+  <svg id="close-icon" class="hidden" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
+</button>
+
+<!-- Chat Window -->
+<div id="chat-window" class="chat-hidden">
+  <div id="chat-header">
+    <span>INARI 助手</span>
+  </div>
+  <div id="chat-messages"></div>
+  <form id="chat-form">
+    <input id="chat-input" type="text" placeholder="請輸入您的問題..." autocomplete="off" />
+    <button type="submit" aria-label="發送訊息">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </form>
+</div>
+
+<style>
+  #chat-toggle {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #3245ff 0%, #bc52ee 100%);
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+  }
+  #chat-toggle:hover {
+    transform: scale(1.08);
+  }
+  .hidden {
+    display: none !important;
+  }
+
+  #chat-window {
+    position: fixed;
+    bottom: 96px;
+    right: 24px;
+    width: 380px;
+    max-height: 520px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+    z-index: 9998;
+    overflow: hidden;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  #chat-window.chat-hidden {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+    pointer-events: none;
+  }
+
+  #chat-header {
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #3245ff 0%, #bc52ee 100%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    font-family: Inter, sans-serif;
+  }
+
+  #chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 300px;
+    max-height: 380px;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .msg-user,
+  .msg-assistant {
+    padding: 10px 14px;
+    border-radius: 12px;
+    max-width: 85%;
+    word-wrap: break-word;
+  }
+  .msg-user {
+    align-self: flex-end;
+    background: #3245ff;
+    color: #fff;
+  }
+  .msg-assistant {
+    align-self: flex-start;
+    background: #f3f4f6;
+    color: #111827;
+  }
+
+  #chat-form {
+    display: flex;
+    padding: 12px;
+    border-top: 1px solid #e5e7eb;
+    gap: 8px;
+  }
+  #chat-input {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    outline: none;
+    font-family: Inter, sans-serif;
+  }
+  #chat-input:focus {
+    border-color: #3245ff;
+  }
+  #chat-form button[type="submit"] {
+    background: linear-gradient(135deg, #3245ff 0%, #bc52ee 100%);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+  #chat-form button[type="submit"]:hover {
+    opacity: 0.9;
+  }
+
+  @media screen and (max-width: 480px) {
+    #chat-window {
+      right: 8px;
+      left: 8px;
+      bottom: 88px;
+      width: auto;
+      max-height: 70vh;
+    }
+    #chat-toggle {
+      bottom: 16px;
+      right: 16px;
+    }
+  }
+</style>
+
+<script>
+  const toggle = document.getElementById("chat-toggle");
+  const chatIcon = document.getElementById("chat-icon");
+  const closeIcon = document.getElementById("close-icon");
+  const chatWindow = document.getElementById("chat-window");
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("chat-input");
+  const messagesContainer = document.getElementById("chat-messages");
+
+  let conversationHistory = [];
+  let isOpen = false;
+
+  appendMessage("assistant", "你好！我是 INARI 助手，有什麼可以幫你的嗎？");
+
+  toggle.addEventListener("click", () => {
+    isOpen = !isOpen;
+    chatWindow.classList.toggle("chat-hidden", !isOpen);
+    chatIcon.classList.toggle("hidden", isOpen);
+    closeIcon.classList.toggle("hidden", !isOpen);
+    if (isOpen) input.focus();
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+
+    appendMessage("user", text);
+    input.value = "";
+    conversationHistory.push({ role: "user", content: text });
+
+    const assistantBubble = appendMessage("assistant", "");
+    assistantBubble.textContent = "...";
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: conversationHistory, stream: true }),
+      });
+
+      if (!response.ok) throw new Error("Request failed");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6).trim();
+          if (data === "[DONE]") continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
+              fullText += delta;
+              assistantBubble.textContent = fullText;
+              scrollToBottom();
+            }
+          } catch {
+            // skip malformed chunks
+          }
+        }
+      }
+
+      fullText = stripThinkTags(fullText);
+      if (!fullText) {
+        assistantBubble.textContent = "抱歉，我暫時無法回答。請稍後再試。";
+      } else {
+        assistantBubble.textContent = fullText;
+      }
+
+      conversationHistory.push({ role: "assistant", content: fullText || "" });
+    } catch (err) {
+      assistantBubble.textContent = "抱歉，發生了錯誤。請稍後再試。";
+      console.error("Chat error:", err);
+    }
+  });
+
+  function appendMessage(role, text) {
+    const div = document.createElement("div");
+    div.className = role === "user" ? "msg-user" : "msg-assistant";
+    div.textContent = text;
+    messagesContainer.appendChild(div);
+    scrollToBottom();
+    return div;
+  }
+
+  function stripThinkTags(text) {
+    return text.replace(/<think>[\s\S]*?<\/think>\s*/g, "").trim();
+  }
+
+  function scrollToBottom() {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+</script>
