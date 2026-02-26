@@ -1,0 +1,8 @@
+name = "inari"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "inari-db"
+database_id = "1f9a3e35-4a75-4434-8553-0b014fd6e43d"

@@ -30,14 +30,39 @@ export async function onRequestPost(context) {
       );
     }
 
-    // 讀取知識庫
+    // 從 D1 讀取知識庫
     let knowledge = "";
     try {
-      const url = new URL("/api/knowledge.json", context.request.url);
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        knowledge = data.content || "";
+      const db = context.env.DB;
+      if (db) {
+        const { results } = await db.prepare(
+          "SELECT category, question, answer FROM knowledge ORDER BY category, id"
+        ).all();
+
+        if (results && results.length > 0) {
+          const sections = {};
+          for (const row of results) {
+            if (!sections[row.category]) {
+              sections[row.category] = [];
+            }
+            sections[row.category].push(row);
+          }
+
+          const parts = [];
+          for (const [category, rows] of Object.entries(sections)) {
+            parts.push(`【${category}】`);
+            for (const row of rows) {
+              if (row.question) {
+                parts.push(`Q: ${row.question}`);
+                parts.push(`A: ${row.answer}`);
+              } else {
+                parts.push(row.answer);
+              }
+            }
+            parts.push("");
+          }
+          knowledge = parts.join("\n");
+        }
       }
     } catch {
       // 知識庫讀取失敗時繼續運作
