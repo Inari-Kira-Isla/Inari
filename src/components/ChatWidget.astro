@@ -226,7 +226,7 @@
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
               fullText += delta;
-              assistantBubble.textContent = fullText;
+              assistantBubble.innerHTML = renderMarkdown(fullText);
               scrollToBottom();
             }
           } catch {
@@ -239,7 +239,7 @@
       if (!fullText) {
         assistantBubble.textContent = "抱歉，我暫時無法回答。請稍後再試。";
       } else {
-        assistantBubble.textContent = fullText;
+        assistantBubble.innerHTML = renderMarkdown(fullText);
       }
 
       conversationHistory.push({ role: "assistant", content: fullText || "" });
@@ -249,10 +249,22 @@
     }
   });
 
+  function renderMarkdown(text) {
+    return text
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      .replace(/\n/g, "<br>");
+  }
+
   function appendMessage(role, text) {
     const div = document.createElement("div");
     div.className = role === "user" ? "msg-user" : "msg-assistant";
-    div.textContent = text;
+    if (role === "assistant" && text) {
+      div.innerHTML = renderMarkdown(text);
+    } else {
+      div.textContent = text;
+    }
     messagesContainer.appendChild(div);
     scrollToBottom();
     return div;
