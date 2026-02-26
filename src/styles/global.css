@@ -1,1 +1,39 @@
 @import "tailwindcss";
+
+@theme {
+  --color-ivory: #faf9f6;
+  --color-gold: #b08d57;
+  --color-main: #1a1a1a;
+  --color-warm-gray: #f2f0eb;
+  --font-playfair: 'Playfair Display', serif;
+  --font-noto: 'Noto Serif TC', serif;
+}
+
+body {
+  font-family: var(--font-noto);
+  background-color: var(--color-ivory);
+  color: var(--color-main);
+  line-height: 1.6;
+}
+
+.playfair {
+  font-family: var(--font-playfair);
+}
+
+.letter-spacing-wide {
+  letter-spacing: 0.15em;
+}
+
+.fade-in {
+  animation: fadeIn 1.5s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.image-overlay {
+  background: linear-gradient(to bottom, rgba(250, 249, 246, 0) 70%, rgba(250, 249, 246, 1) 100%);
+}

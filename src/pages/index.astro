@@ -1,11 +1,125 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
 <Layout>
-	<Welcome />
+	<!-- Navbar -->
+	<nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+		<div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+		<div class="hidden md:flex space-x-8 text-sm uppercase letter-spacing-wide">
+			<a href="#expertise" class="hover:text-gold transition">Expertise</a>
+			<a href="#supply-chain" class="hover:text-gold transition">Supply Chain</a>
+			<a href="#inquiry" class="hover:text-gold transition">Inquiry</a>
+		</div>
+	</nav>
+
+	<!-- Hero Section -->
+	<section class="min-h-screen pt-32 px-8 flex flex-col items-center justify-center text-center">
+		<div class="fade-in">
+			<h2 class="text-sm uppercase letter-spacing-wide text-gray-500 mb-4">Established Excellence Since 2001</h2>
+			<h1 class="text-4xl md:text-6xl lg:text-7xl font-light playfair mb-8 leading-tight">
+				The Art of <br>
+				<span class="italic">Sea Urchin</span> Supply.
+			</h1>
+			<p class="max-w-xl mx-auto text-gray-600 font-light mb-12">
+				結合二十五年海膽鑑定經驗與數據驅動的全球採購策略，為高端餐飲提供最穩定、精準的供應體系。
+			</p>
+		</div>
+
+		<!-- Hero Image -->
+		<div class="relative w-full max-w-5xl h-[60vh] bg-zinc-100 rounded-sm overflow-hidden mb-20 fade-in" style="animation-delay: 0.3s;">
+			<img
+				src="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1200&q=80"
+				class="w-full h-full object-cover"
+				alt="Premium Sea Urchin"
+				loading="eager"
+			/>
+			<div class="absolute inset-0 image-overlay"></div>
+		</div>
+	</section>
+
+	<!-- Expertise Section -->
+	<section id="expertise" class="py-32 bg-white">
+		<div class="container mx-auto px-8 max-w-6xl">
+			<div class="grid md:grid-cols-2 gap-24 items-center">
+				<div class="space-y-8">
+					<h3 class="text-3xl playfair italic">供應鏈的安全感，<br>來自對細節的絕對偏執。</h3>
+					<p class="text-gray-600 font-light">
+						在稻荷環球食品，我們不只是批發商。我們是您的海鮮採購參謀。透過對 Landed Cost 的精確計算與全球產地數據的比對，我們確保每一盒抵達門店的海膽，都具備可預測的高品質。
+					</p>
+					<div class="border-l-2 border-gold pl-6 py-2">
+						<span class="block text-2xl font-medium">25+</span>
+						<span class="text-xs uppercase text-gray-400 tracking-widest">Years of Sea Urchin Expertise</span>
+					</div>
+				</div>
+				<div class="bg-gray-50 p-12 rounded-sm border border-gray-100">
+					<h4 class="text-xs uppercase tracking-[0.2em] text-gold mb-6">核心服務項目</h4>
+					<ul class="space-y-6 text-sm">
+						<li class="flex justify-between border-b border-gray-100 pb-4">
+							<span>A-Grade 專業鑑定</span>
+							<span class="text-gray-400 italic">Visual Excellence</span>
+						</li>
+						<li class="flex justify-between border-b border-gray-100 pb-4">
+							<span>數據驅動採購決策</span>
+							<span class="text-gray-400 italic">Data Driven</span>
+						</li>
+						<li class="flex justify-between border-b border-gray-100 pb-4">
+							<span>全境冷鏈物流優化</span>
+							<span class="text-gray-400 italic">Landed Cost Control</span>
+						</li>
+						<li class="flex justify-between border-b border-gray-100 pb-4">
+							<span>全球理事級產地資源</span>
+							<span class="text-gray-400 italic">Global Network</span>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Data Section -->
+	<section id="supply-chain" class="py-32 px-8 text-center bg-warm-gray">
+		<div class="max-w-3xl mx-auto">
+			<h3 class="text-2xl playfair mb-8">「我們用數據管理鮮度。」</h3>
+			<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+				<div class="p-8">
+					<div class="text-3xl mb-2 font-light">3°C</div>
+					<div class="text-[10px] uppercase tracking-widest text-gray-500">Constant Temp</div>
+				</div>
+				<div class="p-8">
+					<div class="text-3xl mb-2 font-light">72h</div>
+					<div class="text-[10px] uppercase tracking-widest text-gray-500">Global Delivery</div>
+				</div>
+				<div class="p-8">
+					<div class="text-3xl mb-2 font-light">100%</div>
+					<div class="text-[10px] uppercase tracking-widest text-gray-500">Inspection Rate</div>
+				</div>
+				<div class="p-8">
+					<div class="text-3xl mb-2 font-light">Zero</div>
+					<div class="text-[10px] uppercase tracking-widest text-gray-500">Supply Risk</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Contact / Inquiry -->
+	<section id="inquiry" class="py-32 bg-white text-center px-8">
+		<h2 class="text-3xl md:text-4xl playfair italic mb-12">邀您親鑑卓越。</h2>
+		<div class="flex flex-col md:flex-row justify-center items-center gap-8">
+			<button class="px-12 py-4 bg-black text-white text-sm uppercase letter-spacing-wide hover:bg-zinc-800 transition rounded-sm cursor-pointer">
+				索取本週行情報告
+			</button>
+			<a href="#" class="text-sm border-b border-black pb-1 hover:text-gold hover:border-gold transition uppercase tracking-widest">
+				聯繫首席顧問
+			</a>
+		</div>
+	</section>
+
+	<!-- Footer -->
+	<footer class="py-12 border-t border-gray-100 text-center px-8">
+		<div class="text-xs text-gray-400 uppercase tracking-widest">
+			Inari Global Foods &copy; 2026.<br>
+			Curating the Finest Sea Treasures for the World.
+		</div>
+	</footer>
 </Layout>
