@@ -226,7 +226,7 @@
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
               fullText += delta;
-              assistantBubble.innerHTML = renderMarkdown(fullText);
+              assistantBubble.innerHTML = renderMarkdown(stripThinkTags(fullText));
               scrollToBottom();
             }
           } catch {
