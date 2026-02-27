@@ -16,6 +16,10 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+function stripThinkTags(text) {
+  return text.replace(/<think>[\s\S]*?<\/think>\s*/g, "").trim();
+}
+
 export async function onRequestOptions() {
   return new Response(null, { status: 204, headers: CORS_HEADERS });
 }
@@ -32,8 +36,8 @@ export async function onRequestPost(context) {
 
     // 從 D1 讀取知識庫
     let knowledge = "";
+    const db = context.env.DB;
     try {
-      const db = context.env.DB;
       if (db) {
         const { results } = await db.prepare(
           "SELECT category, question, answer FROM knowledge ORDER BY category, id"
@@ -72,6 +76,22 @@ export async function onRequestPost(context) {
 
     const body = await context.request.json();
     const userMessages = body.messages || [];
+    const sessionId = body.session_id || null;
+
+    // 取得最後一條用戶訊息並寫入 D1
+    const lastUserMessage = userMessages.length > 0 && userMessages[userMessages.length - 1].role === "user"
+      ? userMessages[userMessages.length - 1].content
+      : null;
+
+    if (sessionId && lastUserMessage && db) {
+      try {
+        await db.prepare(
+          "INSERT INTO conversations (session_id, role, message) VALUES (?, 'user', ?)"
+        ).bind(sessionId, lastUserMessage).run();
+      } catch {
+        // 寫入失敗不影響聊天功能
+      }
+    }
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -104,6 +124,61 @@ export async function onRequestPost(context) {
     }
 
     if (stream) {
+      // 若有 session_id，使用 TransformStream 攔截串流並累積完整回應
+      if (sessionId && db) {
+        let accumulatedText = "";
+
+        const { readable, writable } = new TransformStream({
+          transform(chunk, controller) {
+            // 轉發 chunk 給前端
+            controller.enqueue(chunk);
+
+            // 累積解碼文字以取得完整回應
+            const text = new TextDecoder().decode(chunk, { stream: true });
+            const lines = text.split("\n");
+            for (const line of lines) {
+              if (!line.startsWith("data: ")) continue;
+              const data = line.slice(6).trim();
+              if (data === "[DONE]") continue;
+              try {
+                const parsed = JSON.parse(data);
+                const delta = parsed.choices?.[0]?.delta?.content;
+                if (delta) {
+                  accumulatedText += delta;
+                }
+              } catch {
+                // 忽略解析錯誤
+              }
+            }
+          },
+          async flush(controller) {
+            // 串流結束後寫入 AI 回應到 D1（strip think tags）
+            const cleanText = stripThinkTags(accumulatedText);
+            if (cleanText && sessionId) {
+              try {
+                await db.prepare(
+                  "INSERT INTO conversations (session_id, role, message) VALUES (?, 'assistant', ?)"
+                ).bind(sessionId, cleanText).run();
+              } catch {
+                // 寫入失敗不影響回應
+              }
+            }
+          },
+        });
+
+        // 將 API 回應 pipe 進 TransformStream
+        apiResponse.body.pipeTo(writable).catch(() => {});
+
+        return new Response(readable, {
+          headers: {
+            ...CORS_HEADERS,
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+          },
+        });
+      }
+
+      // 無 session_id 時直接轉發串流
       return new Response(apiResponse.body, {
         headers: {
           ...CORS_HEADERS,
@@ -114,6 +189,22 @@ export async function onRequestPost(context) {
     }
 
     const data = await apiResponse.json();
+
+    // 非串流模式也寫入 AI 回應
+    if (sessionId && db) {
+      try {
+        const assistantContent = data.choices?.[0]?.message?.content || "";
+        const cleanContent = stripThinkTags(assistantContent);
+        if (cleanContent) {
+          await db.prepare(
+            "INSERT INTO conversations (session_id, role, message) VALUES (?, 'assistant', ?)"
+          ).bind(sessionId, cleanContent).run();
+        }
+      } catch {
+        // 寫入失敗不影響回應
+      }
+    }
+
     return new Response(JSON.stringify(data), {
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });

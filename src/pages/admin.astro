@@ -6,27 +6,52 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>INARI - 知識庫管理</title>
+    <title>INARI - 後台管理</title>
   </head>
   <body>
     <div class="page">
       <header>
-        <h1>INARI 知識庫管理</h1>
+        <h1>INARI 後台管理</h1>
         <a href="/" class="back-link">← 返回首頁</a>
       </header>
 
-      <div class="toolbar">
-        <div class="filter-group">
-          <label for="filter-category">篩選分類：</label>
-          <select id="filter-category">
-            <option value="">全部</option>
-          </select>
-        </div>
-        <button id="btn-add" class="btn btn-primary">+ 新增知識</button>
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-knowledge" onclick="switchTab('knowledge')">知識庫</button>
+        <button class="tab-btn" id="tab-conversations" onclick="switchTab('conversations')">對話記錄</button>
       </div>
 
-      <div id="list-container">
-        <div class="loading">載入中...</div>
+      <!-- Tab: 知識庫 -->
+      <div id="panel-knowledge" class="tab-panel">
+        <div class="toolbar">
+          <div class="filter-group">
+            <label for="filter-category">篩選分類：</label>
+            <select id="filter-category">
+              <option value="">全部</option>
+            </select>
+          </div>
+          <button id="btn-add" class="btn btn-primary">+ 新增知識</button>
+        </div>
+
+        <div id="list-container">
+          <div class="loading">載入中...</div>
+        </div>
+      </div>
+
+      <!-- Tab: 對話記錄 -->
+      <div id="panel-conversations" class="tab-panel hidden">
+        <div class="conv-stats" id="conv-stats">
+          <span class="stat-label">總對話數：</span>
+          <span class="stat-value" id="total-sessions">-</span>
+        </div>
+        <div class="conv-layout">
+          <div class="conv-sidebar" id="conv-sidebar">
+            <div class="loading">載入中...</div>
+          </div>
+          <div class="conv-main" id="conv-main">
+            <div class="conv-empty">請選擇左側的對話 session 來查看內容</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -70,6 +95,18 @@
       </div>
     </div>
 
+    <!-- 刪除 Session 確認 Modal -->
+    <div id="delete-session-overlay" class="modal-overlay hidden">
+      <div class="modal modal-sm">
+        <h2>確認刪除對話</h2>
+        <p class="delete-msg">確定要刪除這個 session 的所有對話嗎？此操作無法復原。</p>
+        <div class="modal-actions">
+          <button type="button" id="btn-session-delete-cancel" class="btn btn-secondary">取消</button>
+          <button type="button" id="btn-session-delete-confirm" class="btn btn-danger">刪除</button>
+        </div>
+      </div>
+    </div>
+
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body {
@@ -79,7 +116,7 @@
         color: #111827;
       }
       .page {
-        max-width: 900px;
+        max-width: 1100px;
         margin: 0 auto;
         padding: 24px 16px;
       }
@@ -102,6 +139,36 @@
         font-size: 14px;
       }
       .back-link:hover { color: #3245ff; }
+
+      /* Tabs */
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 24px;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 0;
+      }
+      .tab-btn {
+        padding: 10px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: #6b7280;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        border-radius: 8px 8px 0 0;
+        transition: all 0.15s;
+      }
+      .tab-btn:hover { color: #3245ff; background: #f3f4f6; }
+      .tab-btn.active {
+        color: #3245ff;
+        border-bottom-color: #3245ff;
+        background: #fff;
+      }
+      .tab-panel { }
+      .tab-panel.hidden { display: none; }
 
       .toolbar {
         display: flex;
@@ -151,6 +218,10 @@
         background: #ef4444;
         color: #fff;
       }
+      .btn-sm {
+        padding: 6px 14px;
+        font-size: 13px;
+      }
 
       .loading {
         text-align: center;
@@ -165,6 +236,7 @@
         font-size: 14px;
       }
 
+      /* Knowledge Cards */
       .knowledge-card {
         background: #fff;
         border-radius: 12px;
@@ -223,6 +295,153 @@
       }
       .btn-icon:hover { background: #f3f4f6; }
       .btn-icon.delete:hover { background: #fee2e2; color: #ef4444; border-color: #fca5a5; }
+
+      /* Conversations */
+      .conv-stats {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        color: #6b7280;
+      }
+      .stat-value {
+        font-weight: 700;
+        color: #3245ff;
+        font-size: 16px;
+      }
+      .conv-layout {
+        display: flex;
+        gap: 16px;
+        min-height: 500px;
+      }
+      .conv-sidebar {
+        width: 320px;
+        flex-shrink: 0;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+        overflow-y: auto;
+        max-height: 680px;
+      }
+      .conv-main {
+        flex: 1;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+        overflow-y: auto;
+        max-height: 680px;
+        display: flex;
+        flex-direction: column;
+      }
+      .conv-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        color: #9ca3af;
+        font-size: 14px;
+        padding: 48px;
+        text-align: center;
+      }
+
+      /* Session List Items */
+      .session-item {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f3f4f6;
+        cursor: pointer;
+        transition: background 0.1s;
+      }
+      .session-item:last-child { border-bottom: none; }
+      .session-item:hover { background: #f9fafb; }
+      .session-item.active { background: linear-gradient(135deg, #3245ff0d 0%, #bc52ee0d 100%); border-left: 3px solid #3245ff; }
+      .session-preview {
+        font-size: 13px;
+        color: #1f2937;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 4px;
+      }
+      .session-meta {
+        font-size: 11px;
+        color: #9ca3af;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .session-count {
+        display: inline-block;
+        background: #f3f4f6;
+        border-radius: 10px;
+        padding: 1px 8px;
+        font-size: 11px;
+        color: #6b7280;
+      }
+
+      /* Conversation Messages */
+      .conv-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      .conv-header-title {
+        font-size: 13px;
+        color: #6b7280;
+        font-weight: 500;
+        word-break: break-all;
+      }
+      .conv-messages {
+        flex: 1;
+        padding: 16px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow-y: auto;
+      }
+      .msg-bubble {
+        max-width: 80%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.6;
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+      .msg-bubble.user {
+        align-self: flex-end;
+        background: #3245ff;
+        color: #fff;
+        border-bottom-right-radius: 4px;
+      }
+      .msg-bubble.assistant {
+        align-self: flex-start;
+        background: #f3f4f6;
+        color: #111827;
+        border-bottom-left-radius: 4px;
+      }
+      .msg-role {
+        font-size: 11px;
+        margin-bottom: 4px;
+        color: #9ca3af;
+      }
+      .msg-role.user-role { text-align: right; }
+      .msg-time {
+        font-size: 10px;
+        color: #9ca3af;
+        margin-top: 3px;
+      }
+      .msg-time.user-time { text-align: right; }
+      .msg-wrapper {
+        display: flex;
+        flex-direction: column;
+      }
+      .msg-wrapper.user-wrapper { align-items: flex-end; }
+      .msg-wrapper.assistant-wrapper { align-items: flex-start; }
 
       /* Modal */
       .modal-overlay {
@@ -288,9 +507,26 @@
         line-height: 1.6;
       }
       .error { color: #ef4444; font-size: 13px; min-height: 18px; margin-bottom: 4px; }
+
+      @media (max-width: 700px) {
+        .conv-layout { flex-direction: column; }
+        .conv-sidebar { width: 100%; max-height: 280px; }
+        .conv-main { max-height: 400px; }
+      }
     </style>
 
     <script>
+      // ===================== TAB SWITCHING =====================
+      function switchTab(tab) {
+        document.getElementById("panel-knowledge").classList.toggle("hidden", tab !== "knowledge");
+        document.getElementById("panel-conversations").classList.toggle("hidden", tab !== "conversations");
+        document.getElementById("tab-knowledge").classList.toggle("active", tab === "knowledge");
+        document.getElementById("tab-conversations").classList.toggle("active", tab === "conversations");
+        if (tab === "conversations") loadSessions();
+      }
+      window.switchTab = switchTab;
+
+      // ===================== KNOWLEDGE BASE =====================
       let allItems = [];
       let deleteTargetId = null;
       const categories = new Set();
@@ -370,7 +606,6 @@
           .replace(/"/g, "&quot;");
       }
 
-      // 新增
       document.getElementById("btn-add").addEventListener("click", () => {
         modalTitle.textContent = "新增知識";
         editId.value = "";
@@ -382,7 +617,6 @@
         editCategory.focus();
       });
 
-      // 取消
       document.getElementById("btn-cancel").addEventListener("click", () => {
         modalOverlay.classList.add("hidden");
       });
@@ -391,7 +625,6 @@
         if (e.target === modalOverlay) modalOverlay.classList.add("hidden");
       });
 
-      // 編輯
       window.openEdit = function(id) {
         const item = allItems.find(i => i.id === id);
         if (!item) return;
@@ -405,7 +638,6 @@
         editCategory.focus();
       };
 
-      // 儲存（新增/更新）
       modalForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         modalError.textContent = "";
@@ -448,7 +680,6 @@
         }
       });
 
-      // 刪除
       window.openDelete = function(id) {
         deleteTargetId = id;
         deleteOverlay.classList.remove("hidden");
@@ -484,13 +715,132 @@
         }
       });
 
-      // 分類篩選
       filterSelect.addEventListener("change", () => {
         loadItems(filterSelect.value);
       });
 
-      // 初始載入
       loadItems();
+
+      // ===================== CONVERSATIONS =====================
+      let allSessions = [];
+      let activeSessionId = null;
+      let deleteSessionTarget = null;
+
+      const convSidebar = document.getElementById("conv-sidebar");
+      const convMain = document.getElementById("conv-main");
+      const totalSessionsEl = document.getElementById("total-sessions");
+      const deleteSessionOverlay = document.getElementById("delete-session-overlay");
+
+      async function loadSessions() {
+        convSidebar.innerHTML = '<div class="loading">載入中...</div>';
+        try {
+          const res = await fetch("/api/conversations");
+          const data = await res.json();
+          allSessions = data.sessions || [];
+          totalSessionsEl.textContent = data.total || 0;
+          renderSessions();
+        } catch (err) {
+          convSidebar.innerHTML = '<div class="empty-state">載入失敗</div>';
+        }
+      }
+
+      function formatTime(ts) {
+        if (!ts) return "";
+        try {
+          const d = new Date(ts.includes("T") ? ts : ts.replace(" ", "T") + "Z");
+          return d.toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+        } catch { return ts; }
+      }
+
+      function renderSessions() {
+        if (allSessions.length === 0) {
+          convSidebar.innerHTML = '<div class="empty-state">尚無對話記錄</div>';
+          return;
+        }
+        convSidebar.innerHTML = allSessions.map(s => `
+          <div class="session-item ${activeSessionId === s.session_id ? 'active' : ''}" onclick="selectSession('${escapeHtml(s.session_id)}')">
+            <div class="session-preview">${escapeHtml(s.preview || '（無訊息）')}</div>
+            <div class="session-meta">
+              <span>${formatTime(s.last_message_at)}</span>
+              <span class="session-count">${s.message_count} 則</span>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      window.selectSession = async function(sessionId) {
+        activeSessionId = sessionId;
+        renderSessions();
+        convMain.innerHTML = '<div class="loading">載入中...</div>';
+        try {
+          const res = await fetch(`/api/conversations?session_id=${encodeURIComponent(sessionId)}`);
+          const data = await res.json();
+          renderConversation(sessionId, data.messages || []);
+        } catch (err) {
+          convMain.innerHTML = '<div class="conv-empty">載入失敗</div>';
+        }
+      };
+
+      function renderConversation(sessionId, messages) {
+        const shortId = sessionId.length > 20 ? sessionId.substring(0, 20) + "..." : sessionId;
+        convMain.innerHTML = `
+          <div class="conv-header">
+            <div class="conv-header-title">Session: ${escapeHtml(shortId)}</div>
+            <button class="btn btn-danger btn-sm" onclick="openDeleteSession('${escapeHtml(sessionId)}')">刪除對話</button>
+          </div>
+          <div class="conv-messages" id="conv-messages-inner">
+            ${messages.length === 0
+              ? '<div style="color:#9ca3af;font-size:14px;text-align:center;padding:32px;">此對話沒有記錄</div>'
+              : messages.map(m => `
+                <div class="msg-wrapper ${m.role === 'user' ? 'user-wrapper' : 'assistant-wrapper'}">
+                  <div class="msg-role ${m.role === 'user' ? 'user-role' : ''}">${m.role === 'user' ? '用戶' : 'AI 助手'}</div>
+                  <div class="msg-bubble ${m.role === 'user' ? 'user' : 'assistant'}">${escapeHtml(m.message)}</div>
+                  <div class="msg-time ${m.role === 'user' ? 'user-time' : ''}">${formatTime(m.created_at)}</div>
+                </div>
+              `).join("")
+            }
+          </div>
+        `;
+      }
+
+      window.openDeleteSession = function(sessionId) {
+        deleteSessionTarget = sessionId;
+        deleteSessionOverlay.classList.remove("hidden");
+      };
+
+      document.getElementById("btn-session-delete-cancel").addEventListener("click", () => {
+        deleteSessionOverlay.classList.add("hidden");
+        deleteSessionTarget = null;
+      });
+
+      deleteSessionOverlay.addEventListener("click", (e) => {
+        if (e.target === deleteSessionOverlay) {
+          deleteSessionOverlay.classList.add("hidden");
+          deleteSessionTarget = null;
+        }
+      });
+
+      document.getElementById("btn-session-delete-confirm").addEventListener("click", async () => {
+        if (!deleteSessionTarget) return;
+        const confirmBtn = document.getElementById("btn-session-delete-confirm");
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = "刪除中...";
+        try {
+          const res = await fetch(`/api/conversations?session_id=${encodeURIComponent(deleteSessionTarget)}`, { method: "DELETE" });
+          if (res.ok) {
+            deleteSessionOverlay.classList.add("hidden");
+            if (activeSessionId === deleteSessionTarget) {
+              activeSessionId = null;
+              convMain.innerHTML = '<div class="conv-empty">請選擇左側的對話 session 來查看內容</div>';
+            }
+            deleteSessionTarget = null;
+            await loadSessions();
+          }
+        } finally {
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = "刪除";
+        }
+      });
     </script>
   </body>
 </html>

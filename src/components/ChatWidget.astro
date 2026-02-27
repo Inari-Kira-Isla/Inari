@@ -172,6 +172,22 @@
   let conversationHistory = [];
   let isOpen = false;
 
+  function generateId() {
+    return crypto.randomUUID ? crypto.randomUUID() :
+      'xxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+  }
+
+  // 從 localStorage 取得或生成 session_id
+  let sessionId = localStorage.getItem("inari_session_id");
+  if (!sessionId) {
+    sessionId = generateId();
+    localStorage.setItem("inari_session_id", sessionId);
+  }
+
   appendMessage("assistant", "你好！我是 INARI 助手，有什麼可以幫你的嗎？");
 
   toggle.addEventListener("click", () => {
@@ -198,7 +214,7 @@
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: conversationHistory, stream: true }),
+        body: JSON.stringify({ messages: conversationHistory, stream: true, session_id: sessionId }),
       });
 
       if (!response.ok) throw new Error("Request failed");

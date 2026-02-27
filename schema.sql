@@ -1,5 +1,15 @@
 -- INARI Knowledge Base Schema
 
+CREATE TABLE IF NOT EXISTS conversations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id TEXT NOT NULL,
+  role TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_conversations_session ON conversations(session_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_created ON conversations(created_at);
+
 CREATE TABLE IF NOT EXISTS knowledge (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   category TEXT NOT NULL,
