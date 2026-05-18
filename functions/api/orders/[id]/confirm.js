@@ -1,0 +1,100 @@
+// PATCH /api/orders/{id}/confirm — confirm a draft order
+
+const SUPABASE_URL = "https://cqartwwsbxnjjatmndtt.supabase.co";
+const TENANT_ID = "b15d5a02-764c-4353-ad40-07b901d9f321";
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "PATCH, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+function json(payload, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+}
+
+function sbHeaders(key) {
+  return {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    "Content-Type": "application/json",
+    Prefer: "return=representation",
+  };
+}
+
+function getUserContext(request) {
+  return {
+    user_type: request.headers.get("X-User-Type") || "unknown",
+    customer_code: request.headers.get("X-Customer-Code") || null,
+  };
+}
+
+async function parseBody(request) {
+  try {
+    return await request.json();
+  } catch {
+    return {};
+  }
+}
+
+export async function onRequestOptions() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
+
+export async function onRequestPatch(context) {
+  const ctx = getUserContext(context.request);
+  if (ctx.user_type === "unknown") {
+    return json({ error: "未登入" }, 401);
+  }
+
+  const id = context.params.id;
+  const serviceKey = context.env.SUPABASE_SERVICE_KEY || context.env.SUPABASE_ANON_KEY;
+  const headers = sbHeaders(serviceKey);
+  const orderUrl = `${SUPABASE_URL}/rest/v1/inari_customer_orders?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${TENANT_ID}&select=*`;
+
+  const orderResp = await fetch(orderUrl, { headers });
+  if (!orderResp.ok) {
+    return json({ error: "讀取訂單失敗", detail: await orderResp.text() }, 500);
+  }
+
+  const [order] = await orderResp.json();
+  if (!order) {
+    return json({ error: "訂單不存在" }, 404);
+  }
+
+  if (ctx.user_type === "b2b" && ctx.customer_code !== order.customer_code) {
+    return json({ error: "無權限確認此訂單" }, 403);
+  }
+
+  if (order.status !== "draft") {
+    return json({ error: "訂單不是草稿狀態" }, 400);
+  }
+
+  const body = await parseBody(context.request);
+  const updatePayload = {
+    status: "confirmed",
+    payment_method: body.payment_method || null,
+    delivery_date: body.delivery_date || null,
+    notes: body.notes || null,
+    confirmed_at: new Date().toISOString(),
+  };
+
+  const updateResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/inari_customer_orders?id=eq.${encodeURIComponent(id)}&status=eq.draft&tenant_id=eq.${TENANT_ID}`,
+    { method: "PATCH", headers, body: JSON.stringify(updatePayload) }
+  );
+
+  if (!updateResp.ok) {
+    return json({ error: "確認訂單失敗", detail: await updateResp.text() }, 500);
+  }
+
+  const [updated] = await updateResp.json();
+  if (!updated) {
+    return json({ error: "訂單不是草稿狀態" }, 400);
+  }
+
+  return json({ ok: true, order_no: updated.order_no, status: "confirmed" });
+}

@@ -1,0 +1,308 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>稻荷商城 — 結帳</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", sans-serif;
+        background: #f8fafc;
+        color: #111827;
+        min-height: 100vh;
+      }
+      header {
+        height: 60px;
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+      .back-btn { color: #374151; font-size: 20px; text-decoration: none; line-height: 1; }
+      .header-title { font-size: 17px; font-weight: 700; }
+      .checkout-layout {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        gap: 20px;
+        align-items: start;
+      }
+      section {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+      }
+      .order-summary { padding: 20px; }
+      .checkout-form { padding: 22px; }
+      h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+      .checkout-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        padding: 14px 0;
+        border-bottom: 1px solid #f3f4f6;
+      }
+      .item-name { font-size: 14px; font-weight: 650; color: #1f2937; line-height: 1.35; }
+      .item-meta { font-size: 12px; color: #6b7280; margin-top: 4px; }
+      .item-total { font-size: 14px; font-weight: 700; color: #c0392b; white-space: nowrap; }
+      .empty-cart {
+        text-align: center;
+        color: #9ca3af;
+        padding: 44px 0;
+        font-size: 14px;
+      }
+      .summary-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 18px;
+        margin-top: 4px;
+        font-size: 16px;
+      }
+      .summary-total strong { color: #c0392b; font-size: 24px; }
+      .field-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 650;
+        color: #374151;
+        margin: 16px 0 8px;
+      }
+      input[type="date"],
+      textarea {
+        width: 100%;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 11px 12px;
+        font: inherit;
+        font-size: 14px;
+        outline: none;
+        background: #fff;
+      }
+      input[type="date"]:focus,
+      textarea:focus { border-color: #c0392b; box-shadow: 0 0 0 3px rgba(192,57,43,.08); }
+      textarea { resize: vertical; min-height: 88px; line-height: 1.5; }
+      .payment-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .pay-opt {
+        border: 1.5px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .pay-opt:has(input:checked) { border-color: #c0392b; background: #fef2f2; color: #991b1b; }
+      .pay-opt input { accent-color: #c0392b; }
+      #confirm-btn {
+        width: 100%;
+        margin-top: 20px;
+        border: none;
+        border-radius: 8px;
+        background: #c0392b;
+        color: #fff;
+        padding: 14px 16px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      #confirm-btn:hover { background: #a93226; }
+      #confirm-btn:disabled { opacity: .55; cursor: not-allowed; }
+      .terms-note { text-align: center; color: #6b7280; font-size: 12px; margin-top: 12px; }
+      @media (max-width: 820px) {
+        .checkout-layout { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 520px) {
+        header { padding: 0 16px; }
+        .checkout-layout { padding: 16px 12px 36px; gap: 14px; }
+        .order-summary, .checkout-form { padding: 16px; }
+        .payment-options { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="/shop/catalog" class="back-btn" aria-label="返回">←</a>
+      <span class="header-title">結帳</span>
+    </header>
+
+    <div class="checkout-layout">
+      <section class="order-summary">
+        <h2>訂單摘要</h2>
+        <div id="checkout-items"></div>
+        <div class="summary-total">
+          <span>合計</span>
+          <strong id="checkout-total">MOP 0</strong>
+        </div>
+      </section>
+
+      <section class="checkout-form">
+        <h2>送貨資訊</h2>
+
+        <label class="field-label" for="delivery_date">送貨日期 *</label>
+        <input type="date" id="delivery_date" required />
+
+        <label class="field-label">付款方式 *</label>
+        <div class="payment-options">
+          <label class="pay-opt">
+            <input type="radio" name="payment" value="月結" checked />
+            <span>月結</span>
+          </label>
+          <label class="pay-opt">
+            <input type="radio" name="payment" value="現金" />
+            <span>現金</span>
+          </label>
+          <label class="pay-opt">
+            <input type="radio" name="payment" value="轉帳" />
+            <span>銀行轉帳</span>
+          </label>
+          <label class="pay-opt">
+            <input type="radio" name="payment" value="支票" />
+            <span>支票</span>
+          </label>
+        </div>
+
+        <label class="field-label" for="notes">備注</label>
+        <textarea id="notes" placeholder="特殊要求或備注..." rows="3"></textarea>
+
+        <button id="confirm-btn" onclick="submitOrder()">確認下單</button>
+        <p class="terms-note">下單後業務會與您確認</p>
+      </section>
+    </div>
+
+    <script type="module">
+      import { getAuth } from "/js/auth.js";
+      import { getCart, getCartTotal, clearCart } from "/js/cart.js";
+
+      const auth = getAuth();
+      if (!auth.isLoggedIn) window.location.href = "/shop/login";
+
+      function fmt(n) {
+        return "MOP " + Number(n || 0).toLocaleString("zh-HK", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        });
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[char]);
+      }
+
+      function setTomorrowMin() {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const value = tomorrow.toISOString().slice(0, 10);
+        const input = document.getElementById("delivery_date");
+        input.min = value;
+        input.value = value;
+      }
+
+      function renderCheckout() {
+        const cart = getCart();
+        const itemsEl = document.getElementById("checkout-items");
+        const totalEl = document.getElementById("checkout-total");
+        totalEl.textContent = fmt(getCartTotal());
+
+        if (!cart.items.length) {
+          itemsEl.innerHTML = '<div class="empty-cart">購物車是空的</div>';
+          return;
+        }
+
+        itemsEl.innerHTML = cart.items.map((item) => `
+          <div class="checkout-item">
+            <div>
+              <div class="item-name">${escapeHtml(item.product_name)}</div>
+              <div class="item-meta">${escapeHtml(item.sku)} · ${Number(item.qty).toLocaleString("zh-HK")} ${escapeHtml(item.unit)} · ${fmt(item.unit_price)} / ${escapeHtml(item.unit)}</div>
+            </div>
+            <div class="item-total">${fmt(item.line_total || item.qty * item.unit_price)}</div>
+          </div>
+        `).join("");
+      }
+
+      window.submitOrder = async function submitOrder() {
+        const cart = getCart();
+        if (!cart.items.length) { alert("購物車是空的"); return; }
+
+        const delivery_date = document.getElementById("delivery_date").value;
+        const payment_method = document.querySelector("input[name=payment]:checked").value;
+        const notes = document.getElementById("notes").value;
+
+        if (!delivery_date) { alert("請選擇送貨日期"); return; }
+
+        const btn = document.getElementById("confirm-btn");
+        btn.disabled = true;
+        btn.textContent = "處理中...";
+
+        try {
+          const createRes = await fetch("/api/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              items: cart.items.map((i) => ({
+                product_id: i.product_id,
+                product_code: i.sku,
+                product_name: i.product_name,
+                qty: i.qty,
+                unit: i.unit,
+                unit_price: i.unit_price,
+              })),
+              source: "web",
+              payment_method,
+              delivery_date,
+              notes,
+            }),
+          });
+
+          const createData = await createRes.json();
+          if (!createRes.ok || !createData.ok) {
+            alert("下單失敗: " + (createData.error || "請稍後重試"));
+            return;
+          }
+
+          const confirmRes = await fetch("/api/orders/" + createData.order_id + "/confirm", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ payment_method, delivery_date, notes }),
+          });
+          const confirmData = await confirmRes.json();
+          if (!confirmRes.ok || !confirmData.ok) {
+            alert("確認訂單失敗: " + (confirmData.error || "請稍後重試"));
+            return;
+          }
+
+          clearCart();
+          window.location.href = "/shop/order/confirmed?no=" + encodeURIComponent(createData.order_no);
+        } catch {
+          alert("下單失敗，請檢查網絡後重試");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "確認下單";
+        }
+      };
+
+      setTomorrowMin();
+      renderCheckout();
+    </script>
+  </body>
+</html>

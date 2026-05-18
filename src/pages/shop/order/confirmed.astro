@@ -1,0 +1,95 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>稻荷商城 — 訂單已確認</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        min-height: 100vh;
+        background: #f8fafc;
+        color: #111827;
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", sans-serif;
+        display: grid;
+        place-items: center;
+        padding: 24px 16px;
+      }
+      .confirmed-wrap {
+        width: min(100%, 440px);
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 40px 28px;
+        text-align: center;
+        box-shadow: 0 12px 36px rgba(15, 23, 42, .06);
+      }
+      .success-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #dcfce7;
+        color: #15803d;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 34px;
+        margin-bottom: 18px;
+      }
+      h1 { font-size: 26px; font-weight: 800; margin-bottom: 10px; }
+      .order-no {
+        color: #c0392b;
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+      .confirmed-msg {
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 28px;
+      }
+      .confirmed-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .btn-secondary,
+      .btn-primary {
+        border-radius: 8px;
+        padding: 13px 14px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .btn-secondary { background: #f3f4f6; color: #374151; }
+      .btn-secondary:hover { background: #e5e7eb; }
+      .btn-primary { background: #c0392b; color: #fff; }
+      .btn-primary:hover { background: #a93226; }
+      @media (max-width: 420px) {
+        .confirmed-wrap { padding: 34px 18px; }
+        .confirmed-actions { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="confirmed-wrap">
+      <div class="success-icon">✓</div>
+      <h1>訂單已確認！</h1>
+      <p class="order-no" id="order-no-display"></p>
+      <p class="confirmed-msg">業務將盡快與您聯繫確認送貨安排</p>
+
+      <div class="confirmed-actions">
+        <a href="/shop/orders" class="btn-secondary">查看訂單記錄</a>
+        <a href="/shop/catalog" class="btn-primary">繼續購物</a>
+      </div>
+    </div>
+
+    <script>
+      const no = new URLSearchParams(location.search).get("no");
+      document.getElementById("order-no-display").textContent = no ? "訂單號：" + no : "訂單號：";
+    </script>
+  </body>
+</html>
