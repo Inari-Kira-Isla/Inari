@@ -3,7 +3,7 @@
 // Sets inari_auth_v2 cookie with user context
 
 const COOKIE_NAME = "inari_auth_v2";
-const SUPABASE_URL = "https://yitmabzsxfgbchhhjjef.supabase.co";
+const SUPABASE_URL = "https://cqartwwsbxnjjatmndtt.supabase.co";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",

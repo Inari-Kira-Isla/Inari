@@ -1,7 +1,7 @@
 // POST /api/orders — create draft order
 // GET  /api/orders — list orders (staff: all, b2b: own only)
 
-const SUPABASE_URL = "https://yitmabzsxfgbchhhjjef.supabase.co";
+const SUPABASE_URL = "https://cqartwwsbxnjjatmndtt.supabase.co";
 const TENANT_ID = "b15d5a02-764c-4353-ad40-07b901d9f321";
 
 const CORS_HEADERS = {
