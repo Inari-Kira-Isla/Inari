@@ -76,6 +76,14 @@ export async function onRequest(context) {
     return context.next();
   }
 
+  // --- Admin routes: staff/manager only ---
+  if (path.startsWith("/shop/admin")) {
+    const userType = context.request.headers.get("X-User-Type") || "";
+    if (userType !== "staff" && userType !== "manager") {
+      return Response.redirect(new URL(SHOP_LOGIN_PATH, context.request.url), 302);
+    }
+  }
+
   // --- Shop routes require shop login ---
   if (path.startsWith("/shop")) {
     return Response.redirect(new URL(SHOP_LOGIN_PATH, context.request.url), 302);

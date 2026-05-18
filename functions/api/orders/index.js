@@ -109,6 +109,9 @@ export async function onRequestPost(context) {
     status: "draft",
     raw_text: rawText,
     tenant_id: TENANT_ID,
+    ...(body.payment_method ? { payment_method: body.payment_method } : {}),
+    ...(body.delivery_date ? { delivery_date: body.delivery_date } : {}),
+    ...(body.notes ? { notes: body.notes } : {}),
   };
 
   const orderResp = await fetch(
@@ -128,19 +131,24 @@ export async function onRequestPost(context) {
   const orderId = newOrder.id;
 
   // Insert order items
-  const itemPayloads = items.map((item) => ({
-    order_id: orderId,
-    order_no: orderNo,
-    product_id: item.product_id || null,
-    product_code: item.product_code || null,
-    product_name: item.product_name || item.raw || null,
-    raw_text: item.raw || null,
-    qty: item.qty || 0,
-    unit: item.suggested_unit || item.unit || null,
-    unit_price: item.suggested_price || item.unit_price || null,
-    match_confidence: item.match_confidence || "unmatched",
-    tenant_id: TENANT_ID,
-  }));
+  const itemPayloads = items.map((item) => {
+    const qty = item.qty || 0;
+    const unit_price = item.suggested_price || item.unit_price || null;
+    return {
+      order_id: orderId,
+      order_no: orderNo,
+      product_id: item.product_id || null,
+      product_code: item.product_code || null,
+      product_name: item.product_name || item.raw || null,
+      raw_text: item.raw || null,
+      qty,
+      unit: item.suggested_unit || item.unit || null,
+      unit_price,
+      amount: unit_price ? qty * unit_price : null,
+      match_confidence: item.match_confidence || "unmatched",
+      tenant_id: TENANT_ID,
+    };
+  });
 
   await fetch(`${SUPABASE_URL}/rest/v1/inari_customer_order_items`, {
     method: "POST",

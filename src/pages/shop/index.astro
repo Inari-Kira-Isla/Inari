@@ -53,6 +53,8 @@
         transition: border-color 0.15s, box-shadow 0.15s;
       }
       .menu-card:hover { border-color: #3245ff; box-shadow: 0 4px 16px rgba(50,69,255,0.08); }
+      .menu-card.admin-card { border-color: #c0392b; }
+      .menu-card.admin-card:hover { border-color: #a93226; box-shadow: 0 4px 16px rgba(192,57,43,0.15); }
       .menu-icon { font-size: 28px; }
       .menu-title { font-size: 15px; font-weight: 600; }
       .menu-desc { font-size: 12px; color: #9ca3af; }
@@ -134,6 +136,17 @@
       }
 
       window.logout = () => { doLogout(); };
+
+      if (auth.isStaff || auth.user?.user_type === 'manager') {
+        const menuGrid = document.querySelector('.menu-grid');
+        if (menuGrid) {
+          const adminCard = document.createElement('a');
+          adminCard.href = '/shop/admin/orders';
+          adminCard.className = 'menu-card admin-card';
+          adminCard.innerHTML = '<div class="menu-icon">⚙️</div><div class="menu-title">訂單管理</div><div class="menu-desc">查看/確認/開單</div>';
+          menuGrid.appendChild(adminCard);
+        }
+      }
 
       // Load recent orders
       fetch('/api/orders?limit=5')

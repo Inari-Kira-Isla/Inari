@@ -1,0 +1,293 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>稻荷商城 — 訂單管理</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", sans-serif; background: #f8fafc; color: #111827; min-height: 100vh; }
+      header { height: 56px; background: #c0392b; color: #fff; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 20; }
+      .header-left { display: flex; align-items: center; gap: 12px; }
+      .header-title { font-size: 16px; font-weight: 700; }
+      .header-sub { font-size: 12px; opacity: 0.85; }
+      .logout-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+      .logout-btn:hover { background: rgba(255,255,255,0.3); }
+      .wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 48px; }
+
+      .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+      .stat-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 20px; }
+      .stat-num { font-size: 28px; font-weight: 800; color: #c0392b; }
+      .stat-label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+
+      .filter-bar { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      .filter-bar input, .filter-bar select { height: 36px; border: 1px solid #d1d5db; border-radius: 6px; padding: 0 10px; font-size: 13px; }
+      .filter-bar input[type="date"] { min-width: 140px; }
+      .filter-bar select { min-width: 120px; }
+      .filter-bar input[type="text"] { min-width: 160px; flex: 1; }
+      .btn-query { height: 36px; background: #c0392b; color: #fff; border: none; border-radius: 6px; padding: 0 18px; cursor: pointer; font-size: 13px; font-weight: 600; }
+      .btn-query:hover { background: #a93226; }
+
+      .table-wrap { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; font-size: 13px; }
+      thead th { padding: 12px 14px; text-align: left; font-weight: 700; color: #374151; background: #f9fafb; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+      tbody td { padding: 11px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+      tbody tr:last-child td { border-bottom: none; }
+      tbody tr:hover { background: #fafafa; }
+      .order-no { font-weight: 700; color: #1f2937; font-size: 13px; }
+      .items-preview { font-size: 12px; color: #6b7280; margin-top: 3px; line-height: 1.4; }
+
+      .badge { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+      .badge-draft     { background: #fef3c7; color: #92400e; }
+      .badge-confirmed { background: #d1fae5; color: #065f46; }
+      .badge-invoiced  { background: #dbeafe; color: #1e3a8a; }
+      .badge-cancelled { background: #fee2e2; color: #991b1b; }
+
+      .action-btn { display: inline-block; margin: 2px 3px 2px 0; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; }
+      .btn-confirm  { background: #d1fae5; color: #065f46; }
+      .btn-confirm:hover  { background: #a7f3d0; }
+      .btn-invoice  { background: #dbeafe; color: #1e3a8a; }
+      .btn-invoice:hover  { background: #bfdbfe; }
+      .btn-cancel   { background: #fee2e2; color: #991b1b; }
+      .btn-cancel:hover   { background: #fecaca; }
+
+      #toast { position: fixed; bottom: 28px; right: 24px; background: #111827; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100; }
+      #toast.show { opacity: 1; }
+
+      .empty-row td { text-align: center; color: #9ca3af; padding: 40px; font-size: 14px; }
+      .loading-row td { text-align: center; color: #6b7280; padding: 32px; }
+
+      @media (max-width: 768px) {
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+        table { font-size: 12px; }
+        thead th, tbody td { padding: 10px 10px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-left">
+        <a href="/shop" style="color:#fff;text-decoration:none;font-size:22px;line-height:1">←</a>
+        <div>
+          <div class="header-title">稻荷商城 — 訂單管理</div>
+          <div class="header-sub">今日: <span id="today-date">-</span></div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">登出</button>
+    </header>
+
+    <div class="wrap">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num" id="stat-draft">-</div>
+          <div class="stat-label">草稿待確認</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-confirmed">-</div>
+          <div class="stat-label">已確認</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-invoiced">-</div>
+          <div class="stat-label">已開單</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-amount">MOP 0</div>
+          <div class="stat-label">今日金額</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <input type="date" id="f-date" onchange="loadOrders()" />
+        <select id="f-status" onchange="loadOrders()">
+          <option value="">全部狀態</option>
+          <option value="draft">草稿</option>
+          <option value="confirmed">已確認</option>
+          <option value="invoiced">已開單</option>
+          <option value="cancelled">已取消</option>
+        </select>
+        <input type="text" id="f-customer" placeholder="客戶名稱..." oninput="debouncedLoad()" />
+        <button class="btn-query" onclick="loadOrders()">查詢</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>單號</th>
+              <th>客戶</th>
+              <th>日期</th>
+              <th>品項</th>
+              <th>金額</th>
+              <th>付款</th>
+              <th>狀態</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="orders-tbody">
+            <tr class="loading-row"><td colspan="8">載入中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script type="module">
+      import { getAuth, logout as doLogoutFn } from '/js/auth.js';
+
+      const auth = getAuth();
+      if (!auth.isLoggedIn || (!auth.isStaff && auth.user?.user_type !== 'manager')) {
+        window.location.href = '/shop/login';
+      }
+
+      window.doLogout = () => doLogoutFn();
+
+      const todayStr = () => new Date().toISOString().slice(0, 10);
+      document.getElementById('today-date').textContent = todayStr();
+      document.getElementById('f-date').value = todayStr();
+
+      const PAYMENT_LABELS = {
+        monthly_credit: '月結',
+        cash: '現金',
+        transfer: '轉帳',
+        cheque: '支票',
+      };
+      const STATUS_LABELS = {
+        draft: '草稿',
+        confirmed: '已確認',
+        invoiced: '已開單',
+        cancelled: '已取消',
+      };
+
+      function fmt(n) {
+        return 'MOP ' + Number(n || 0).toLocaleString('zh-HK', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      }
+
+      function escHtml(s) {
+        if (s == null) return '';
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function showToast(msg, duration = 2800) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), duration);
+      }
+
+      let debounceTimer;
+      window.debouncedLoad = () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(loadOrders, 400);
+      };
+
+      window.loadOrders = async function loadOrders() {
+        const tbody = document.getElementById('orders-tbody');
+        tbody.innerHTML = '<tr class="loading-row"><td colspan="8">載入中...</td></tr>';
+
+        const date = document.getElementById('f-date').value;
+        const status = document.getElementById('f-status').value;
+        const customer = document.getElementById('f-customer').value;
+
+        const params = new URLSearchParams();
+        if (date) params.set('date', date);
+        if (status) params.set('status', status);
+        if (customer) params.set('customer', customer);
+
+        try {
+          const res = await fetch('/api/admin/orders?' + params.toString());
+          if (res.status === 401) { window.location.href = '/shop/login'; return; }
+          const { orders = [] } = await res.json();
+          renderOrders(orders);
+          updateStats(orders, date || todayStr());
+        } catch {
+          tbody.innerHTML = '<tr class="empty-row"><td colspan="8">載入失敗，請重試</td></tr>';
+        }
+      };
+
+      function calcTotal(order) {
+        const items = order.inari_customer_order_items || [];
+        return items.reduce((s, i) => s + Number(i.amount || i.line_total || (i.qty * (i.unit_price || 0)) || 0), 0);
+      }
+
+      function renderOrders(orders) {
+        const tbody = document.getElementById('orders-tbody');
+        if (!orders.length) {
+          tbody.innerHTML = '<tr class="empty-row"><td colspan="8">無訂單記錄</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = orders.map(o => {
+          const items = o.inari_customer_order_items || [];
+          const preview = items.slice(0, 2).map(i => i.product_name || i.product_code).filter(Boolean).join('、');
+          const more = items.length > 2 ? ` +${items.length - 2}` : '';
+          const total = calcTotal(o);
+          const payLabel = PAYMENT_LABELS[o.payment_method] || o.payment_method || '-';
+
+          let actions = '';
+          if (o.status === 'draft') {
+            actions = `<button class="action-btn btn-confirm" onclick="updateStatus('${o.id}','confirmed')">確認訂單</button><button class="action-btn btn-cancel" onclick="updateStatus('${o.id}','cancelled')">取消</button>`;
+          } else if (o.status === 'confirmed') {
+            actions = `<button class="action-btn btn-invoice" onclick="updateStatus('${o.id}','invoiced')">標記開單</button><button class="action-btn btn-cancel" onclick="updateStatus('${o.id}','cancelled')">取消</button>`;
+          }
+
+          return `<tr>
+            <td><div class="order-no">${escHtml(o.order_no)}</div></td>
+            <td>${escHtml(o.customer_name || o.customer_code)}</td>
+            <td>${escHtml(o.order_date) || '-'}</td>
+            <td><div>${escHtml(preview)}${more ? `<span style="color:#9ca3af"> ${escHtml(more)}</span>` : ''}</div>${items.length > 0 ? `<div class="items-preview">${items.length} 品項</div>` : ''}</td>
+            <td><strong>${fmt(total)}</strong></td>
+            <td>${escHtml(payLabel)}</td>
+            <td><span class="badge badge-${escHtml(o.status)}">${escHtml(STATUS_LABELS[o.status] || o.status)}</span></td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('');
+      }
+
+      function updateStats(orders, filterDate) {
+        document.getElementById('stat-draft').textContent = orders.filter(o => o.status === 'draft').length;
+        document.getElementById('stat-confirmed').textContent = orders.filter(o => o.status === 'confirmed').length;
+        document.getElementById('stat-invoiced').textContent = orders.filter(o => o.status === 'invoiced').length;
+        const todayOrders = filterDate
+          ? orders.filter(o => o.order_date === filterDate)
+          : orders;
+        const totalAmt = todayOrders.reduce((s, o) => s + calcTotal(o), 0);
+        document.getElementById('stat-amount').textContent = fmt(totalAmt);
+      }
+
+      window.updateStatus = async function updateStatus(id, status) {
+        const msgs = {
+          confirmed: '確認此訂單？',
+          invoiced: '標記為已開單？',
+          cancelled: '確定取消此訂單？這個動作無法撤銷。',
+        };
+        if (!confirm(msgs[status] || '確認操作？')) return;
+
+        try {
+          const res = await fetch('/api/admin/orders/' + id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status }),
+          });
+          const data = await res.json();
+          if (data.ok) {
+            showToast('✅ 狀態已更新：' + (STATUS_LABELS[status] || status));
+            loadOrders();
+          } else {
+            showToast('❌ ' + (data.error || '操作失敗'));
+          }
+        } catch {
+          showToast('❌ 網絡錯誤，請重試');
+        }
+      };
+
+      loadOrders();
+    </script>
+  </body>
+</html>

@@ -50,13 +50,13 @@ export async function onRequestPost(context) {
       // Insert fresh items
       const payload = items.map((item) => ({
         session_id,
-        customer_code,
         product_id: item.product_id || null,
         sku: item.sku,
         product_name: item.product_name,
         qty: item.qty,
         unit: item.unit,
         unit_price: item.unit_price,
+        line_total: item.line_total || (item.qty * (item.unit_price || 0)) || null,
         tenant_id: TENANT_ID,
       }));
 
