@@ -1,0 +1,145 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>稻荷商城 — 商品搜尋</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", sans-serif;
+        background: #f8fafc;
+        min-height: 100vh;
+      }
+      header {
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .back-btn { font-size: 20px; text-decoration: none; color: #374151; }
+      .search-bar {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        background: #f3f4f6;
+        border-radius: 12px;
+        padding: 8px 14px;
+        gap: 8px;
+      }
+      .search-bar input {
+        flex: 1;
+        background: none;
+        border: none;
+        outline: none;
+        font-size: 15px;
+        color: #111;
+      }
+      .search-bar input::placeholder { color: #9ca3af; }
+      .main { max-width: 640px; margin: 0 auto; padding: 16px; }
+      .product-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .product-info { flex: 1 }
+      .product-name { font-size: 14px; font-weight: 600; color: #111; margin-bottom: 4px; }
+      .product-meta { font-size: 12px; color: #9ca3af; }
+      .product-sku { font-size: 11px; color: #6b7280; background: #f3f4f6; padding: 2px 8px; border-radius: 6px; }
+      .product-price { font-size: 15px; font-weight: 700; color: #3245ff; white-space: nowrap; }
+      .match-kw { font-size: 11px; color: #065f46; background: #d1fae5; padding: 2px 8px; border-radius: 6px; }
+      .empty { text-align: center; color: #9ca3af; font-size: 14px; padding: 48px 0; }
+      .hint { text-align: center; color: #9ca3af; font-size: 13px; padding: 32px 0; }
+      .category-tag {
+        font-size: 11px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-left: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="/shop" class="back-btn">←</a>
+      <div class="search-bar">
+        <span>🔍</span>
+        <input id="search-input" type="text" placeholder="搜尋商品，例：三文魚、海膽、鰻魚..." autofocus />
+      </div>
+    </header>
+
+    <div class="main">
+      <div id="results"><div class="hint">輸入商品名稱搜尋稻荷目錄</div></div>
+    </div>
+
+    <script type="module">
+      import { getAuth } from '/js/auth.js';
+      const auth = getAuth();
+      if (!auth.isLoggedIn) { window.location.href = '/shop/login'; }
+    </script>
+
+    <script>
+      const input = document.getElementById('search-input');
+      const results = document.getElementById('results');
+      let timer;
+
+      input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (!q) { results.innerHTML = '<div class="hint">輸入商品名稱搜尋稻荷目錄</div>'; return; }
+        results.innerHTML = '<div class="hint">搜尋中...</div>';
+        timer = setTimeout(() => search(q), 300);
+      });
+
+      async function search(q) {
+        try {
+          const resp = await fetch(`/api/products/search?q=${encodeURIComponent(q)}&limit=20`);
+          const data = await resp.json();
+          const items = data.results || [];
+
+          if (items.length === 0) {
+            results.innerHTML = `<div class="empty">找不到「${q}」相關商品</div>`;
+            return;
+          }
+
+          results.innerHTML = items.map(p => `
+            <div class="product-card">
+              <div class="product-info">
+                <div class="product-name">
+                  ${p.name}
+                  ${p.category ? `<span class="category-tag">${p.category}</span>` : ''}
+                </div>
+                <div class="product-meta" style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
+                  <span class="product-sku">${p.sku}</span>
+                  ${p.matched_keyword ? `<span class="match-kw">關鍵字：${p.matched_keyword}</span>` : ''}
+                  ${p.storage_type ? `<span style="font-size:11px;color:#6b7280">${p.storage_type}</span>` : ''}
+                  ${p.is_air_freight ? `<span style="font-size:11px;color:#6b7280">✈️ 空運</span>` : ''}
+                </div>
+              </div>
+              <div style="text-align:right">
+                ${p.sales_price ? `<div class="product-price">MOP ${p.sales_price}</div>` : ''}
+                <div style="font-size:11px;color:#9ca3af;margin-top:2px">/ ${p.unit || '-'}</div>
+              </div>
+            </div>
+          `).join('');
+        } catch {
+          results.innerHTML = '<div class="empty">搜尋失敗，請稍後重試</div>';
+        }
+      }
+    </script>
+  </body>
+</html>

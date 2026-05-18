@@ -1,0 +1,517 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>稻荷商城 — 新增訂單</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", sans-serif;
+        background: #f8fafc;
+        min-height: 100vh;
+      }
+      header {
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .back-btn { font-size: 20px; text-decoration: none; color: #374151; }
+      .header-title { font-size: 16px; font-weight: 600; }
+      .main { max-width: 640px; margin: 0 auto; padding: 20px 16px; }
+
+      /* Voice Section */
+      .voice-section {
+        background: #fff;
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 20px;
+        border: 1.5px solid #e5e7eb;
+        text-align: center;
+      }
+      .voice-btn {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3245ff 0%, #bc52ee 100%);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        transition: transform 0.1s, box-shadow 0.15s;
+        box-shadow: 0 4px 20px rgba(50,69,255,0.3);
+      }
+      .voice-btn:hover { transform: scale(1.05); }
+      .voice-btn.recording {
+        animation: pulse 1.2s ease-in-out infinite;
+        background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+        box-shadow: 0 4px 20px rgba(239,68,68,0.4);
+      }
+      @keyframes pulse {
+        0%, 100% { box-shadow: 0 4px 20px rgba(239,68,68,0.4); }
+        50% { box-shadow: 0 4px 30px rgba(239,68,68,0.7), 0 0 0 12px rgba(239,68,68,0.1); }
+      }
+      .voice-icon { font-size: 28px; }
+      .voice-status { font-size: 14px; color: #6b7280; margin-bottom: 12px; }
+      .voice-transcript {
+        background: #f9fafb;
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 14px;
+        color: #374151;
+        min-height: 44px;
+        text-align: left;
+        line-height: 1.5;
+      }
+      .parse-btn {
+        margin-top: 14px;
+        background: #3245ff;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 11px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: none;
+      }
+      .parse-btn:hover { opacity: 0.9; }
+
+      /* Text input section */
+      .text-section {
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #e5e7eb;
+      }
+      .section-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 10px; }
+      textarea {
+        width: 100%;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 11px 14px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 80px;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      textarea:focus { border-color: #3245ff; }
+      .text-parse-btn {
+        margin-top: 10px;
+        background: #f3f4f6;
+        color: #374151;
+        border: none;
+        border-radius: 8px;
+        padding: 9px 18px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .text-parse-btn:hover { background: #e5e7eb; }
+
+      /* Customer selection */
+      .customer-section {
+        background: #fff;
+        border-radius: 16px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .customer-section label { font-size: 13px; font-weight: 600; color: #374151; white-space: nowrap; }
+      .customer-section input {
+        flex: 1;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 14px;
+        outline: none;
+      }
+      .customer-section input:focus { border-color: #3245ff; }
+
+      /* Items preview */
+      .items-section {
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #e5e7eb;
+        display: none;
+      }
+      .items-section.visible { display: block; }
+      .item-row {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        background: #fafafa;
+      }
+      .item-raw { font-size: 12px; color: #9ca3af; margin-bottom: 4px; }
+      .item-matched { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .item-name { font-size: 14px; font-weight: 600; color: #111; flex: 1; }
+      .item-detail { font-size: 12px; color: #6b7280; }
+      .confidence-badge {
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+      .c-keyword { background: #d1fae5; color: #065f46; }
+      .c-fuzzy { background: #fef3c7; color: #92400e; }
+      .c-unmatched { background: #fee2e2; color: #991b1b; }
+      .item-inputs { display: flex; gap: 8px; margin-top: 8px; }
+      .item-inputs input {
+        border: 1px solid #e5e7eb;
+        border-radius: 7px;
+        padding: 6px 10px;
+        font-size: 13px;
+        outline: none;
+        width: 80px;
+      }
+      .item-inputs input:focus { border-color: #3245ff; }
+      .item-inputs .unit-input { width: 60px; }
+      .delete-item {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        color: #9ca3af;
+        padding: 2px;
+      }
+
+      /* Submit */
+      .submit-section { margin-bottom: 40px; }
+      .submit-btn {
+        width: 100%;
+        background: linear-gradient(135deg, #3245ff 0%, #bc52ee 100%);
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        padding: 16px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      .submit-btn:hover { opacity: 0.9; }
+      .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+      /* Success */
+      .success-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+      .success-overlay.show { display: flex; }
+      .success-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 40px 32px;
+        text-align: center;
+        max-width: 320px;
+        width: 90%;
+      }
+      .success-icon { font-size: 48px; margin-bottom: 16px; }
+      .success-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+      .success-no { font-size: 14px; color: #3245ff; font-weight: 600; margin-bottom: 24px; }
+      .success-actions { display: flex; gap: 12px; }
+      .btn-secondary {
+        flex: 1;
+        background: #f3f4f6;
+        color: #374151;
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-primary {
+        flex: 1;
+        background: #3245ff;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="/shop" class="back-btn">←</a>
+      <span class="header-title">新增訂單</span>
+    </header>
+
+    <div class="main">
+
+      <!-- Customer -->
+      <div class="customer-section">
+        <label for="customer-input">客戶</label>
+        <input id="customer-input" type="text" placeholder="客戶代碼或名稱" />
+      </div>
+
+      <!-- Voice input -->
+      <div class="voice-section">
+        <button class="voice-btn" id="voice-btn">
+          <span class="voice-icon">🎙️</span>
+        </button>
+        <div class="voice-status" id="voice-status">按下開始語音輸入</div>
+        <div class="voice-transcript" id="voice-transcript">（語音識別結果將顯示在這裡）</div>
+        <button class="parse-btn" id="parse-voice-btn" onclick="parseText('voice')">解析訂單 →</button>
+      </div>
+
+      <!-- Text input -->
+      <div class="text-section">
+        <div class="section-label">或手動輸入訂單</div>
+        <textarea id="text-input" placeholder="例：三文魚 20kg @105&#10;海膽 5盒&#10;甜蝦 10盒 @45"></textarea>
+        <button class="text-parse-btn" onclick="parseText('text')">解析 →</button>
+      </div>
+
+      <!-- Items preview -->
+      <div class="items-section" id="items-section">
+        <div class="section-label" style="margin-bottom:14px">訂單明細 <span id="items-count" style="color:#9ca3af;font-weight:400"></span></div>
+        <div id="items-list"></div>
+      </div>
+
+      <!-- Submit -->
+      <div class="submit-section">
+        <button class="submit-btn" id="submit-btn" disabled onclick="submitOrder()">提交草稿訂單</button>
+      </div>
+
+    </div>
+
+    <!-- Success overlay -->
+    <div class="success-overlay" id="success-overlay">
+      <div class="success-card">
+        <div class="success-icon">✅</div>
+        <div class="success-title">訂單已提交</div>
+        <div class="success-no" id="success-order-no"></div>
+        <div class="success-actions">
+          <button class="btn-secondary" onclick="newOrder()">再下一單</button>
+          <button class="btn-primary" onclick="viewOrders()">查看訂單</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { getAuth } from '/js/auth.js';
+      const auth = getAuth();
+      if (!auth.isLoggedIn) { window.location.href = '/shop/login'; }
+
+      // Pre-fill customer for B2B
+      if (auth.user?.customer_code) {
+        document.getElementById('customer-input').value = auth.user.customer_code;
+        if (auth.isB2B) document.getElementById('customer-input').disabled = true;
+      }
+    </script>
+
+    <script>
+      let recognition = null;
+      let isRecording = false;
+      let parsedItems = [];
+      let rawText = '';
+
+      // ====== Voice Recognition ======
+      const voiceBtn = document.getElementById('voice-btn');
+      const voiceStatus = document.getElementById('voice-status');
+      const voiceTranscript = document.getElementById('voice-transcript');
+      const parseVoiceBtn = document.getElementById('parse-voice-btn');
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      voiceBtn.addEventListener('click', () => {
+        if (!SpeechRecognition) {
+          voiceStatus.textContent = '此瀏覽器不支援語音識別，請使用文字輸入';
+          return;
+        }
+        if (isRecording) stopRecording();
+        else startRecording();
+      });
+
+      function startRecording() {
+        recognition = new SpeechRecognition();
+        recognition.lang = 'zh-HK'; // Cantonese
+        recognition.interimResults = true;
+        recognition.continuous = true;
+
+        recognition.onresult = (e) => {
+          let interim = '', final = '';
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            if (e.results[i].isFinal) final += e.results[i][0].transcript;
+            else interim += e.results[i][0].transcript;
+          }
+          voiceTranscript.textContent = (final || interim) || '聆聽中...';
+          if (final) rawText = (rawText + ' ' + final).trim();
+        };
+
+        recognition.onerror = (e) => {
+          voiceStatus.textContent = `識別錯誤：${e.error}`;
+          stopRecording();
+        };
+
+        recognition.onend = () => { if (isRecording) stopRecording(); };
+
+        recognition.start();
+        isRecording = true;
+        voiceBtn.classList.add('recording');
+        voiceStatus.textContent = '正在聆聽... (再按停止)';
+        voiceTranscript.textContent = '聆聽中...';
+      }
+
+      function stopRecording() {
+        if (recognition) { try { recognition.stop(); } catch {} recognition = null; }
+        isRecording = false;
+        voiceBtn.classList.remove('recording');
+        voiceStatus.textContent = '識別完成，請確認後解析';
+        if (rawText) {
+          voiceTranscript.textContent = rawText;
+          parseVoiceBtn.style.display = 'inline-block';
+        }
+      }
+
+      // ====== Parse Text ======
+      window.parseText = async function(source) {
+        const text = source === 'voice'
+          ? rawText || voiceTranscript.textContent
+          : document.getElementById('text-input').value.trim();
+
+        if (!text || text === '（語音識別結果將顯示在這裡）') {
+          alert('請先輸入訂單內容');
+          return;
+        }
+
+        voiceStatus.textContent = '解析中...';
+        document.querySelector('.text-parse-btn').textContent = '解析中...';
+
+        try {
+          const resp = await fetch('/api/voice/parse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text }),
+          });
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || '解析失敗');
+
+          parsedItems = data.items || [];
+          renderItems();
+          document.getElementById('submit-btn').disabled = parsedItems.length === 0;
+        } catch (err) {
+          alert('解析失敗：' + err.message);
+        } finally {
+          voiceStatus.textContent = '識別完成，可修改明細後提交';
+          document.querySelector('.text-parse-btn').textContent = '解析 →';
+        }
+      };
+
+      function confidenceBadge(c) {
+        const map = { keyword: ['c-keyword','關鍵字'], fuzzy: ['c-fuzzy','模糊'], unmatched: ['c-unmatched','未匹配'] };
+        const [cls, label] = map[c] || ['c-unmatched', c];
+        return `<span class="confidence-badge ${cls}">${label}</span>`;
+      }
+
+      function renderItems() {
+        const section = document.getElementById('items-section');
+        const list = document.getElementById('items-list');
+        const count = document.getElementById('items-count');
+
+        section.classList.add('visible');
+        count.textContent = `(${parsedItems.length} 項)`;
+
+        list.innerHTML = parsedItems.map((item, i) => `
+          <div class="item-row" id="item-row-${i}">
+            <div class="item-raw">原文：${item.raw || ''}</div>
+            <div class="item-matched">
+              <div class="item-name">${item.product_name || item.product_guess || '未知商品'}</div>
+              ${confidenceBadge(item.match_confidence)}
+              <button class="delete-item" onclick="removeItem(${i})" title="刪除">✕</button>
+            </div>
+            <div class="item-inputs">
+              <input type="number" step="0.01" placeholder="數量"
+                value="${item.qty || ''}"
+                onchange="updateItem(${i},'qty',this.value)"
+                title="數量" />
+              <input type="text" class="unit-input" placeholder="單位"
+                value="${item.suggested_unit || item.unit || ''}"
+                onchange="updateItem(${i},'unit',this.value)"
+                title="單位" />
+              <input type="number" step="0.01" placeholder="單價"
+                value="${item.suggested_price || item.unit_price || ''}"
+                onchange="updateItem(${i},'unit_price',this.value)"
+                title="單價 (MOP)" />
+              <span class="item-detail">${item.product_code || ''}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      window.removeItem = function(i) {
+        parsedItems.splice(i, 1);
+        renderItems();
+        document.getElementById('submit-btn').disabled = parsedItems.length === 0;
+      };
+
+      window.updateItem = function(i, field, val) {
+        if (field === 'qty' || field === 'unit_price') {
+          parsedItems[i][field === 'unit_price' ? 'suggested_price' : 'qty'] = parseFloat(val) || null;
+        } else {
+          parsedItems[i].unit = val;
+        }
+      };
+
+      // ====== Submit Order ======
+      window.submitOrder = async function() {
+        const customerCode = document.getElementById('customer-input').value.trim();
+        if (!customerCode) { alert('請填寫客戶代碼'); return; }
+        if (parsedItems.length === 0) { alert('訂單明細不能為空'); return; }
+
+        const submitBtn = document.getElementById('submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '提交中...';
+
+        try {
+          const resp = await fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customer_code: customerCode,
+              items: parsedItems,
+              raw_text: rawText || document.getElementById('text-input').value,
+              source: 'web',
+            }),
+          });
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || '提交失敗');
+
+          document.getElementById('success-order-no').textContent = data.order_no;
+          document.getElementById('success-overlay').classList.add('show');
+        } catch (err) {
+          alert('提交失敗：' + err.message);
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '提交草稿訂單';
+        }
+      };
+
+      window.newOrder = () => { window.location.reload(); };
+      window.viewOrders = () => { window.location.href = '/shop/orders'; };
+    </script>
+  </body>
+</html>

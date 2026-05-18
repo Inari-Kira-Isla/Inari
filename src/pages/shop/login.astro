@@ -1,0 +1,117 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>稻荷商城 — 登入</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", sans-serif;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f0f4ff 0%, #fdf6ff 100%);
+      }
+      .card {
+        width: 100%;
+        max-width: 380px;
+        margin: 16px;
+        background: #fff;
+        border-radius: 20px;
+        padding: 40px 32px;
+        box-shadow: 0 8px 40px rgba(50, 69, 255, 0.1);
+      }
+      .logo { font-size: 26px; font-weight: 700; color: #3245ff; margin-bottom: 4px; }
+      .subtitle { font-size: 13px; color: #9ca3af; margin-bottom: 32px; }
+      label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; }
+      input {
+        width: 100%;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 11px 14px;
+        font-size: 15px;
+        outline: none;
+        transition: border-color 0.15s;
+        margin-bottom: 16px;
+      }
+      input:focus { border-color: #3245ff; }
+      button {
+        width: 100%;
+        background: linear-gradient(135deg, #3245ff 0%, #bc52ee 100%);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 13px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      button:hover { opacity: 0.9; }
+      button:disabled { opacity: 0.5; cursor: not-allowed; }
+      .error { color: #ef4444; font-size: 13px; margin-top: 12px; min-height: 18px; }
+      .staff-link { margin-top: 20px; text-align: center; font-size: 12px; color: #9ca3af; }
+      .staff-link a { color: #6b7280; text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="logo">稻荷商城</div>
+      <div class="subtitle">INARI Global Food — 客戶訂單系統</div>
+      <form id="login-form">
+        <label for="username">用戶名</label>
+        <input id="username" type="text" placeholder="請輸入用戶名" autocomplete="username" />
+        <label for="password">密碼</label>
+        <input id="password" type="password" placeholder="請輸入密碼" autocomplete="current-password" />
+        <button type="submit" id="submit-btn">登入</button>
+      </form>
+      <p id="error" class="error"></p>
+      <p class="staff-link"><a href="/login">稻荷員工入口 →</a></p>
+    </div>
+
+    <script>
+      const form = document.getElementById("login-form");
+      const usernameInput = document.getElementById("username");
+      const passwordInput = document.getElementById("password");
+      const errorMsg = document.getElementById("error");
+      const submitBtn = document.getElementById("submit-btn");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        errorMsg.textContent = "";
+        submitBtn.disabled = true;
+        submitBtn.textContent = "登入中...";
+
+        try {
+          const res = await fetch("/api/shop-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: usernameInput.value.trim(),
+              password: passwordInput.value,
+            }),
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            window.location.href = "/shop";
+          } else {
+            errorMsg.textContent = data.error || "登入失敗，請再試一次";
+            passwordInput.value = "";
+            passwordInput.focus();
+          }
+        } catch {
+          errorMsg.textContent = "網絡錯誤，請稍後再試";
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "登入";
+        }
+      });
+    </script>
+  </body>
+</html>

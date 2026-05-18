@@ -1,0 +1,140 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "海膽最佳購買月份是什麼時候？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "日本馬糞海膽最佳購買月份是6月至8月，此時海膽肉質最肥美，旨味最濃郁。紫海膽則在9月至11月品質最佳。了解產季可以確保您獲得最佳品質的產品。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "三文魚全年都可以購買嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "是的，養殖三文魚如挪威三文魚全年供應穩定。野生三文魚如紅鮭、銀鮭則有季節性，通常在秋季（9月至11月）最為肥美。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "什麼時候購買海膽最便宜？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "海膽價格通常在夏季（6月至8月）最為實惠，因為這是日本馬糞海膽的豐產季供應充足。冬季節日前後（12月至1月）價格會上漲20-30%。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="全年進貨季節日曆 | Seasonal Calendar | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase">
+      <a href="/" class="hover:text-gold transition">Home</a>
+      <a href="#calendar" class="hover:text-gold transition">Calendar</a>
+    </div>
+  </nav>
+
+  <section class="min-h-screen pt-32 px-8 text-center">
+    <h2 class="text-sm uppercase text-gray-500 mb-4">Procurement Guide</h2>
+    <h1 class="text-4xl md:text-6xl font-light playfair mb-8">Seasonal <span class="italic">Calendar</span></h1>
+    <p class="max-w-xl mx-auto text-gray-600 mb-12">全年海膽與三文魚採購時間指南，把握最佳品質與價格。</p>
+  </section>
+
+  <section id="calendar" class="py-24 bg-white">
+    <div class="container mx-auto px-8 max-w-6xl">
+      <div class="grid md:grid-cols-12 gap-4">
+        <!-- Header -->
+        <div class="hidden md:block"></div>
+        <div class="md:col-span-2 text-center font-bold py-2">一月</div>
+        <div class="md:col-span-2 text-center font-bold py-2">二月</div>
+        <div class="md:col-span-2 text-center font-bold py-2">三月</div>
+        <div class="md:col-span-2 text-center font-bold py-2">四月</div>
+        <div class="md:col-span-2 text-center font-bold py-2">五月</div>
+        <div class="md:col-span-2 text-center font-bold py-2">六月</div>
+
+        <!-- Sea Urchin Row -->
+        <div class="md:col-span-12 font-medium py-2 border-b mt-4">🦔 海膽 Sea Urchin</div>
+        <div class="md:col-span-2 p-4 bg-gray-50 text-center text-sm">加拿大<br/>紅海膽</div>
+        <div class="md:col-span-2 p-4 bg-gray-50 text-center text-sm">加拿大<br/>紅海膽</div>
+        <div class="md:col-span-2 p-4 bg-blue-50 text-center text-sm">淡季<br/>價格高</div>
+        <div class="md:col-span-2 p-4 bg-blue-50 text-center text-sm">淡季<br/>價格高</div>
+        <div class="md:col-span-2 p-4 bg-blue-50 text-center text-sm">淡季<br/>庫存少</div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm font-bold">開始<br/>供應</div>
+
+        <!-- July-Dec -->
+        <div class="hidden md:block"></div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm font-bold">旺季<br/>最佳</div>
+        <div class="md:col-span-2 p-4 bg-green-100 text-center text-sm font-bold">最高峰<br/>最便宜</div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm font-bold">旺季<br/>優質</div>
+        <div class="md:col-span-2 p-4 bg-amber-50 text-center text-sm">紫海膽<br/>開始</div>
+        <div class="md:col-span-2 p-4 bg-amber-50 text-center text-sm">紫海膽<br/>旺季</div>
+        <div class="md:col-span-2 p-4 bg-amber-50 text-center text-sm">紫海膽<br/>旺季</div>
+
+        <!-- Salmon Row -->
+        <div class="md:col-span-12 font-medium py-2 border-b mt-8">🐟 三文魚 Salmon</div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm">旺季<br/>優質</div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm">旺季<br/>優質</div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm">旺季<br/>穩定</div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm">旺季<br/>穩定</div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm">旺季<br/>穩定</div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm">旺季<br/>穩定</div>
+
+        <!-- July-Dec -->
+        <div class="hidden md:block"></div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm">旺季<br/>穩定</div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm">旺季<br/>穩定</div>
+        <div class="md:col-span-2 p-4 bg-green-50 text-center text-sm">旺季<br/>穩定</div>
+        <div class="md:col-span-2 p-4 bg-amber-50 text-center text-sm">野生<br/>開始</div>
+        <div class="md:col-span-2 p-4 bg-amber-100 text-center text-sm font-bold">野生<br/>最高峰</div>
+        <div class="md:col-span-2 p-4 bg-amber-50 text-center text-sm">野生<br/>優質</div>
+      </div>
+
+      <!-- Legend -->
+      <div class="mt-12 flex flex-wrap justify-center gap-4 text-sm">
+        <span class="px-3 py-1 bg-green-100 rounded">旺季 - 品質最佳/價格實惠</span>
+        <span class="px-3 py-1 bg-amber-50 rounded">次旺季 - 品質好</span>
+        <span class="px-3 py-1 bg-blue-50 rounded">淡季 - 價格較高</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-warm-gray">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <h3 class="text-2xl playfair italic text-center mb-8">採購建議</h3>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-sm">
+          <h4 class="font-bold mb-2">海膽</h4>
+          <ul class="text-sm space-y-2 text-gray-600">
+            <li>• 6-8月：馬糞海膽最佳購買時機</li>
+            <li>• 9-11月：紫海膽品質最佳</li>
+            <li>• 12-2月：選擇加拿大紅海膽</li>
+            <li>• 節日前1個月開始備貨</li>
+          </ul>
+        </div>
+        <div class="bg-white p-6 rounded-sm">
+          <h4 class="font-bold mb-2">三文魚</h4>
+          <ul class="text-sm space-y-2 text-gray-600">
+            <li>• 挪威養殖三文魚全年穩定供應</li>
+            <li>• 9-11月：野生三文魚最肥美</li>
+            <li>• 刺身級建議提前預訂</li>
+            <li>• 聖誕節前價格上漲 15-20%</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="py-12 text-center text-xs text-gray-400">
+    Inari Global Foods &copy; 2026. 稻荷環球食品
+  </footer>
+</Layout>

@@ -1,8 +1,42 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "ProductGroup",
+  "name": "稻荷環球食品產品目錄",
+  "description": "來自日本、加拿大、挪威等全球頂級產區的優質海鮮產品",
+  "url": "https://inariglobal.com/products.json",
+  "variesBy": ["size", "weight", "origin"],
+  "hasProductGroupMember": [
+    {
+      "@type": "Product",
+      "name": "日本馬糞海膽",
+      "description": "來自日本北海道、根室海域的頂級馬糞海膽",
+      "brand": { "@type": "Brand", "name": "小川 (Ogawa)" },
+      "origin": "日本",
+      "offers": { "@type": "Offer", "priceCurrency": "HKD", "availability": "https://schema.org/InStock" }
+    },
+    {
+      "@type": "Product", 
+      "name": "挪威三文魚",
+      "description": "來自挪威海域的優質養殖三文魚",
+      "origin": "挪威",
+      "offers": { "@type": "Offer", "priceCurrency": "HKD", "availability": "https://schema.org/InStock" }
+    },
+    {
+      "@type": "Product",
+      "name": "日本帆立貝柱", 
+      "description": "日本進口帆立貝柱，可刺身或烹調",
+      "origin": "日本",
+      "offers": { "@type": "Offer", "priceCurrency": "HKD", "availability": "https://schema.org/InStock" }
+    }
+  ]
+};
 ---
 
 <Layout>
+	<script type="application/ld+json" set:html={JSON.stringify(productSchema)} />
 	<!-- Navbar -->
 	<nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
 		<div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>

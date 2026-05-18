@@ -1,0 +1,168 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>稻荷商城 — 訂單記錄</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", sans-serif;
+        background: #f8fafc;
+        min-height: 100vh;
+      }
+      header {
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .back-btn { font-size: 20px; text-decoration: none; color: #374151; }
+      .header-title { font-size: 16px; font-weight: 600; }
+      .main { max-width: 640px; margin: 0 auto; padding: 20px 16px; }
+      .filter-bar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+      .filter-btn {
+        background: #fff;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 20px;
+        padding: 6px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        white-space: nowrap;
+        color: #374151;
+        transition: all 0.15s;
+      }
+      .filter-btn.active { background: #3245ff; color: #fff; border-color: #3245ff; }
+      .order-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 16px 18px;
+        margin-bottom: 12px;
+        border: 1px solid #e5e7eb;
+        cursor: pointer;
+        transition: border-color 0.15s;
+      }
+      .order-card:hover { border-color: #3245ff; }
+      .order-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+      .order-no { font-size: 14px; font-weight: 700; color: #3245ff; }
+      .status-badge {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+      .status-draft { background: #fef3c7; color: #92400e; }
+      .status-confirmed { background: #d1fae5; color: #065f46; }
+      .status-invoiced { background: #dbeafe; color: #1e3a8a; }
+      .status-cancelled { background: #f3f4f6; color: #6b7280; }
+      .order-meta { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+      .order-items { font-size: 13px; color: #374151; }
+      .empty { text-align: center; color: #9ca3af; font-size: 14px; padding: 48px 0; }
+      .loading { text-align: center; color: #9ca3af; font-size: 14px; padding: 32px 0; }
+      .new-order-fab {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: linear-gradient(135deg, #3245ff 0%, #bc52ee 100%);
+        color: #fff;
+        border: none;
+        border-radius: 28px;
+        padding: 14px 22px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(50,69,255,0.35);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="/shop" class="back-btn">←</a>
+      <span class="header-title">訂單記錄</span>
+    </header>
+
+    <div class="main">
+      <div class="filter-bar">
+        <button class="filter-btn active" data-status="all" onclick="setFilter('all',this)">全部</button>
+        <button class="filter-btn" data-status="draft" onclick="setFilter('draft',this)">草稿</button>
+        <button class="filter-btn" data-status="confirmed" onclick="setFilter('confirmed',this)">已確認</button>
+        <button class="filter-btn" data-status="invoiced" onclick="setFilter('invoiced',this)">已開票</button>
+      </div>
+      <div id="orders-list"><div class="loading">載入中...</div></div>
+    </div>
+
+    <a href="/shop/order/new" class="new-order-fab">
+      <span>+</span> 新增訂單
+    </a>
+
+    <script type="module">
+      import { getAuth } from '/js/auth.js';
+      const auth = getAuth();
+      if (!auth.isLoggedIn) { window.location.href = '/shop/login'; }
+    </script>
+
+    <script>
+      let allOrders = [];
+      let currentFilter = 'all';
+
+      const statusLabels = {draft:'草稿',confirmed:'已確認',invoiced:'已開票',cancelled:'已取消'};
+
+      async function loadOrders() {
+        try {
+          const resp = await fetch('/api/orders?limit=100');
+          const data = await resp.json();
+          allOrders = data.orders || [];
+          renderOrders();
+        } catch {
+          document.getElementById('orders-list').innerHTML = '<div class="empty">載入失敗，請稍後重試</div>';
+        }
+      }
+
+      function renderOrders() {
+        const list = document.getElementById('orders-list');
+        const filtered = currentFilter === 'all' ? allOrders : allOrders.filter(o => o.status === currentFilter);
+
+        if (filtered.length === 0) {
+          list.innerHTML = '<div class="empty">沒有訂單記錄</div>';
+          return;
+        }
+
+        list.innerHTML = filtered.map(o => `
+          <div class="order-card" onclick="window.location='/shop/orders/${o.id}'">
+            <div class="order-header">
+              <div class="order-no">${o.order_no}</div>
+              <span class="status-badge status-${o.status}">${statusLabels[o.status] || o.status}</span>
+            </div>
+            <div class="order-meta">
+              ${o.customer_name || o.customer_code} · ${o.order_date} · ${o.source}
+            </div>
+            ${o.raw_text ? `<div class="order-items" style="color:#9ca3af;font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${o.raw_text.slice(0,60)}...</div>` : ''}
+          </div>
+        `).join('');
+      }
+
+      window.setFilter = function(status, btn) {
+        currentFilter = status;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderOrders();
+      };
+
+      loadOrders();
+    </script>
+  </body>
+</html>

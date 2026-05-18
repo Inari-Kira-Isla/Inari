@@ -1,35 +1,86 @@
 const COOKIE_NAME = "inari_auth";
+const COOKIE_V2 = "inari_auth_v2";
 const LOGIN_PATH = "/login";
+const SHOP_LOGIN_PATH = "/shop/login";
+
+function getCookieValue(cookieHeader, name) {
+  if (!cookieHeader) return null;
+  const match = cookieHeader
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith(`${name}=`));
+  return match ? match.slice(name.length + 1) : null;
+}
+
+function parseV2Token(token) {
+  try {
+    const decoded = atob(token);
+    const session = JSON.parse(decoded);
+    if (session.v !== 2) return null;
+    if (session.exp && session.exp < Math.floor(Date.now() / 1000)) return null;
+    return session;
+  } catch {
+    return null;
+  }
+}
 
 export async function onRequest(context) {
   const url = new URL(context.request.url);
+  const path = url.pathname;
 
-  // 不保護靜態資源和 login 頁面本身
+  // Public paths — no auth required
   if (
-    url.pathname.startsWith(LOGIN_PATH) ||
-    url.pathname === "/api/login" ||
-    url.pathname.match(/\.(css|js|svg|ico|png|jpg|woff2?)$/)
+    path.startsWith(LOGIN_PATH) ||
+    path.startsWith(SHOP_LOGIN_PATH) ||
+    path === "/api/login" ||
+    path === "/api/shop-login" ||
+    path === "/api/chat" ||
+    path === "/api/knowledge" ||
+    path.match(/\.(css|js|svg|ico|png|jpg|woff2?)$/)
   ) {
     return context.next();
   }
 
-  // 檢查認證 cookie
   const cookie = context.request.headers.get("Cookie") || "";
-  const token = cookie
-    .split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith(`${COOKIE_NAME}=`));
 
-  if (!token) {
-    return Response.redirect(new URL(LOGIN_PATH, context.request.url), 302);
+  // --- Try new v2 token (username-based login) ---
+  const v2Token = getCookieValue(cookie, COOKIE_V2);
+  if (v2Token) {
+    const session = parseV2Token(v2Token);
+    if (session) {
+      // Inject user context into request headers for downstream functions
+      const newHeaders = new Headers(context.request.headers);
+      newHeaders.set("X-User-Id", session.id || "");
+      newHeaders.set("X-User-Type", session.user_type || "staff");
+      newHeaders.set("X-User-Role", session.role || "");
+      newHeaders.set("X-Username", session.username || "");
+      newHeaders.set("X-Customer-Code", session.customer_code || "");
+
+      const newRequest = new Request(context.request, { headers: newHeaders });
+      context.request = newRequest;
+      return context.next();
+    }
   }
 
-  const expectedToken = context.env.SITE_PASSWORD || "inari2026";
-  const tokenValue = token.split("=")[1];
+  // --- Fallback: legacy single-password token (staff) ---
+  const v1Token = getCookieValue(cookie, COOKIE_NAME);
+  const expectedPassword = context.env.SITE_PASSWORD || "inari2026";
+  if (v1Token && v1Token === btoa(expectedPassword)) {
+    const newHeaders = new Headers(context.request.headers);
+    newHeaders.set("X-User-Type", "staff");
+    newHeaders.set("X-User-Role", "staff");
+    newHeaders.set("X-Username", "staff");
 
-  if (tokenValue !== btoa(expectedToken)) {
-    return Response.redirect(new URL(LOGIN_PATH, context.request.url), 302);
+    const newRequest = new Request(context.request, { headers: newHeaders });
+    context.request = newRequest;
+    return context.next();
   }
 
-  return context.next();
+  // --- Shop routes require shop login ---
+  if (path.startsWith("/shop")) {
+    return Response.redirect(new URL(SHOP_LOGIN_PATH, context.request.url), 302);
+  }
+
+  // --- Other routes: redirect to main login ---
+  return Response.redirect(new URL(LOGIN_PATH, context.request.url), 302);
 }

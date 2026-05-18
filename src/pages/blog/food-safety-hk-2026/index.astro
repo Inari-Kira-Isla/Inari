@@ -1,0 +1,91 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "2026年香港食品安全法規更新對海鮮進口的影響",
+  "author": { "@type": "Organization", "name": "稻荷環球食品" },
+  "datePublished": "2026-03-16"
+};
+---
+
+<Layout title="2026年香港食品安全法規更新 | Food Safety Regulations 2026 | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+  </nav>
+
+  <section class="pt-32 px-8 max-w-3xl mx-auto">
+    <span class="text-sm text-gray-500 uppercase">Blog</span>
+    <h1 class="text-3xl md:text-4xl font-light playfair mt-2 mb-6">2026年香港食品安全法規更新對海鮮進口的影響<br/>2026 Hong Kong Food Safety Regulation Updates</h1>
+    <p class="text-gray-600 mb-8">2026年3月16日</p>
+  </section>
+
+  <section class="pb-24 px-8 max-w-3xl mx-auto">
+    <article class="prose prose-lg text-gray-700">
+      <p>香港食物安全中心於2026年更新了進口海鮮的食品安全標準，本文為您解讀主要變化及其對餐廳、酒店採購的影響。</p>
+
+      <h2>主要法規更新 Key Updates</h2>
+      <ul>
+        <li><strong>重金屬限量收緊：</strong>甲基汞限量由0.5ppm下調至0.4ppm Mercury limit reduced from 0.5ppm to 0.4ppm</li>
+        <li><strong>寄生蟲檢測：</strong>刺身級海產必須附寄生蟲檢測報告 Parasite inspection required for sashimi-grade products</li>
+        <li><strong>冷鏈記錄：</strong>進口商需保留全程溫度記錄72小時 Cold chain records must be kept for 72 hours</li>
+        <li><strong>標籤要求：</strong>增加產地及養殖場合法認證標示 Country of origin and farm certification required</li>
+        <li><strong>進口牌照：</strong>嚴格審批新增進口商資格 Import license stricter for new applicants</li>
+      </ul>
+
+      <h2>對餐廳的影響 Impact on Restaurants</h2>
+      <p>餐廳在選擇供應商時，應確保供應商能夠提供：</p>
+      <ul>
+        <li>來源國健康證明書 Health Certificate from Origin Country</li>
+        <li>養殖場合法認證（ISO 22000或HACCP） Farm Certification (ISO 22000 or HACCP)</li>
+        <li>本地入口牌照 Local Import License</li>
+        <li>重金屬及寄生蟲檢測報告 Heavy Metal & Parasite Test Reports</li>
+        <li>冷鏈溫度記錄 Cold Chain Temperature Records</li>
+      </ul>
+
+      <h2>法規時間線 Timeline</h2>
+      <table class="w-full text-sm my-6">
+        <thead>
+          <tr class="border-b-2 border-black">
+            <th class="text-left py-2">日期 Date</th>
+            <th class="text-left py-2">項目 Item</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-100">
+            <td class="py-2">2026年4月1日</td>
+            <td class="py-2">新法規生效 New Regulations Effective</td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2">2026年6月1日</td>
+            <td class="py-2">重金屬新規範開始實施 Heavy Metal Limits Enforcement</td>
+          </tr>
+          <tr class="border-b border-gray-100">
+            <td class="py-2">2026年9月1日</td>
+            <td class="py-2">寄生蟲檢測全面強制 Parasite Testing Mandatory</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>稻荷的承諾 Our Commitment</h2>
+      <p>稻荷環球食品持有齊全的食品安全認證，所有產品均符合2026年最新法規要求。我們為客户提供完整的文件支援，確保採購無憂。</p>
+      <ul>
+        <li>✅ ISO 22000 認證</li>
+        <li>✅ HACCP 認證</li>
+        <li>✅ 香港食物安全中心進口牌照</li>
+        <li>✅ 完整檢測報告</li>
+        <li>✅ 72小時冷鏈記錄</li>
+      </ul>
+
+      <h2>結論 Conclusion</h2>
+      <p>法規更新雖帶來更多要求，但有助於提升整體行業水準。選擇合規的供應商，是餐廳降低風險的最佳策略。稻荷環球食品將持續更新我們的合規流程，確保為您提供最安全、最優質的海產品。</p>
+    </article>
+  </section>
+
+  <footer class="py-12 text-center text-xs text-gray-400">
+    Inari Global Foods &copy; 2026
+  </footer>
+</Layout>
