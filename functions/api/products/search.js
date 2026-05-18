@@ -2,7 +2,7 @@
 // Queries Supabase inari_products JOIN inari_product_keywords
 // Returns matching products with match_type (keyword | name)
 
-const SUPABASE_URL = "https://yitmabzsxfgbchhhjjef.supabase.co";
+const SUPABASE_URL = "https://cqartwwsbxnjjatmndtt.supabase.co";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",

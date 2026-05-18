@@ -2,7 +2,7 @@
 // Body: {text: "三文魚20公斤105蚊", customer_code?: "SJZ"}
 // Returns parsed order items with product matches
 
-const SUPABASE_URL = "https://yitmabzsxfgbchhhjjef.supabase.co";
+const SUPABASE_URL = "https://cqartwwsbxnjjatmndtt.supabase.co";
 const MINIMAX_API_URL = "https://api.minimax.io/anthropic/v1/messages";
 
 const CORS_HEADERS = {
