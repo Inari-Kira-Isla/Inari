@@ -35,7 +35,8 @@ function todayStr() {
 function generateOrderNo(customerCode) {
   const d = new Date();
   const datePart = d.toISOString().slice(0, 10).replace(/-/g, "");
-  const code = (customerCode || "UNK").toUpperCase().slice(0, 6);
+  const raw = (customerCode || "STA").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const code = (raw.slice(0, 4) || "STA") + Math.random().toString(36).slice(2, 4).toUpperCase();
   return `ORD-${datePart}-${code}`;
 }
 
@@ -144,17 +145,21 @@ export async function onRequestPost(context) {
       qty,
       unit: item.suggested_unit || item.unit || null,
       unit_price,
-      amount: unit_price ? qty * unit_price : null,
       match_confidence: item.match_confidence || "unmatched",
       tenant_id: TENANT_ID,
     };
   });
 
-  await fetch(`${SUPABASE_URL}/rest/v1/inari_customer_order_items`, {
+  const itemsResp = await fetch(`${SUPABASE_URL}/rest/v1/inari_customer_order_items`, {
     method: "POST",
     headers,
     body: JSON.stringify(itemPayloads),
   });
+
+  if (!itemsResp.ok) {
+    const errText = await itemsResp.text();
+    console.error("Items insert failed:", errText);
+  }
 
   return new Response(
     JSON.stringify({ ok: true, order_no: orderNo, order_id: orderId }),
