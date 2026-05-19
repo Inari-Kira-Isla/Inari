@@ -116,6 +116,16 @@
           <div class="menu-title">文字下單</div>
           <div class="menu-desc">手動輸入訂單明細</div>
         </a>
+        <a href="/shop/catalog" class="menu-card">
+          <div class="menu-icon">🛒</div>
+          <div class="menu-title">商品目錄</div>
+          <div class="menu-desc">瀏覽商品，加入購物車</div>
+        </a>
+        <a href="/shop/checkout" class="menu-card">
+          <div class="menu-icon">💳</div>
+          <div class="menu-title">購物車結帳</div>
+          <div class="menu-desc" id="cart-count-desc">查看購物車並結帳</div>
+        </a>
       </div>
 
       <div class="recent-orders">
@@ -136,6 +146,19 @@
       }
 
       window.logout = () => { doLogout(); };
+
+      // Show cart count in checkout card
+      try {
+        const cartRaw = localStorage.getItem('inari_cart');
+        if (cartRaw) {
+          const cart = JSON.parse(cartRaw);
+          const count = (cart.items || []).reduce((s, i) => s + (i.qty || 0), 0);
+          if (count > 0) {
+            const desc = document.getElementById('cart-count-desc');
+            if (desc) desc.textContent = `購物車 ${count} 件商品`;
+          }
+        }
+      } catch {}
 
       if (auth.isStaff || auth.user?.user_type === 'manager') {
         const menuGrid = document.querySelector('.menu-grid');
