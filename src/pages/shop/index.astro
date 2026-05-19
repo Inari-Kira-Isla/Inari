@@ -4,135 +4,165 @@
 <html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>稻荷商城</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", sans-serif;
-        background: #f8fafc;
-        min-height: 100vh;
-      }
-      header {
-        background: #fff;
-        border-bottom: 1px solid #e5e7eb;
-        padding: 14px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .logo { font-size: 18px; font-weight: 700; color: #3245ff; }
-      .user-info { font-size: 13px; color: #6b7280; }
-      .logout-btn {
-        background: none;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 6px 12px;
-        font-size: 12px;
-        cursor: pointer;
-        color: #6b7280;
-      }
-      .main { max-width: 600px; margin: 0 auto; padding: 24px 16px; }
-      h2 { font-size: 22px; font-weight: 700; color: #111; margin-bottom: 20px; }
-      .menu-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 14px;
-        margin-bottom: 32px;
-      }
-      .menu-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 24px 20px;
-        text-decoration: none;
-        color: #111;
-        border: 1.5px solid #e5e7eb;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        transition: border-color 0.15s, box-shadow 0.15s;
-      }
-      .menu-card:hover { border-color: #3245ff; box-shadow: 0 4px 16px rgba(50,69,255,0.08); }
-      .menu-card.admin-card { border-color: #c0392b; }
-      .menu-card.admin-card:hover { border-color: #a93226; box-shadow: 0 4px 16px rgba(192,57,43,0.15); }
-      .menu-icon { font-size: 28px; }
-      .menu-title { font-size: 15px; font-weight: 600; }
-      .menu-desc { font-size: 12px; color: #9ca3af; }
-      .recent-orders h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
-      .order-row {
-        background: #fff;
-        border-radius: 12px;
-        padding: 14px 16px;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border: 1px solid #e5e7eb;
-      }
-      .order-no { font-size: 13px; font-weight: 600; color: #3245ff; }
-      .order-meta { font-size: 12px; color: #9ca3af; margin-top: 2px; }
-      .status-badge {
-        font-size: 11px;
-        padding: 3px 10px;
-        border-radius: 20px;
-        font-weight: 500;
-      }
-      .status-draft { background: #fef3c7; color: #92400e; }
-      .status-confirmed { background: #d1fae5; color: #065f46; }
-      .status-invoiced { background: #dbeafe; color: #1e3a8a; }
-      .empty { text-align: center; color: #9ca3af; font-size: 14px; padding: 32px 0; }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
   </head>
   <body>
-    <header>
-      <div class="logo">稻荷商城</div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span id="user-display" class="user-info"></span>
-        <button class="logout-btn" onclick="logout()">登出</button>
+    <!-- App header -->
+    <div class="app-header">
+      <div class="brand">
+        <div class="mark">稻</div>
+        <div>
+          <div class="name">稻荷商城</div>
+          <div class="sub">INARI · MARKET</div>
+        </div>
       </div>
-    </header>
-
-    <div class="main">
-      <h2>你好 👋</h2>
-
-      <div class="menu-grid">
-        <a href="/shop/order/new" class="menu-card">
-          <div class="menu-icon">🎙️</div>
-          <div class="menu-title">語音下單</div>
-          <div class="menu-desc">說出訂單，自動識別商品</div>
-        </a>
-        <a href="/shop/orders" class="menu-card">
-          <div class="menu-icon">📋</div>
-          <div class="menu-title">訂單記錄</div>
-          <div class="menu-desc">查看歷史訂單狀態</div>
-        </a>
-        <a href="/shop/search" class="menu-card">
-          <div class="menu-icon">🔍</div>
-          <div class="menu-title">商品搜尋</div>
-          <div class="menu-desc">搜尋稻荷商品目錄</div>
-        </a>
-        <a href="/shop/order/new?mode=text" class="menu-card">
-          <div class="menu-icon">✏️</div>
-          <div class="menu-title">文字下單</div>
-          <div class="menu-desc">手動輸入訂單明細</div>
-        </a>
-        <a href="/shop/catalog" class="menu-card">
-          <div class="menu-icon">🛒</div>
-          <div class="menu-title">商品目錄</div>
-          <div class="menu-desc">瀏覽商品，加入購物車</div>
-        </a>
-        <a href="/shop/checkout" class="menu-card">
-          <div class="menu-icon">💳</div>
-          <div class="menu-title">購物車結帳</div>
-          <div class="menu-desc" id="cart-count-desc">查看購物車並結帳</div>
-        </a>
-      </div>
-
-      <div class="recent-orders">
-        <h3>最近訂單</h3>
-        <div id="orders-list"><div class="empty">載入中...</div></div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="icon-btn" aria-label="通知">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0"/></svg>
+        </button>
+        <button class="icon-btn" aria-label="帳號" onclick="window.location.href='/shop/login'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+        </button>
       </div>
     </div>
+
+    <!-- Scrollable content -->
+    <div class="screen-scroll" style="flex:1;padding-bottom:4px">
+      <!-- Page title -->
+      <div class="page-title">
+        <div class="eyebrow" id="today-eyebrow">— · —</div>
+        <h1 id="greeting-h1">早安</h1>
+        <div class="meta" id="user-meta">載入中...</div>
+      </div>
+
+      <!-- Today's freight callout -->
+      <div style="padding:4px 18px 14px">
+        <div style="background:var(--ink);color:var(--paper);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px">
+          <div style="width:40px;height:40px;border-radius:10px;background:oklch(28% 0.04 245);display:grid;place-items:center;flex-shrink:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M21 16v-2l-9-5V3.5a1.5 1.5 0 0 0-3 0V9l-9 5v2l9-2.5V19l-2 1.5V22l3.5-1L14 22v-1.5L12 19v-5.5z"/></svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-size:11px;opacity:.7;letter-spacing:.06em">今日空運 · 14:30 抵達</div>
+            <div style="font-weight:700;font-size:14px;margin-top:2px">北海道海膽、活毛蟹、青森帆立貝</div>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;opacity:.5;flex-shrink:0"><path d="m9 6 6 6-6 6"/></svg>
+        </div>
+      </div>
+
+      <!-- Quick tile grid -->
+      <div class="tile-grid">
+        <button class="tile dark" onclick="window.location.href='/shop/order/new'">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </div>
+          <div>
+            <h3>語音下單</h3>
+            <div class="desc">說出商品 · 自動辨識</div>
+          </div>
+        </button>
+        <button class="tile sea" onclick="window.location.href='/shop/catalog'">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </div>
+          <div>
+            <h3>商品目錄</h3>
+            <div class="desc">649 件 · 18 個分類</div>
+          </div>
+        </button>
+        <button class="tile" onclick="window.location.href='/shop/order/new?mode=text'">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7v12M15 7v12"/></svg>
+          </div>
+          <div>
+            <h3>文字下單</h3>
+            <div class="desc">輸入清單</div>
+          </div>
+        </button>
+        <button class="tile" onclick="window.location.href='/shop/search'">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          </div>
+          <div>
+            <h3>商品搜尋</h3>
+            <div class="desc">SKU · 關鍵字</div>
+          </div>
+        </button>
+        <button class="tile" onclick="window.location.href='/shop/orders'">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a2 2 0 0 1 2 2v14l-5-2-5 2V6a2 2 0 0 1 2-2z"/></svg>
+          </div>
+          <div>
+            <h3>訂單記錄</h3>
+            <div class="desc" id="orders-tile-desc">本月訂單</div>
+          </div>
+        </button>
+        <button class="tile coral" id="cart-tile" onclick="window.location.href='/shop/checkout'">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/></svg>
+          </div>
+          <div>
+            <h3>購物車結帳</h3>
+            <div class="desc" id="cart-tile-desc">無商品</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Staff card (hidden by default) -->
+      <div id="staff-card" style="padding:0 18px 18px;display:none">
+        <button class="tile staff" style="width:100%;aspect-ratio:auto;flex-direction:row;align-items:center;gap:14px;padding:14px 16px"
+          onclick="window.location.href='/shop/admin/orders'">
+          <div class="icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2l-.4-2.5h-4l-.4 2.5a7 7 0 0 0-2 1.2L5.4 6 3.4 9.4l2 1.5A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2l.4 2.5h4l.4-2.5a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5A7 7 0 0 0 19 12z"/></svg>
+          </div>
+          <div style="text-align:left;flex:1">
+            <h3 style="font-size:14px">員工訂單管理</h3>
+            <div class="desc" id="staff-orders-desc">訂單管理後台</div>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold-ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0"><path d="m9 6 6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <!-- Recent orders -->
+      <div class="section-head">
+        <h2>近期訂單</h2>
+        <a class="link" href="/shop/orders" style="color:var(--sea);font-size:12px;font-weight:500;text-decoration:none">查看全部</a>
+      </div>
+      <div style="padding:0 18px 120px">
+        <div class="card" id="orders-card">
+          <div style="padding:20px;text-align:center;color:var(--mute);font-size:13px">載入中...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <nav class="tab-bar">
+      <button onclick="window.location.href='/shop'" id="tab-home" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg>
+        <span>首頁</span>
+      </button>
+      <button onclick="window.location.href='/shop/catalog'" id="tab-catalog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>目錄</span>
+      </button>
+      <button onclick="window.location.href='/shop/order/new'" id="tab-voice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        <span>下單</span>
+      </button>
+      <button onclick="window.location.href='/shop/orders'" id="tab-orders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a2 2 0 0 1 2 2v14l-5-2-5 2V6a2 2 0 0 1 2-2z"/></svg>
+        <span>訂單</span>
+      </button>
+      <button onclick="window.location.href='/shop/checkout'" id="tab-cart" style="position:relative">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        <span>購物車</span>
+        <span class="dot" id="cart-dot" style="display:none"></span>
+      </button>
+    </nav>
 
     <script type="module">
       import { getAuth, logout as doLogout } from '/js/auth.js';
@@ -140,63 +170,98 @@
       const auth = getAuth();
       if (!auth.isLoggedIn) { window.location.href = '/shop/login'; }
 
-      const display = document.getElementById('user-display');
+      // Greetings
+      const now = new Date();
+      const hour = now.getHours();
+      const greeting = hour < 12 ? '早安' : hour < 18 ? '你好' : '晚安';
+      document.getElementById('greeting-h1').textContent = greeting + (auth.user?.username ? `，${auth.user.username}` : '');
+
+      const days = ['週日','週一','週二','週三','週四','週五','週六'];
+      const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 · ${days[now.getDay()]}`;
+      document.getElementById('today-eyebrow').textContent = dateStr;
+
       if (auth.user) {
-        display.textContent = auth.user.username + (auth.user.customer_code ? ` (${auth.user.customer_code})` : '');
+        const code = auth.user.customer_code || '';
+        const role = auth.user.user_type === 'manager' ? '管理員' : 'B2B 採購員';
+        document.getElementById('user-meta').innerHTML = code
+          ? `客戶 <span style="font-family:var(--mono);color:var(--ink)">${code}</span> · ${role}`
+          : role;
       }
 
-      window.logout = () => { doLogout(); };
+      // Show staff card
+      if (auth.isStaff || auth.user?.user_type === 'manager') {
+        document.getElementById('staff-card').style.display = 'block';
+      }
 
-      // Show cart count in checkout card
+      // Cart count
       try {
         const cartRaw = localStorage.getItem('inari_cart');
         if (cartRaw) {
           const cart = JSON.parse(cartRaw);
-          const count = (cart.items || []).reduce((s, i) => s + (i.qty || 0), 0);
+          const items = cart.items || [];
+          const count = items.reduce((s, i) => s + (i.qty || 0), 0);
+          const total = items.reduce((s, i) => s + (i.line_total || i.qty * i.unit_price || 0), 0);
           if (count > 0) {
-            const desc = document.getElementById('cart-count-desc');
-            if (desc) desc.textContent = `購物車 ${count} 件商品`;
+            document.getElementById('cart-dot').style.display = 'block';
+            document.getElementById('cart-tile-desc').textContent = `${count} 件 · MOP ${total.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+            // Add corner badge to cart tile
+            const cartTile = document.getElementById('cart-tile');
+            const corner = document.createElement('div');
+            corner.className = 'corner cart-count';
+            corner.textContent = count;
+            cartTile.appendChild(corner);
           }
         }
       } catch {}
-
-      if (auth.isStaff || auth.user?.user_type === 'manager') {
-        const menuGrid = document.querySelector('.menu-grid');
-        if (menuGrid) {
-          const adminCard = document.createElement('a');
-          adminCard.href = '/shop/admin/orders';
-          adminCard.className = 'menu-card admin-card';
-          adminCard.innerHTML = '<div class="menu-icon">⚙️</div><div class="menu-title">訂單管理</div><div class="menu-desc">查看/確認/開單</div>';
-          menuGrid.appendChild(adminCard);
-        }
-      }
 
       // Load recent orders
       fetch('/api/orders?limit=5')
         .then(r => r.json())
         .then(data => {
-          const list = document.getElementById('orders-list');
+          const card = document.getElementById('orders-card');
           const orders = data.orders || [];
           if (orders.length === 0) {
-            list.innerHTML = '<div class="empty">暫無訂單記錄</div>';
+            card.innerHTML = '<div style="padding:24px;text-align:center;color:var(--mute);font-size:13px">暫無訂單記錄</div>';
             return;
           }
-          list.innerHTML = orders.map(o => `
-            <div class="order-row">
-              <div>
-                <div class="order-no">${o.order_no}</div>
-                <div class="order-meta">${o.customer_name || o.customer_code} · ${o.order_date}</div>
+
+          card.innerHTML = orders.map((o, i) => {
+            const isLast = i === orders.length - 1;
+            const isMic = o.source === 'voice';
+            const micSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>`;
+            const bagSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/></svg>`;
+            const badge = statusBadge(o.status);
+            const amt = Number(o.amount || 0).toLocaleString('en-US',{maximumFractionDigits:0});
+            return `<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;${isLast ? '' : 'border-bottom:1px solid var(--hairline)'};cursor:pointer"
+              onclick="window.location.href='/shop/orders'">
+              <div style="width:44px;height:44px;border-radius:10px;display:grid;place-items:center;background:var(--mist);color:var(--ink-2);flex-shrink:0">
+                ${isMic ? micSvg : bagSvg}
               </div>
-              <span class="status-badge status-${o.status}">${statusLabel(o.status)}</span>
-            </div>
-          `).join('');
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
+                  <div style="font-family:var(--mono);font-size:12px;font-weight:600">${o.order_no}</div>
+                  ${badge}
+                </div>
+                <div style="font-size:11.5px;color:var(--mute);margin-top:4px">
+                  ${o.customer_name || o.customer_code || ''} · MOP ${amt} · ${o.delivery_date || o.order_date || ''}
+                </div>
+              </div>
+            </div>`;
+          }).join('');
         })
         .catch(() => {
-          document.getElementById('orders-list').innerHTML = '<div class="empty">無法載入訂單</div>';
+          document.getElementById('orders-card').innerHTML = '<div style="padding:24px;text-align:center;color:var(--mute);font-size:13px">無法載入訂單</div>';
         });
 
-      function statusLabel(s) {
-        return {draft:'草稿',confirmed:'已確認',invoiced:'已開票',cancelled:'已取消'}[s] || s;
+      function statusBadge(status) {
+        const map = {
+          draft: ['amber', '草稿'],
+          confirmed: ['leaf', '已確認'],
+          invoiced: ['sea', '已開單'],
+          cancelled: ['slate', '已取消'],
+        };
+        const [tone, label] = map[status] || ['amber', '草稿'];
+        return `<span class="badge ${tone}"><span class="dot"></span>${label}</span>`;
       }
     </script>
   </body>

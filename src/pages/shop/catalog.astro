@@ -2,267 +2,459 @@
 ---
 <!doctype html>
 <html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>稻荷商城 — 商品目錄</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;background:#f8fafc;min-height:100vh}
-    
-    /* Header */
-    .shop-header{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 20px;height:60px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-    .back-btn{font-size:20px;text-decoration:none;color:#374151;flex-shrink:0}
-    .header-logo{font-size:16px;font-weight:700;color:#c0392b;flex-shrink:0}
-    .header-search{flex:1;max-width:360px;position:relative}
-    .header-search input{width:100%;border:1.5px solid #e5e7eb;border-radius:24px;padding:8px 16px 8px 36px;font-size:14px;outline:none;background:#f8fafc;transition:border-color .15s}
-    .header-search input:focus{border-color:#c0392b;background:#fff}
-    .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px;pointer-events:none}
-    .cart-btn{position:relative;background:none;border:none;cursor:pointer;font-size:24px;padding:4px;flex-shrink:0;margin-left:auto}
-    .cart-badge{position:absolute;top:-4px;right:-4px;background:#c0392b;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:700;display:none;align-items:center;justify-content:center;line-height:1}
-    
-    /* Layout */
-    .catalog-layout{display:grid;grid-template-columns:180px 1fr;gap:0;max-width:1280px;margin:0 auto}
-    @media(max-width:768px){.catalog-layout{grid-template-columns:1fr}}
-    
-    /* Category sidebar */
-    .category-sidebar{background:#fff;border-right:1px solid #e5e7eb;padding:16px 0;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
-    @media(max-width:768px){.category-sidebar{position:static;height:auto;display:flex;overflow-x:auto;padding:12px 16px;gap:8px;border-right:none;border-bottom:1px solid #e5e7eb;scrollbar-width:none}}
-    @media(max-width:768px){.category-sidebar::-webkit-scrollbar{display:none}}
-    .cat-btn{display:block;width:100%;text-align:left;padding:11px 20px;border:none;background:none;cursor:pointer;font-size:14px;color:#374151;transition:background .15s;border-left:3px solid transparent}
-    @media(max-width:768px){.cat-btn{flex-shrink:0;border-radius:20px;border:1.5px solid #e5e7eb;padding:7px 14px;white-space:nowrap;border-left:1.5px solid #e5e7eb}}
-    .cat-btn:hover{background:#fef2f2;color:#c0392b}
-    .cat-btn.active{background:#fef2f2;color:#c0392b;font-weight:600;border-left-color:#c0392b}
-    @media(max-width:768px){.cat-btn.active{background:#c0392b;color:#fff;border-color:#c0392b}}
-    
-    /* Product area */
-    .product-area{padding:20px 24px}
-    @media(max-width:768px){.product-area{padding:16px}}
-    .result-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    .result-info{font-size:13px;color:#6b7280}
-    
-    /* Product grid */
-    .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:16px}
-    @media(max-width:640px){.product-grid{grid-template-columns:repeat(2,1fr);gap:12px}}
-    
-    /* Product card */
-    .product-card{background:#fff;border-radius:14px;border:1px solid #e5e7eb;overflow:hidden;transition:box-shadow .2s,transform .2s;display:flex;flex-direction:column}
-    .product-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.1);transform:translateY(-2px)}
-    .product-img{aspect-ratio:1;overflow:hidden;background:#f8fafc;position:relative}
-    .product-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
-    .product-card:hover .product-img img{transform:scale(1.05)}
-    .badge-air{position:absolute;top:8px;left:8px;background:#3b82f6;color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px}
-    .badge-frozen{position:absolute;top:8px;left:8px;background:#06b6d4;color:#fff;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px}
-    .product-info{padding:10px 12px;flex:1}
-    .product-sku{font-size:10px;color:#9ca3af;letter-spacing:.5px;text-transform:uppercase}
-    .product-name{font-size:13px;font-weight:600;color:#1f2937;margin:3px 0 6px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .product-price{font-size:17px;font-weight:700;color:#c0392b}
-    .product-unit{font-size:11px;color:#9ca3af;font-weight:400}
-    .product-actions{padding:10px 12px;border-top:1px solid #f3f4f6}
-    .qty-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
-    .qty-btn{width:30px;height:30px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer;font-size:16px;color:#374151;display:flex;align-items:center;justify-content:center;transition:border-color .15s}
-    .qty-btn:hover{border-color:#c0392b;color:#c0392b}
-    .qty-input{flex:1;border:1.5px solid #e5e7eb;border-radius:8px;padding:5px;text-align:center;font-size:14px;font-weight:600;outline:none;min-width:0}
-    .qty-input:focus{border-color:#c0392b}
-    .add-btn{width:100%;background:#c0392b;color:#fff;border:none;border-radius:10px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:6px}
-    .add-btn:hover{background:#a93226}
-    .add-btn.added{background:#27ae60}
-    
-    /* Load more */
-    .load-more-wrap{text-align:center;padding:32px 0}
-    .load-more-btn{background:#fff;border:2px solid #c0392b;color:#c0392b;padding:12px 32px;border-radius:24px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
-    .load-more-btn:hover{background:#c0392b;color:#fff}
-    
-    /* Skeleton */
-    .skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
-    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-    
-    /* Empty state */
-    .empty-state{text-align:center;padding:60px 20px;color:#9ca3af}
-    .empty-icon{font-size:48px;margin-bottom:12px}
-  </style>
-</head>
-<body>
-  <header class="shop-header">
-    <a href="/shop" class="back-btn">←</a>
-    <span class="header-logo">稻荷商城</span>
-    <div class="header-search">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="header-search" placeholder="搜尋商品名稱或SKU..." autocomplete="off" oninput="debounceSearch(this.value)">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>稻荷商城 — 商品目錄</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      /* Skeleton animation */
+      .skeleton {
+        background: linear-gradient(90deg, var(--paper-2) 25%, var(--mist) 50%, var(--paper-2) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+      }
+      @keyframes shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- App header with search -->
+    <div class="app-header">
+      <button class="icon-btn" onclick="window.location.href='/shop'" aria-label="返回">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div style="flex:1;padding:0 8px">
+        <div style="position:relative">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+            style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--mute);pointer-events:none">
+            <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+          </svg>
+          <input class="search-input" id="catalog-search" placeholder="搜尋 SKU 或商品名稱…" oninput="debounceSearch(this.value)" />
+        </div>
+      </div>
+      <button class="icon-btn" id="cart-btn" onclick="openDrawer()" aria-label="購物車" style="position:relative">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.6 12.3a2 2 0 0 0 2 1.7h7.8a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>
+        <span id="cart-badge" style="display:none;position:absolute;top:4px;right:4px;background:var(--coral);color:white;font-size:9px;font-weight:700;font-family:var(--mono);border-radius:999px;padding:1px 5px;min-width:16px;text-align:center"></span>
+      </button>
     </div>
-    <button class="cart-btn" onclick="openCartPanel()" aria-label="購物車">
-      🛒
-      <span class="cart-badge" id="cart-badge-header"></span>
-    </button>
-  </header>
 
-  <div class="catalog-layout">
-    <aside class="category-sidebar" id="category-sidebar">
-      <button class="cat-btn active" data-cat="" onclick="selectCategory('', this)">全部商品</button>
-      <!-- categories injected by JS -->
+    <!-- Page title -->
+    <div class="page-title" style="padding-top:10px;padding-bottom:8px">
+      <div class="eyebrow">商品目錄 · <span id="total-count">—</span> 件</div>
+      <h1 style="font-size:22px">今日上架</h1>
+    </div>
+
+    <!-- Category pill rail -->
+    <div class="pill-rail" id="pill-rail">
+      <button class="pill active" data-cat="" onclick="selectCat('',this)">全部 <span class="ct" id="pill-ct-all">—</span></button>
+    </div>
+
+    <!-- Scrollable product grid -->
+    <div class="screen-scroll" style="flex:1">
+      <div id="product-grid" style="padding:4px 18px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <!-- skeleton placeholders -->
+        <div class="product-card"><div class="thumb skeleton" style="aspect-ratio:1"></div><div class="body"><div class="skeleton" style="height:10px;width:60%;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
+        <div class="product-card"><div class="thumb skeleton" style="aspect-ratio:1"></div><div class="body"><div class="skeleton" style="height:10px;width:60%;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
+        <div class="product-card"><div class="thumb skeleton" style="aspect-ratio:1"></div><div class="body"><div class="skeleton" style="height:10px;width:60%;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
+        <div class="product-card"><div class="thumb skeleton" style="aspect-ratio:1"></div><div class="body"><div class="skeleton" style="height:10px;width:60%;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
+      </div>
+      <div style="padding:0 18px 120px">
+        <button id="load-more-btn" class="btn ghost block" style="display:none" onclick="loadMore()">載入更多商品</button>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <nav class="tab-bar">
+      <button onclick="window.location.href='/shop'" id="tab-home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg>
+        <span>首頁</span>
+      </button>
+      <button onclick="window.location.href='/shop/catalog'" id="tab-catalog" class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>目錄</span>
+      </button>
+      <button onclick="window.location.href='/shop/order/new'" id="tab-voice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        <span>下單</span>
+      </button>
+      <button onclick="window.location.href='/shop/orders'" id="tab-orders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6a2 2 0 0 1 2 2v14l-5-2-5 2V6a2 2 0 0 1 2-2z"/></svg>
+        <span>訂單</span>
+      </button>
+      <button onclick="window.location.href='/shop/checkout'" id="tab-cart" style="position:relative">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        <span>購物車</span>
+        <span class="dot" id="cart-dot" style="display:none"></span>
+      </button>
+    </nav>
+
+    <!-- Cart drawer -->
+    <div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+    <aside class="drawer" id="cart-drawer">
+      <div class="hd">
+        <h3>購物車 <span style="color:var(--mute);font-weight:500;font-size:13px" id="drawer-count">· 0 件</span></h3>
+        <button class="icon-btn" onclick="closeDrawer()" aria-label="關閉">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="items" id="drawer-items">
+        <div style="padding:40px 20px;text-align:center;color:var(--mute);font-size:13px">購物車內無商品</div>
+      </div>
+      <div class="ft" id="drawer-ft" style="display:none">
+        <div class="total-row">
+          <span class="lbl">合計</span>
+          <span class="val" id="drawer-total">MOP 0</span>
+        </div>
+        <button class="btn coral block lg" onclick="window.location.href='/shop/checkout'">
+          前往結帳
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
     </aside>
 
-    <main class="product-area">
-      <div class="result-bar">
-        <span class="result-info">共 <strong id="result-count">—</strong> 件商品</span>
-      </div>
-      <div id="product-grid" class="product-grid">
-        <!-- skeleton placeholders -->
-        <div class="product-card"><div class="product-img skeleton"></div><div class="product-info"><div class="skeleton" style="height:10px;width:40%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:4px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
-        <div class="product-card"><div class="product-img skeleton"></div><div class="product-info"><div class="skeleton" style="height:10px;width:40%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:4px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
-        <div class="product-card"><div class="product-img skeleton"></div><div class="product-info"><div class="skeleton" style="height:10px;width:40%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:4px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
-        <div class="product-card"><div class="product-img skeleton"></div><div class="product-info"><div class="skeleton" style="height:10px;width:40%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:4px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
-        <div class="product-card"><div class="product-img skeleton"></div><div class="product-info"><div class="skeleton" style="height:10px;width:40%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:4px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
-        <div class="product-card"><div class="product-img skeleton"></div><div class="product-info"><div class="skeleton" style="height:10px;width:40%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:4px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
-        <div class="product-card"><div class="product-img skeleton"></div><div class="product-info"><div class="skeleton" style="height:10px;width:40%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:4px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
-        <div class="product-card"><div class="product-img skeleton"></div><div class="product-info"><div class="skeleton" style="height:10px;width:40%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:4px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
-      </div>
-      <div class="load-more-wrap">
-        <button id="load-more-btn" class="load-more-btn" onclick="loadMore()" style="display:none">載入更多商品</button>
-      </div>
-    </main>
-  </div>
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <span class="check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="m5 12 5 5L20 7"/></svg>
+      </span>
+      <span id="toast-msg"></span>
+    </div>
 
-  <script type="module">
-    import { initCart, addToCart, openCartPanel } from '/js/cart.js';
-    initCart();
-    window.openCartPanel = openCartPanel;
+    <script type="module">
+      import { getAuth } from '/js/auth.js';
+      import { addToCart, getCart, getCartTotal, updateCartItem, removeCartItem } from '/js/cart.js';
 
-    let currentPage = 1;
-    let currentCategory = '';
-    let currentSearch = '';
-    let searchTimer = null;
-    let isLoading = false;
+      const auth = getAuth();
+      if (!auth.isLoggedIn) { window.location.href = '/shop/login'; }
 
-    async function loadProducts(reset = false) {
-      if (isLoading) return;
-      isLoading = true;
-      if (reset) {
-        currentPage = 1;
-        document.getElementById('product-grid').innerHTML = Array(6).fill('<div class="product-card"><div class="product-img skeleton" style="aspect-ratio:1"></div><div class="product-info"><div class="skeleton" style="height:10px;width:40%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:4px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>').join('');
+      // ── State ──
+      let currentPage = 1;
+      let currentCat = '';
+      let currentSearch = '';
+      let isLoading = false;
+      let searchTimer = null;
+      let cart = [];
+
+      // ── Cart helpers ──
+      function getLocalCart() {
+        try {
+          const raw = localStorage.getItem('inari_cart');
+          if (!raw) return { items: [] };
+          return JSON.parse(raw);
+        } catch { return { items: [] }; }
       }
 
-      const params = new URLSearchParams({ page: currentPage, limit: 24 });
-      if (currentCategory) params.set('category', currentCategory);
-      if (currentSearch) params.set('q', currentSearch);
+      function saveLocalCart(c) {
+        localStorage.setItem('inari_cart', JSON.stringify(c));
+      }
 
-      try {
-        const res = await fetch('/api/products/catalog?' + params);
-        const data = await res.json();
+      function getQty(sku) {
+        const c = getLocalCart();
+        const item = (c.items || []).find(i => i.sku === sku);
+        return item ? item.qty : 0;
+      }
+
+      function updateCartUI() {
+        const c = getLocalCart();
+        const items = c.items || [];
+        const count = items.reduce((s, i) => s + (i.qty || 0), 0);
+        const total = items.reduce((s, i) => s + (i.line_total || i.qty * i.unit_price || 0), 0);
+
+        // Badge
+        const badge = document.getElementById('cart-badge');
+        if (count > 0) {
+          badge.textContent = count;
+          badge.style.display = 'block';
+          document.getElementById('cart-dot').style.display = 'block';
+        } else {
+          badge.style.display = 'none';
+          document.getElementById('cart-dot').style.display = 'none';
+        }
+
+        // Drawer
+        document.getElementById('drawer-count').textContent = `· ${count} 件`;
+        document.getElementById('drawer-total').textContent = `MOP ${total.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+
+        const drawerItems = document.getElementById('drawer-items');
+        const drawerFt = document.getElementById('drawer-ft');
+
+        if (items.length === 0) {
+          drawerItems.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--mute);font-size:13px">購物車內無商品</div>';
+          drawerFt.style.display = 'none';
+        } else {
+          drawerFt.style.display = 'block';
+          drawerItems.innerHTML = items.map(it => `
+            <div class="cart-item">
+              <div class="ti cat-misc" style="background:var(--mist)">
+                <span style="font-size:18px;color:oklch(35% 0.04 240 / .55)">🐟</span>
+              </div>
+              <div class="info">
+                <div class="nm">${it.product_name}</div>
+                <div class="pr">MOP ${(it.unit_price||0).toLocaleString('en-US',{maximumFractionDigits:0})} / ${it.unit || '件'}</div>
+              </div>
+              <div class="side">
+                <div class="stepper" style="background:var(--paper-2)">
+                  <button onclick="cartDec('${it.sku}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 12h14"/></svg>
+                  </button>
+                  <span class="val">${it.qty}</span>
+                  <button onclick="cartInc('${it.sku}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>
+                  </button>
+                </div>
+                <span class="lt">MOP ${(it.line_total || it.qty * it.unit_price || 0).toLocaleString('en-US',{maximumFractionDigits:0})}</span>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Refresh stepper buttons in product grid
+        document.querySelectorAll('[data-sku]').forEach(el => {
+          const sku = el.dataset.sku;
+          const qty = getQty(sku);
+          const priceRow = el.querySelector('.price-row');
+          if (!priceRow) return;
+          const addBtn = priceRow.querySelector('.add');
+          const stepper = priceRow.querySelector('.stepper');
+          if (qty > 0) {
+            if (addBtn) addBtn.style.display = 'none';
+            if (stepper) { stepper.style.display = 'inline-flex'; stepper.querySelector('.val').textContent = qty; }
+          } else {
+            if (addBtn) addBtn.style.display = 'grid';
+            if (stepper) stepper.style.display = 'none';
+          }
+        });
+      }
+
+      window.cartInc = function(sku) {
+        const c = getLocalCart();
+        const idx = (c.items || []).findIndex(i => i.sku === sku);
+        if (idx >= 0) {
+          c.items[idx].qty++;
+          c.items[idx].line_total = c.items[idx].qty * c.items[idx].unit_price;
+          saveLocalCart(c);
+          updateCartUI();
+        }
+      };
+
+      window.cartDec = function(sku) {
+        const c = getLocalCart();
+        const idx = (c.items || []).findIndex(i => i.sku === sku);
+        if (idx >= 0) {
+          if (c.items[idx].qty <= 1) {
+            c.items.splice(idx, 1);
+          } else {
+            c.items[idx].qty--;
+            c.items[idx].line_total = c.items[idx].qty * c.items[idx].unit_price;
+          }
+          saveLocalCart(c);
+          updateCartUI();
+        }
+      };
+
+      window.addItem = function(sku, name, price, unit) {
+        const c = getLocalCart();
+        if (!c.items) c.items = [];
+        const idx = c.items.findIndex(i => i.sku === sku);
+        if (idx >= 0) {
+          c.items[idx].qty++;
+          c.items[idx].line_total = c.items[idx].qty * c.items[idx].unit_price;
+        } else {
+          c.items.push({ sku, product_name: name, qty: 1, unit, unit_price: price, line_total: price });
+        }
+        saveLocalCart(c);
+        updateCartUI();
+        showToast(`已加入 ${name.slice(0,12)}…`);
+      };
+
+      // ── Drawer ──
+      window.openDrawer = function() {
+        document.getElementById('scrim').classList.add('open');
+        document.getElementById('cart-drawer').classList.add('open');
+      };
+      window.closeDrawer = function() {
+        document.getElementById('scrim').classList.remove('open');
+        document.getElementById('cart-drawer').classList.remove('open');
+      };
+
+      // ── Toast ──
+      function showToast(msg) {
+        const t = document.getElementById('toast');
+        document.getElementById('toast-msg').textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2200);
+      }
+
+      // ── Category type badge ──
+      function typeBadge(item) {
+        if (item.is_air_freight) return `<span class="badge gold sq"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-9-5V3.5a1.5 1.5 0 0 0-3 0V9l-9 5v2l9-2.5V19l-2 1.5V22l3.5-1L14 22v-1.5L12 19v-5.5z"/></svg>空運</span>`;
+        if (item.storage_type === '冷凍') return `<span class="badge ice sq"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>冷凍</span>`;
+        return `<span class="badge leaf sq">冰鮮</span>`;
+      }
+
+      function thumbClass(item) {
+        const cat = (item.category || '').toLowerCase();
+        if (cat.includes('魚') || cat.includes('鮭') || cat.includes('鮪') || cat.includes('鰤')) return 'cat-fish';
+        if (cat.includes('貝') || cat.includes('帆立') || cat.includes('蛤')) return 'cat-shell';
+        if (cat.includes('蝦')) return 'cat-shrimp';
+        if (cat.includes('海膽') || cat.includes('uni')) return 'cat-uni';
+        if (cat.includes('章魚') || cat.includes('魷') || cat.includes('蟹')) return 'cat-octopus';
+        if (cat.includes('醬') || cat.includes('汁')) return 'cat-sauce';
+        if (cat.includes('昆布') || cat.includes('海苔') || cat.includes('藻')) return 'cat-seaweed';
+        return 'cat-misc';
+      }
+
+      function glyphFor(item) {
+        const name = (item.name || '').toLowerCase();
+        const cat = (item.category || '').toLowerCase();
+        if (cat.includes('鮭') || name.includes('鮭') || name.includes('三文魚')) return '🐟';
+        if (cat.includes('海膽') || name.includes('海膽')) return '🦔';
+        if (cat.includes('蝦') || name.includes('蝦')) return '🦐';
+        if (cat.includes('蟹') || name.includes('蟹')) return '🦀';
+        if (cat.includes('帆立') || name.includes('帆立') || name.includes('扇貝')) return '🐚';
+        if (cat.includes('鮪') || name.includes('鮪') || name.includes('吞拿')) return '🐟';
+        return '🐠';
+      }
+
+      // ── Render product card ──
+      function renderProductCard(item) {
+        const sku = item.sku;
+        const name = item.name || item.product_name || '';
+        const price = item.sales_price || item.price || 0;
+        const unit = item.unit || '件';
+        const qty = getQty(sku);
+        const cls = thumbClass(item);
+        const glyph = glyphFor(item);
+        const badge = typeBadge(item);
+        const origin = item.origin || '';
+        const fmtPrice = Number(price).toLocaleString('en-US',{maximumFractionDigits:0});
+
+        return `
+          <div class="product-card" data-sku="${sku}">
+            <div class="thumb ${cls}">
+              <span class="glyph">${glyph}</span>
+              <div class="type-tag">${badge}</div>
+              ${origin ? `<div class="origin-tag">${origin}</div>` : ''}
+              <span class="sku-strip">${sku}</span>
+            </div>
+            <div class="body">
+              <div class="name">${name}</div>
+              <div class="price-row">
+                <div class="price">
+                  <span class="cur">MOP</span>
+                  <span class="num">${fmtPrice}</span>
+                  <span class="unit">/ ${unit}</span>
+                </div>
+                <button class="add" onclick="addItem('${sku}','${name.replace(/'/g,"\\'")}',${price},'${unit}')" aria-label="加入購物車" ${qty > 0 ? 'style="display:none"' : ''}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>
+                </button>
+                <div class="stepper" style="${qty > 0 ? '' : 'display:none'}">
+                  <button onclick="cartDec('${sku}')" aria-label="減少">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 12h14"/></svg>
+                  </button>
+                  <span class="val">${qty}</span>
+                  <button onclick="cartInc('${sku}')" aria-label="增加">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      // ── Load products ──
+      async function loadProducts(reset = false) {
+        if (isLoading) return;
+        isLoading = true;
 
         if (reset) {
-          document.getElementById('product-grid').innerHTML = '';
+          currentPage = 1;
+          const grid = document.getElementById('product-grid');
+          grid.innerHTML = Array(4).fill(`
+            <div class="product-card">
+              <div class="thumb skeleton" style="aspect-ratio:1"></div>
+              <div class="body">
+                <div class="skeleton" style="height:10px;width:60%;border-radius:4px;margin-bottom:8px"></div>
+                <div class="skeleton" style="height:13px;width:80%;border-radius:4px;margin-bottom:6px"></div>
+                <div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div>
+              </div>
+            </div>`).join('');
         }
 
-        if (!data.items || !data.items.length && reset) {
-          document.getElementById('product-grid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🐟</div><p>沒有符合條件的商品</p></div>';
-        } else {
-          renderProducts(data.items);
-        }
+        const params = new URLSearchParams({ page: currentPage, limit: 24 });
+        if (currentCat) params.set('category', currentCat);
+        if (currentSearch) params.set('q', currentSearch);
 
-        document.getElementById('result-count').textContent = data.total || 0;
-        document.getElementById('load-more-btn').style.display = data.has_more ? 'block' : 'none';
+        try {
+          const res = await fetch('/api/products/catalog?' + params);
+          const data = await res.json();
 
-        // Populate categories (only on first load)
-        if (reset && data.categories && data.categories.length) {
-          populateCategories(data.categories);
+          const grid = document.getElementById('product-grid');
+          if (reset) grid.innerHTML = '';
+
+          const items = data.items || [];
+          if (reset && items.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--mute);font-size:13px">無符合的商品</div>';
+          } else {
+            grid.insertAdjacentHTML('beforeend', items.map(renderProductCard).join(''));
+          }
+
+          document.getElementById('total-count').textContent = data.total || items.length;
+          document.getElementById('load-more-btn').style.display = data.has_more ? 'block' : 'none';
+
+          // Populate category pills (first load only)
+          if (reset && data.categories && data.categories.length) {
+            populateCategories(data.categories, data.total);
+          }
+
+          updateCartUI();
+        } catch (err) {
+          const grid = document.getElementById('product-grid');
+          if (reset) grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--coral-deep);font-size:13px">載入失敗，請重試</div>';
+        } finally {
+          isLoading = false;
         }
-      } catch (err) {
-        console.error(err);
-        document.getElementById('product-grid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p style="color:#ef4444">載入失敗，請重試</p></div>';
-      } finally {
-        isLoading = false;
       }
-    }
 
-    function populateCategories(cats) {
-      const sidebar = document.getElementById('category-sidebar');
-      // Keep "全部商品" button, add categories
-      const existing = sidebar.querySelector('[data-cat=""]');
-      sidebar.innerHTML = '';
-      sidebar.appendChild(existing);
-      cats.forEach(cat => {
-        const btn = document.createElement('button');
-        btn.className = 'cat-btn';
-        btn.dataset.cat = cat;
-        btn.textContent = cat;
-        btn.onclick = () => selectCategory(cat, btn);
-        sidebar.appendChild(btn);
-      });
-    }
+      function populateCategories(cats, total) {
+        const rail = document.getElementById('pill-rail');
+        document.getElementById('pill-ct-all').textContent = total || '';
 
-    window.selectCategory = function(cat, btn) {
-      currentCategory = cat;
-      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+        cats.forEach(cat => {
+          const catName = typeof cat === 'string' ? cat : cat.name || cat;
+          const count = typeof cat === 'object' ? (cat.count || '') : '';
+          const btn = document.createElement('button');
+          btn.className = 'pill';
+          btn.dataset.cat = catName;
+          btn.innerHTML = `${catName} <span class="ct">${count}</span>`;
+          btn.onclick = () => selectCat(catName, btn);
+          rail.appendChild(btn);
+        });
+      }
+
+      window.selectCat = function(cat, btn) {
+        currentCat = cat;
+        document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadProducts(true);
+      };
+
+      window.debounceSearch = function(val) {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => { currentSearch = val; loadProducts(true); }, 350);
+      };
+
+      window.loadMore = function() { currentPage++; loadProducts(false); };
+
+      // Init
+      updateCartUI();
       loadProducts(true);
-    };
-
-    window.debounceSearch = function(val) {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => { currentSearch = val; loadProducts(true); }, 350);
-    };
-
-    window.loadMore = function() { currentPage++; loadProducts(false); };
-
-    function renderProducts(items) {
-      const grid = document.getElementById('product-grid');
-      items.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'product-card';
-        const badgeHtml = item.is_air_freight
-          ? '<span class="badge-air">✈️ 空運</span>'
-          : (item.storage_type === '冷凍' ? '<span class="badge-frozen">❄️ 冷凍</span>' : '');
-        const imgSrc = `/image-db/images/${item.sku}.jpg`;
-        card.innerHTML = `
-          <div class="product-img">
-            <img src="${imgSrc}" alt="${item.name}" loading="lazy" onerror="this.src='/images/food-placeholder.svg'">
-            ${badgeHtml}
-          </div>
-          <div class="product-info">
-            <div class="product-sku">${item.sku}</div>
-            <div class="product-name">${item.name}</div>
-            <div class="product-price">${item.sales_price ? 'MOP ' + item.sales_price : '—'} <span class="product-unit">/ ${item.unit || '件'}</span></div>
-          </div>
-          <div class="product-actions">
-            <div class="qty-row">
-              <button class="qty-btn" onclick="decreaseQty('${item.sku}')">−</button>
-              <input class="qty-input" type="number" id="qty-${item.sku}" value="1" min="1" max="9999">
-              <button class="qty-btn" onclick="increaseQty('${item.sku}')">+</button>
-            </div>
-            <button class="add-btn" id="add-${item.sku}" 
-              onclick="handleAddToCart('${item.sku}','${item.name.replace(/'/g,"\\'")}',${item.sales_price||0},'${item.unit||'件'}','${item.id}')">
-              🛒 加入購物車
-            </button>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    window.decreaseQty = function(sku) {
-      const input = document.getElementById('qty-' + sku);
-      if (input) input.value = Math.max(1, parseInt(input.value || 1) - 1);
-    };
-    window.increaseQty = function(sku) {
-      const input = document.getElementById('qty-' + sku);
-      if (input) input.value = parseInt(input.value || 1) + 1;
-    };
-
-    window.handleAddToCart = function(sku, name, price, unit, productId) {
-      const qty = parseFloat(document.getElementById('qty-' + sku)?.value) || 1;
-      addToCart({ sku, product_id: productId, product_name: name, qty, unit, unit_price: price, line_total: qty * price });
-      const btn = document.getElementById('add-' + sku);
-      if (btn) {
-        btn.textContent = '✓ 已加入';
-        btn.classList.add('added');
-        setTimeout(() => { btn.innerHTML = '🛒 加入購物車'; btn.classList.remove('added'); }, 1500);
-      }
-      openCartPanel();
-    };
-
-    // Init
-    loadProducts(true);
-  </script>
-</body>
+    </script>
+  </body>
 </html>

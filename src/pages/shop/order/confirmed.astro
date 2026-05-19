@@ -4,92 +4,81 @@
 <html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>稻荷商城 — 訂單已確認</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
+      /* Confirmed page: full flex centred */
       body {
-        min-height: 100vh;
-        background: #f8fafc;
-        color: #111827;
-        font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", sans-serif;
-        display: grid;
-        place-items: center;
-        padding: 24px 16px;
-      }
-      .confirmed-wrap {
-        width: min(100%, 440px);
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 40px 28px;
-        text-align: center;
-        box-shadow: 0 12px 36px rgba(15, 23, 42, .06);
-      }
-      .success-icon {
-        width: 64px;
-        height: 64px;
-        border-radius: 50%;
-        background: #dcfce7;
-        color: #15803d;
-        display: inline-flex;
-        align-items: center;
         justify-content: center;
-        font-size: 34px;
-        margin-bottom: 18px;
-      }
-      h1 { font-size: 26px; font-weight: 800; margin-bottom: 10px; }
-      .order-no {
-        color: #c0392b;
-        font-size: 15px;
-        font-weight: 700;
-        margin-bottom: 12px;
-      }
-      .confirmed-msg {
-        color: #6b7280;
-        font-size: 14px;
-        line-height: 1.6;
-        margin-bottom: 28px;
-      }
-      .confirmed-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      .btn-secondary,
-      .btn-primary {
-        border-radius: 8px;
-        padding: 13px 14px;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 700;
-      }
-      .btn-secondary { background: #f3f4f6; color: #374151; }
-      .btn-secondary:hover { background: #e5e7eb; }
-      .btn-primary { background: #c0392b; color: #fff; }
-      .btn-primary:hover { background: #a93226; }
-      @media (max-width: 420px) {
-        .confirmed-wrap { padding: 34px 18px; }
-        .confirmed-actions { grid-template-columns: 1fr; }
       }
     </style>
   </head>
   <body>
-    <div class="confirmed-wrap">
-      <div class="success-icon">✓</div>
-      <h1>訂單已確認！</h1>
-      <p class="order-no" id="order-no-display"></p>
-      <p class="confirmed-msg">業務將盡快與您聯繫確認送貨安排</p>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 30px;text-align:center">
+      <!-- Success circle -->
+      <div style="width:88px;height:88px;background:var(--leaf-soft);color:var(--leaf);border-radius:50%;display:grid;place-items:center;margin-bottom:24px;box-shadow:0 0 0 8px oklch(58% 0.12 152 / .08)">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m5 12 5 5L20 7"/>
+        </svg>
+      </div>
 
-      <div class="confirmed-actions">
-        <a href="/shop/orders" class="btn-secondary">查看訂單記錄</a>
-        <a href="/shop/catalog" class="btn-primary">繼續購物</a>
+      <div style="font-size:11px;font-family:var(--mono);color:var(--mute);letter-spacing:.14em;text-transform:uppercase">
+        訂單已確認
+      </div>
+      <h1 style="font-size:28px;font-weight:700;margin:10px 0 14px;letter-spacing:-.02em">
+        多謝您的訂單。
+      </h1>
+
+      <!-- Order number pill -->
+      <div style="font-family:var(--mono);font-size:14px;font-weight:600;background:var(--paper-2);padding:6px 12px;border-radius:999px;margin-bottom:18px" id="order-no-pill">
+        載入中...
+      </div>
+
+      <div style="font-size:14px;color:var(--ink-2);line-height:1.7;max-width:280px">
+        已發送到稻荷物流。今晚 22:00 前修改可聯絡您的客服。
+      </div>
+
+      <!-- Order info card -->
+      <div style="margin-top:28px;width:100%;max-width:320px">
+        <div class="card" style="padding:14px 16px;text-align:left">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:11px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.06em">送貨日期</span>
+            <span style="font-weight:600;font-size:13px" id="delivery-info">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.06em">狀態</span>
+            <span class="badge leaf"><span class="dot"></span>已確認</span>
+          </div>
+        </div>
       </div>
     </div>
 
+    <!-- Actions -->
+    <div style="padding:14px 18px 28px;display:flex;flex-direction:column;gap:10px;flex-shrink:0">
+      <button class="btn primary lg block" onclick="window.location.href='/shop/orders'">
+        查看訂單詳情
+      </button>
+      <button class="btn ghost block" onclick="window.location.href='/shop'">
+        返回首頁
+      </button>
+    </div>
+
     <script>
-      const no = new URLSearchParams(location.search).get("no");
-      document.getElementById("order-no-display").textContent = no ? "訂單號：" + no : "訂單號：";
+      // Read order number from URL
+      const params = new URLSearchParams(location.search);
+      const no = params.get('no');
+      const orderNo = no || 'ORD-' + Date.now().toString(36).toUpperCase();
+      document.getElementById('order-no-pill').textContent = orderNo;
+
+      // Show tomorrow as default delivery
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const dateStr = tomorrow.toISOString().slice(0,10);
+      document.getElementById('delivery-info').textContent = dateStr;
     </script>
   </body>
 </html>
