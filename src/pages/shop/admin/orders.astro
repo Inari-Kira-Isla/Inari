@@ -148,12 +148,6 @@
       document.getElementById('today-date').textContent = todayStr();
       document.getElementById('f-date').value = todayStr();
 
-      const PAYMENT_LABELS = {
-        monthly_credit: '月結',
-        cash: '現金',
-        transfer: '轉帳',
-        cheque: '支票',
-      };
       const STATUS_LABELS = {
         draft: '草稿',
         confirmed: '已確認',
@@ -228,7 +222,7 @@
           const preview = items.slice(0, 2).map(i => i.product_name || i.product_code).filter(Boolean).join('、');
           const more = items.length > 2 ? ` +${items.length - 2}` : '';
           const total = calcTotal(o);
-          const payLabel = PAYMENT_LABELS[o.payment_method] || o.payment_method || '-';
+          const payLabel = o.payment_method || '-';
 
           let actions = '';
           if (o.status === 'draft') {
