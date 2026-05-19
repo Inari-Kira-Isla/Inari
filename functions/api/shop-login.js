@@ -120,7 +120,7 @@ export async function onRequestPost(context) {
         headers: {
           ...CORS_HEADERS,
           "Content-Type": "application/json",
-          "Set-Cookie": `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800`,
+          "Set-Cookie": `${COOKIE_NAME}=${token}; Path=/; Secure; SameSite=Strict; Max-Age=604800`,
         },
       }
     );

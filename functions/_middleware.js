@@ -48,7 +48,6 @@ export async function onRequest(context) {
   if (v2Token) {
     const session = parseV2Token(v2Token);
     if (session) {
-      // Inject user context into request headers for downstream functions
       const newHeaders = new Headers(context.request.headers);
       newHeaders.set("X-User-Id", session.id || "");
       newHeaders.set("X-User-Type", session.user_type || "staff");
@@ -56,9 +55,17 @@ export async function onRequest(context) {
       newHeaders.set("X-Username", session.username || "");
       newHeaders.set("X-Customer-Code", session.customer_code || "");
 
-      const newRequest = new Request(context.request, { headers: newHeaders });
-      context.request = newRequest;
-      return context.next();
+      // Admin guard: /shop/admin requires staff or manager
+      if (path.startsWith("/shop/admin")) {
+        const userType = session.user_type || "staff";
+        if (userType !== "staff" && userType !== "manager") {
+          return Response.redirect(new URL(SHOP_LOGIN_PATH, context.request.url), 302);
+        }
+      }
+
+      // Pass modified request explicitly — context.next() uses the passed request,
+      // NOT context.request, so we must pass it here
+      return context.next(new Request(context.request, { headers: newHeaders }));
     }
   }
 
@@ -71,17 +78,11 @@ export async function onRequest(context) {
     newHeaders.set("X-User-Role", "staff");
     newHeaders.set("X-Username", "staff");
 
-    const newRequest = new Request(context.request, { headers: newHeaders });
-    context.request = newRequest;
-    return context.next();
-  }
-
-  // --- Admin routes: staff/manager only ---
-  if (path.startsWith("/shop/admin")) {
-    const userType = context.request.headers.get("X-User-Type") || "";
-    if (userType !== "staff" && userType !== "manager") {
-      return Response.redirect(new URL(SHOP_LOGIN_PATH, context.request.url), 302);
+    if (path.startsWith("/shop/admin")) {
+      // v1 token is always staff — allowed
     }
+
+    return context.next(new Request(context.request, { headers: newHeaders }));
   }
 
   // --- Shop routes require shop login ---
