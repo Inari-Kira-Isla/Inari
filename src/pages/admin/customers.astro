@@ -1,0 +1,181 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="客戶管理" active="customers" pageTitle="客戶管理" pageSubtitle="全部客戶">
+
+  <!-- Stats row -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-blue-lt avatar"><i class="ti ti-users text-blue"></i></span></div>
+            <div class="col"><div class="font-weight-medium" id="stat-total">—</div><div class="text-muted">客戶總數</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-green-lt avatar"><i class="ti ti-trending-up text-green"></i></span></div>
+            <div class="col"><div class="font-weight-medium" id="stat-active">—</div><div class="text-muted">有訂單客戶</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-yellow-lt avatar"><i class="ti ti-alert-triangle text-yellow"></i></span></div>
+            <div class="col"><div class="font-weight-medium" id="stat-draft">—</div><div class="text-muted">有待確認草稿</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-cyan-lt avatar"><i class="ti ti-currency-dollar text-cyan"></i></span></div>
+            <div class="col"><div class="font-weight-medium" id="stat-revenue">—</div><div class="text-muted">累計銷售額</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search + table card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="input-group">
+        <span class="input-group-text"><i class="ti ti-search"></i></span>
+        <input type="text" class="form-control" id="search-input"
+          placeholder="搜尋客戶代碼或名稱…" oninput="debounce(this.value)" />
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-vcenter table-hover card-table">
+        <thead>
+          <tr>
+            <th>客戶代碼</th>
+            <th>客戶名稱</th>
+            <th class="text-end">訂單數</th>
+            <th class="text-end">累計金額</th>
+            <th class="text-end d-none d-md-table-cell">草稿</th>
+            <th class="d-none d-md-table-cell">最後下單</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="customers-tbody">
+          <tr><td colspan="7" class="text-center py-4 text-muted">載入中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Customer orders drawer (offcanvas) -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="customerDrawer">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="drawer-title">客戶訂單</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body" id="drawer-body">
+      <div class="text-muted text-center py-4">選擇客戶查看訂單</div>
+    </div>
+  </div>
+
+  <script>
+    let timer = null;
+    let allCustomers = [];
+
+    async function load(q = '') {
+      const url = `/api/admin/customers${q ? '?q=' + encodeURIComponent(q) : ''}`;
+      const resp = await fetch(url);
+      if (!resp.ok) return;
+      const { customers } = await resp.json();
+      allCustomers = customers;
+      render(customers);
+      updateStats(customers);
+    }
+
+    function updateStats(customers) {
+      document.getElementById('stat-total').textContent = customers.length;
+      document.getElementById('stat-active').textContent = customers.filter(c => c.order_count > 0).length;
+      document.getElementById('stat-draft').textContent = customers.filter(c => c.draft_count > 0).length;
+      const total = customers.reduce((s, c) => s + (c.total_amount || 0), 0);
+      document.getElementById('stat-revenue').textContent = 'MOP ' + total.toLocaleString('zh-TW', { maximumFractionDigits: 0 });
+    }
+
+    function render(customers) {
+      const tbody = document.getElementById('customers-tbody');
+      if (!customers.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">無客戶資料</td></tr>';
+        return;
+      }
+      tbody.innerHTML = customers.map(c => {
+        const amt = c.total_amount ? `MOP ${Number(c.total_amount).toLocaleString('zh-TW', { maximumFractionDigits: 0 })}` : '—';
+        const last = c.last_order ? new Date(c.last_order).toLocaleDateString('zh-TW') : '—';
+        const draftBadge = c.draft_count > 0
+          ? `<span class="badge bg-warning-lt text-warning">${c.draft_count}</span>` : '0';
+        return `<tr>
+          <td class="font-mono text-muted small">${c.customer_code}</td>
+          <td class="fw-medium">${c.customer_name}</td>
+          <td class="text-end">${c.order_count}</td>
+          <td class="text-end font-mono fw-semibold">${amt}</td>
+          <td class="text-end d-none d-md-table-cell">${draftBadge}</td>
+          <td class="text-muted d-none d-md-table-cell small">${last}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-secondary" onclick="showOrders('${c.customer_code}','${c.customer_name.replace(/'/g,"\\'")}')">
+              <i class="ti ti-eye me-1"></i>訂單
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    window.showOrders = async function(code, name) {
+      document.getElementById('drawer-title').textContent = `${name} 的訂單`;
+      document.getElementById('drawer-body').innerHTML = '<div class="text-muted text-center py-4">載入中…</div>';
+      new bootstrap.Offcanvas(document.getElementById('customerDrawer')).show();
+
+      const resp = await fetch(`/api/orders?limit=50`);
+      const { orders } = await resp.json();
+      const filtered = (orders || []).filter(o => o.customer_code === code);
+
+      if (!filtered.length) {
+        document.getElementById('drawer-body').innerHTML = '<div class="text-muted text-center py-4">無訂單記錄</div>';
+        return;
+      }
+
+      const statusColor = { draft:'warning', confirmed:'success', invoiced:'primary', cancelled:'secondary' };
+      const statusMap = { draft:'草稿', confirmed:'已確認', invoiced:'已開單', cancelled:'已取消' };
+
+      document.getElementById('drawer-body').innerHTML = filtered.map(o => {
+        const amt = o.total_amount ? `MOP ${Number(o.total_amount).toLocaleString()}` : '—';
+        const dt = new Date(o.created_at).toLocaleDateString('zh-TW');
+        return `<div class="d-flex align-items-center gap-2 py-2 border-bottom">
+          <span class="badge bg-${statusColor[o.status] || 'secondary'}-lt text-${statusColor[o.status] || 'secondary'}">${statusMap[o.status] || o.status}</span>
+          <div class="flex-fill">
+            <div class="font-mono small fw-semibold">${o.order_no || '—'}</div>
+            <div class="text-muted" style="font-size:11px">${dt}</div>
+          </div>
+          <div class="font-mono small fw-semibold">${amt}</div>
+          <a href="/admin/orders/${o.id}" class="btn btn-sm btn-ghost-secondary px-1">
+            <i class="ti ti-arrow-right"></i>
+          </a>
+        </div>`;
+      }).join('');
+    };
+
+    window.debounce = function(val) {
+      clearTimeout(timer);
+      timer = setTimeout(() => load(val), 350);
+    };
+
+    load();
+  </script>
+</AdminLayout>

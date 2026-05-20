@@ -1,6 +1,6 @@
+// GET   /api/admin/orders/[id] — fetch single order with items
 // PATCH /api/admin/orders/[id] — update order status
 // Staff and manager only
-// Transitions: draft→confirmed, confirmed→invoiced, draft|confirmed→cancelled
 
 import type { APIRoute } from 'astro';
 
@@ -28,6 +28,36 @@ function sbHeaders(key: string) {
     Prefer: 'return=representation',
   };
 }
+
+export const GET: APIRoute = async ({ locals, params }) => {
+  const userType = locals.userType || '';
+  if (userType !== 'staff' && userType !== 'manager') {
+    return new Response(JSON.stringify({ error: '無權限' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+  }
+  const serviceKey = import.meta.env.SUPABASE_SERVICE_KEY || import.meta.env.SUPABASE_ANON_KEY;
+  const id = params.id;
+  if (!id) return new Response(JSON.stringify({ error: '缺少 id' }), { status: 400 });
+
+  const [orderResp, itemsResp] = await Promise.all([
+    fetch(
+      `${SUPABASE_URL}/rest/v1/inari_customer_orders?id=eq.${id}&tenant_id=eq.${TENANT_ID}&select=*`,
+      { headers: sbHeaders(serviceKey) }
+    ),
+    fetch(
+      `${SUPABASE_URL}/rest/v1/inari_customer_order_items?order_id=eq.${id}&select=*&order=id.asc`,
+      { headers: sbHeaders(serviceKey) }
+    ),
+  ]);
+  const orders = orderResp.ok ? await orderResp.json() : [];
+  const items = itemsResp.ok ? await itemsResp.json() : [];
+  if (!orders.length) {
+    return new Response(JSON.stringify({ error: '訂單不存在' }), { status: 404 });
+  }
+  return new Response(
+    JSON.stringify({ order: { ...orders[0], items } }),
+    { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
+  );
+};
 
 export const OPTIONS: APIRoute = async () => {
   return new Response(null, { status: 204, headers: CORS_HEADERS });

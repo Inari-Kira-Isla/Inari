@@ -1,243 +1,226 @@
 ---
-import AdminSidebar from '../../components/AdminSidebar.astro';
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
-<!doctype html>
-<html lang="zh-TW" class="admin-layout">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>稻荷後台 — 知識庫管理</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/shop/styles.css">
-    <style>
-      html.admin-layout body { max-width: none; display: block; min-height: 100vh; }
-      .knl-item {
-        padding: 14px 16px; border-bottom: 1px solid var(--hairline);
-        display: flex; gap: 12px; align-items: flex-start;
-      }
-      .knl-item:last-child { border-bottom: none; }
-      .cat-badge {
-        padding: 2px 8px; border-radius: 20px; font-size: 10px;
-        font-weight: 600; font-family: var(--mono);
-        background: var(--sea-soft); color: var(--sea-ink);
-        flex-shrink: 0; margin-top: 2px; white-space: nowrap;
-      }
-      .knl-q { font-size: 13px; font-weight: 600; }
-      .knl-a { font-size: 12px; color: var(--ink-2); line-height: 1.6; margin-top: 4px; }
-      .knl-actions { display: flex; gap: 6px; margin-left: auto; flex-shrink: 0; }
-    </style>
-  </head>
-  <body>
-    <div class="admin-shell">
-      <AdminSidebar active="knowledge" />
+<AdminLayout title="知識庫" active="knowledge" pageTitle="知識庫管理">
 
-      <div class="admin-main">
-        <div class="admin-top">
-          <div>
-            <div style="font-size:10px;color:var(--mute);letter-spacing:.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:2px">KDS · 知識驅動銷售</div>
-            <h1>知識庫管理</h1>
-          </div>
-          <button class="btn primary sm" onclick="openAddModal()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>
-            新增知識
-          </button>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="row g-2 flex-fill me-3">
+      <div class="col">
+        <div class="input-group">
+          <span class="input-group-text"><i class="ti ti-search"></i></span>
+          <input type="text" class="form-control" id="search-input" placeholder="搜尋知識條目…" oninput="debounceSearch(this.value)" />
         </div>
+      </div>
+      <div class="col-auto">
+        <select class="form-select" id="cat-filter" onchange="applyFilter()">
+          <option value="">全部分類</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+      <i class="ti ti-plus me-1"></i>新增
+    </button>
+  </div>
 
-        <div class="admin-body">
-          <!-- Stats + filter -->
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-            <div class="stat-card" style="flex:1;min-width:140px">
-              <div class="lbl">知識條目</div>
-              <div class="val" id="stat-total">—</div>
-              <div class="sub">inari_knowledge_items</div>
-            </div>
-            <div class="stat-card" style="flex:1;min-width:140px">
-              <div class="lbl">分類數</div>
-              <div class="val" id="stat-cats">—</div>
-              <div class="sub">6 個域</div>
-            </div>
-            <div style="flex:3;min-width:220px;display:flex;gap:8px">
-              <input class="input" id="f-search" type="text" style="flex:1;padding:8px 12px" placeholder="搜尋條目…" oninput="filterItems()" />
-              <select class="input select" id="f-cat" style="width:160px;padding:8px 12px" onchange="filterItems()">
-                <option value="">全部分類</option>
-              </select>
-            </div>
-          </div>
+  <!-- Stats -->
+  <div class="d-flex gap-2 mb-3" id="stats-row">
+    <span class="badge bg-secondary-lt text-secondary px-3 py-2">載入中…</span>
+  </div>
 
-          <!-- List -->
-          <div class="card" style="overflow:hidden">
-            <div id="knl-list">
-              <div style="padding:24px;text-align:center;color:var(--mute);font-size:13px">載入中...</div>
-            </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-vcenter table-hover card-table">
+        <thead>
+          <tr>
+            <th>標題</th>
+            <th>分類</th>
+            <th class="d-none d-md-table-cell">摘要</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="knowledge-tbody">
+          <tr><td colspan="4" class="text-center py-4 text-muted">載入中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add modal -->
+  <div class="modal modal-blur fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">新增知識條目</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-8"><label class="form-label required">標題（中文）</label><input type="text" class="form-control" id="add-title" /></div>
+            <div class="col-md-4"><label class="form-label required">分類</label><input type="text" class="form-control" id="add-category" placeholder="例：銷售管理" /></div>
+            <div class="col-12"><label class="form-label">摘要</label><textarea class="form-control" id="add-summary" rows="2"></textarea></div>
+            <div class="col-12"><label class="form-label">正文內容</label><textarea class="form-control" id="add-content" rows="5"></textarea></div>
+            <div class="col-md-4"><label class="form-label">標籤（逗號分隔）</label><input type="text" class="form-control" id="add-tags" /></div>
+            <div class="col-md-4"><label class="form-label">重要度（1-5）</label><input type="number" class="form-control" id="add-importance" min="1" max="5" value="3" /></div>
           </div>
+          <div id="add-error" class="alert alert-danger d-none mt-2"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-link me-auto" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-primary" onclick="addItem()"><i class="ti ti-plus me-1"></i>建立</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Add/Edit modal -->
-    <div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center">
-      <div style="background:var(--paper);border-radius:var(--r-xl);padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto">
-        <h3 style="margin:0 0 16px;font-size:16px" id="modal-title">新增知識</h3>
-        <div class="field" style="margin-bottom:12px">
-          <label style="font-size:12px;font-weight:600;color:var(--mute);display:block;margin-bottom:6px">分類</label>
-          <input class="input" id="edit-cat" type="text" placeholder="如：銷售管理、日本料理" style="width:100%" />
+  <!-- Edit modal -->
+  <div class="modal modal-blur fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">編輯知識條目</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <input type="hidden" id="edit-id" />
+          <div class="row g-3">
+            <div class="col-md-8"><label class="form-label required">標題（中文）</label><input type="text" class="form-control" id="edit-title" /></div>
+            <div class="col-md-4"><label class="form-label required">分類</label><input type="text" class="form-control" id="edit-category" /></div>
+            <div class="col-12"><label class="form-label">摘要</label><textarea class="form-control" id="edit-summary" rows="2"></textarea></div>
+            <div class="col-12"><label class="form-label">正文內容</label><textarea class="form-control" id="edit-content" rows="5"></textarea></div>
+            <div class="col-md-4"><label class="form-label">標籤</label><input type="text" class="form-control" id="edit-tags" /></div>
+            <div class="col-md-4"><label class="form-label">重要度（1-5）</label><input type="number" class="form-control" id="edit-importance" min="1" max="5" /></div>
+          </div>
+          <div id="edit-error" class="alert alert-danger d-none mt-2"></div>
         </div>
-        <div class="field" style="margin-bottom:12px">
-          <label style="font-size:12px;font-weight:600;color:var(--mute);display:block;margin-bottom:6px">問題（可選）</label>
-          <input class="input" id="edit-q" type="text" placeholder="如：如何跟進客戶下單…" style="width:100%" />
-        </div>
-        <div class="field" style="margin-bottom:20px">
-          <label style="font-size:12px;font-weight:600;color:var(--mute);display:block;margin-bottom:6px">答案/知識內容 *</label>
-          <textarea class="input textarea" id="edit-a" rows="6" placeholder="輸入知識內容…" style="width:100%;resize:vertical"></textarea>
-        </div>
-        <div style="display:flex;gap:10px">
-          <button class="btn ghost sm" onclick="closeModal()" style="flex:1">取消</button>
-          <button class="btn primary sm" onclick="saveItem()" style="flex:1" id="save-btn">儲存</button>
-        </div>
-        <p id="modal-error" style="font-size:12px;color:var(--coral-deep);margin:8px 0 0"></p>
-      </div>
-    </div>
-
-    <!-- Delete confirm -->
-    <div id="delete-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center">
-      <div style="background:var(--paper);border-radius:var(--r-xl);padding:24px;width:340px;max-width:90vw">
-        <h3 style="margin:0 0 8px;font-size:16px">刪除知識條目</h3>
-        <p style="font-size:13px;color:var(--ink-2);margin:0 0 20px">確定要刪除此條目嗎？此操作無法復原。</p>
-        <div style="display:flex;gap:10px">
-          <button class="btn ghost sm" onclick="document.getElementById('delete-modal').style.display='none'" style="flex:1">取消</button>
-          <button class="btn coral sm" onclick="confirmDelete()" style="flex:1">刪除</button>
+        <div class="modal-footer">
+          <button class="btn btn-danger me-auto" onclick="deleteItem()"><i class="ti ti-trash me-1"></i>刪除</button>
+          <button class="btn btn-link" data-bs-dismiss="modal">取消</button>
+          <button class="btn btn-primary" onclick="saveEdit()">儲存</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <script>
-      let items: any[] = [];
-      let filtered: any[] = [];
-      let editingId: string | null = null;
-      let deletingId: string | null = null;
+  <script>
+    let allItems = [], filtered = [], currentSearch = '', currentCat = '';
+    let searchTimer = null;
 
-      async function loadItems() {
-        try {
-          const r = await fetch('/api/knowledge?limit=200');
-          const d = await r.json();
-          items = d.items || [];
-          filtered = [...items];
+    async function load() {
+      const resp = await fetch('/api/knowledge?limit=200');
+      if (!resp.ok) return;
+      const data = await resp.json();
+      allItems = data.items || [];
+      populateCategories(allItems);
+      updateStats(allItems);
+      applyFilter();
+    }
 
-          // Populate category filter
-          const cats = [...new Set<string>(items.map((i: any) => i.category))].sort();
-          const sel = document.getElementById('f-cat') as HTMLSelectElement;
-          cats.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c; opt.textContent = c;
-            sel.appendChild(opt);
-          });
-
-          document.getElementById('stat-total')!.textContent = String(items.length);
-          document.getElementById('stat-cats')!.textContent = String(cats.length);
-          renderList(filtered);
-        } catch {
-          document.getElementById('knl-list')!.innerHTML =
-            '<div style="padding:24px;text-align:center;color:var(--mute)">載入失敗</div>';
+    function populateCategories(items) {
+      const cats = [...new Set(items.map(i => i.category).filter(Boolean))].sort();
+      const sel = document.getElementById('cat-filter');
+      cats.forEach(c => {
+        if (!sel.querySelector(`option[value="${c}"]`)) {
+          const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
         }
-      }
+      });
+    }
 
-      function filterItems() {
-        const search = (document.getElementById('f-search') as HTMLInputElement).value.toLowerCase();
-        const cat = (document.getElementById('f-cat') as HTMLSelectElement).value;
-        filtered = items.filter(i =>
-          (!cat || i.category === cat) &&
-          (!search || (i.answer||'').toLowerCase().includes(search) || (i.question||'').toLowerCase().includes(search) || (i.category||'').toLowerCase().includes(search))
-        );
-        renderList(filtered);
-      }
+    function updateStats(items) {
+      const cats = new Set(items.map(i => i.category).filter(Boolean));
+      document.getElementById('stats-row').innerHTML =
+        `<span class="badge bg-blue-lt text-blue px-3 py-2">共 <b>${items.length}</b> 筆</span>
+         <span class="badge bg-green-lt text-green px-3 py-2"><b>${cats.size}</b> 個分類</span>`;
+    }
 
-      function renderList(list: any[]) {
-        const el = document.getElementById('knl-list')!;
-        if (!list.length) { el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--mute)">無結果</div>'; return; }
-        el.innerHTML = list.map(item => `
-          <div class="knl-item">
-            <span class="cat-badge">${item.category}</span>
-            <div style="flex:1;min-width:0">
-              ${item.question ? `<div class="knl-q">${item.question}</div>` : ''}
-              <div class="knl-a">${item.answer}</div>
-              <div style="font-size:10px;color:var(--whisper);font-family:var(--mono);margin-top:4px">${item.id}</div>
-            </div>
-            <div class="knl-actions">
-              <button class="btn ghost sm" onclick="openEditModal('${item.id}')">編輯</button>
-              <button class="btn ghost sm" style="color:var(--coral)" onclick="openDeleteModal('${item.id}')">刪除</button>
-            </div>
-          </div>`).join('');
-      }
+    function applyFilter() {
+      currentCat = document.getElementById('cat-filter').value;
+      filtered = allItems.filter(item => {
+        const q = currentSearch.toLowerCase();
+        return (!currentCat || item.category === currentCat) &&
+          (!q || (item.title_zh||'').toLowerCase().includes(q) || (item.summary||'').toLowerCase().includes(q));
+      });
+      render();
+    }
 
-      function openAddModal() {
-        editingId = null;
-        (document.getElementById('modal-title') as HTMLElement).textContent = '新增知識';
-        (document.getElementById('edit-cat') as HTMLInputElement).value = '';
-        (document.getElementById('edit-q') as HTMLInputElement).value = '';
-        (document.getElementById('edit-a') as HTMLTextAreaElement).value = '';
-        document.getElementById('modal-error')!.textContent = '';
-        document.getElementById('edit-modal')!.style.display = 'flex';
-      }
+    function render() {
+      const tbody = document.getElementById('knowledge-tbody');
+      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">無條目</td></tr>'; return; }
+      tbody.innerHTML = filtered.map(item => {
+        const stars = '★'.repeat(item.importance_score || 3) + '☆'.repeat(5 - (item.importance_score || 3));
+        return `<tr>
+          <td class="fw-medium">${item.title_zh || '—'}</td>
+          <td><span class="badge bg-blue-lt text-blue">${item.category || '—'}</span></td>
+          <td class="text-muted small d-none d-md-table-cell" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.summary || '—'}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-secondary" onclick='openEdit(${JSON.stringify(item)})'>
+              <i class="ti ti-pencil"></i>
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
 
-      function openEditModal(id: string) {
-        const item = items.find(i => i.id === id);
-        if (!item) return;
-        editingId = id;
-        (document.getElementById('modal-title') as HTMLElement).textContent = '編輯知識';
-        (document.getElementById('edit-cat') as HTMLInputElement).value = item.category || '';
-        (document.getElementById('edit-q') as HTMLInputElement).value = item.question || '';
-        (document.getElementById('edit-a') as HTMLTextAreaElement).value = item.answer || '';
-        document.getElementById('modal-error')!.textContent = '';
-        document.getElementById('edit-modal')!.style.display = 'flex';
-      }
+    window.openEdit = function(item) {
+      document.getElementById('edit-id').value = item.id;
+      document.getElementById('edit-title').value = item.title_zh || '';
+      document.getElementById('edit-category').value = item.category || '';
+      document.getElementById('edit-summary').value = item.summary || '';
+      document.getElementById('edit-content').value = item.content || '';
+      document.getElementById('edit-tags').value = (item.tags || []).join(', ');
+      document.getElementById('edit-importance').value = item.importance_score || 3;
+      document.getElementById('edit-error').classList.add('d-none');
+      new bootstrap.Modal(document.getElementById('editModal')).show();
+    };
 
-      function closeModal() { document.getElementById('edit-modal')!.style.display = 'none'; }
+    window.addItem = async function() {
+      const title_zh = document.getElementById('add-title').value.trim();
+      const category = document.getElementById('add-category').value.trim();
+      const errEl = document.getElementById('add-error');
+      if (!title_zh || !category) { errEl.textContent = '標題和分類為必填'; errEl.classList.remove('d-none'); return; }
+      const body = {
+        title_zh,
+        category,
+        summary: document.getElementById('add-summary').value.trim(),
+        content: document.getElementById('add-content').value.trim(),
+        tags: document.getElementById('add-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+        importance_score: parseInt(document.getElementById('add-importance').value) || 3,
+      };
+      const resp = await fetch('/api/knowledge', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+      const data = await resp.json();
+      if (!data.ok && !data.id) { errEl.textContent = data.error || '建立失敗'; errEl.classList.remove('d-none'); return; }
+      bootstrap.Modal.getInstance(document.getElementById('addModal'))?.hide();
+      ['add-title','add-category','add-summary','add-content','add-tags'].forEach(id => document.getElementById(id).value = '');
+      errEl.classList.add('d-none');
+      load();
+    };
 
-      function openDeleteModal(id: string) {
-        deletingId = id;
-        document.getElementById('delete-modal')!.style.display = 'flex';
-      }
+    window.saveEdit = async function() {
+      const id = document.getElementById('edit-id').value;
+      const errEl = document.getElementById('edit-error');
+      const body = {
+        id,
+        title_zh: document.getElementById('edit-title').value.trim(),
+        category: document.getElementById('edit-category').value.trim(),
+        summary: document.getElementById('edit-summary').value.trim(),
+        content: document.getElementById('edit-content').value.trim(),
+        tags: document.getElementById('edit-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+        importance_score: parseInt(document.getElementById('edit-importance').value) || 3,
+      };
+      const resp = await fetch('/api/knowledge', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+      const data = await resp.json();
+      if (!data.ok) { errEl.textContent = data.error || '更新失敗'; errEl.classList.remove('d-none'); return; }
+      bootstrap.Modal.getInstance(document.getElementById('editModal'))?.hide();
+      load();
+    };
 
-      async function confirmDelete() {
-        if (!deletingId) return;
-        await fetch(`/api/knowledge`, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ id: deletingId }) });
-        document.getElementById('delete-modal')!.style.display = 'none';
-        deletingId = null;
-        await loadItems();
-      }
+    window.deleteItem = async function() {
+      const id = document.getElementById('edit-id').value;
+      if (!confirm('確定刪除此條目？')) return;
+      await fetch(`/api/knowledge?id=${id}`, { method:'DELETE' });
+      bootstrap.Modal.getInstance(document.getElementById('editModal'))?.hide();
+      load();
+    };
 
-      async function saveItem() {
-        const category = (document.getElementById('edit-cat') as HTMLInputElement).value.trim();
-        const question = (document.getElementById('edit-q') as HTMLInputElement).value.trim() || null;
-        const answer = (document.getElementById('edit-a') as HTMLTextAreaElement).value.trim();
-        const errEl = document.getElementById('modal-error')!;
+    window.debounceSearch = function(val) {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => { currentSearch = val; applyFilter(); }, 300);
+    };
 
-        if (!category || !answer) { errEl.textContent = '分類和答案為必填'; return; }
-
-        const btn = document.getElementById('save-btn') as HTMLButtonElement;
-        btn.disabled = true; btn.textContent = '儲存中...';
-        errEl.textContent = '';
-
-        try {
-          if (editingId) {
-            await fetch('/api/knowledge', { method: 'PUT', headers: {'Content-Type':'application/json'},
-              body: JSON.stringify({ id: editingId, category, question, answer }) });
-          } else {
-            await fetch('/api/knowledge', { method: 'POST', headers: {'Content-Type':'application/json'},
-              body: JSON.stringify({ category, question, answer }) });
-          }
-          closeModal();
-          await loadItems();
-        } catch {
-          errEl.textContent = '儲存失敗，請稍後再試';
-        } finally {
-          btn.disabled = false; btn.textContent = '儲存';
-        }
-      }
-
-      loadItems();
-    </script>
-  </body>
-</html>
+    load();
+  </script>
+</AdminLayout>

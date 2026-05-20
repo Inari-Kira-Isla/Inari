@@ -1,0 +1,149 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="報表分析" active="analytics" pageTitle="報表分析" pageSubtitle="過去 6 個月">
+
+  <!-- KPI row -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-4">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-blue-lt avatar"><i class="ti ti-currency-dollar text-blue"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold fs-3" id="kpi-revenue">—</div>
+              <div class="text-muted">6個月總收入</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-green-lt avatar"><i class="ti ti-check text-green"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold fs-3" id="kpi-orders">—</div>
+              <div class="text-muted">已確認/開單訂單</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-cyan-lt avatar"><i class="ti ti-users text-cyan"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold fs-3" id="kpi-customers">—</div>
+              <div class="text-muted">活躍客戶</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Monthly revenue chart -->
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-header"><h3 class="card-title mb-0">月度收入</h3></div>
+        <div class="card-body">
+          <div id="revenue-chart" style="min-height:220px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top products -->
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-header"><h3 class="card-title mb-0">Top 10 商品（收入）</h3></div>
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table table-sm">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>商品名稱</th>
+                <th class="text-end">收入</th>
+              </tr>
+            </thead>
+            <tbody id="top-products-tbody">
+              <tr><td colspan="3" class="text-center py-3 text-muted">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .bar-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .bar-label { width: 60px; font-size: 12px; color: var(--tblr-text-muted); text-align: right; flex-shrink: 0; }
+    .bar-track { flex: 1; background: var(--tblr-gray-100); border-radius: 4px; height: 28px; overflow: hidden; position: relative; }
+    .bar-fill { height: 100%; background: var(--tblr-primary); border-radius: 4px; transition: width .4s ease; display: flex; align-items: center; padding-left: 8px; min-width: 2px; }
+    .bar-value { font-size: 11px; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; }
+    .bar-value-outside { font-size: 11px; font-weight: 600; color: var(--tblr-text-muted); margin-left: 6px; }
+  </style>
+
+  <script>
+    async function load() {
+      const resp = await fetch('/api/admin/analytics');
+      if (!resp.ok) return;
+      const data = await resp.json();
+
+      document.getElementById('kpi-revenue').textContent =
+        'MOP ' + Number(data.totalRevenue || 0).toLocaleString('zh-TW', { maximumFractionDigits: 0 });
+      document.getElementById('kpi-orders').textContent = data.confirmedOrders || 0;
+      document.getElementById('kpi-customers').textContent = data.activeCustomers || 0;
+
+      renderBarChart(data.monthly || []);
+      renderTopProducts(data.top_products || []);
+    }
+
+    function renderBarChart(monthly) {
+      const max = Math.max(...monthly.map(m => m.revenue), 1);
+      const container = document.getElementById('revenue-chart');
+      container.innerHTML = monthly.map(m => {
+        const pct = Math.round((m.revenue / max) * 100);
+        const label = m.month?.slice(5) || m.month; // MM
+        const val = m.revenue > 0
+          ? 'MOP ' + Number(m.revenue).toLocaleString('zh-TW', { maximumFractionDigits: 0 })
+          : '—';
+        const showInside = pct > 25;
+        return `<div class="bar-wrap">
+          <div class="bar-label">${label}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${Math.max(pct, m.revenue > 0 ? 3 : 0)}%">
+              ${showInside ? `<span class="bar-value">${val}</span>` : ''}
+            </div>
+            ${!showInside && m.revenue > 0 ? `<span class="bar-value-outside" style="position:absolute;left:${Math.max(pct,3)+1}%;top:50%;transform:translateY(-50%)">${val}</span>` : ''}
+          </div>
+          <div style="font-size:11px;color:var(--tblr-text-muted);width:32px;text-align:right">${m.order_count}筆</div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderTopProducts(products) {
+      const tbody = document.getElementById('top-products-tbody');
+      if (!products.length) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center py-3 text-muted">無資料</td></tr>';
+        return;
+      }
+      tbody.innerHTML = products.map((p, i) => {
+        const rev = p.revenue > 0
+          ? 'MOP ' + Number(p.revenue).toLocaleString('zh-TW', { maximumFractionDigits: 0 }) : '—';
+        return `<tr>
+          <td class="text-muted w-4">${i + 1}</td>
+          <td class="small">${p.name || p.code || '—'}</td>
+          <td class="text-end font-mono small fw-semibold">${rev}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    load();
+  </script>
+</AdminLayout>

@@ -1,180 +1,164 @@
 ---
-import AdminSidebar from '../../components/AdminSidebar.astro';
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
-<!doctype html>
-<html lang="zh-TW" class="admin-layout">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>稻荷後台 — 總覽</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/shop/styles.css">
-    <style>
-      html.admin-layout body { max-width: none; display: block; min-height: 100vh; }
-      .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 22px; }
-      @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2,1fr); } }
-      .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-      @media (max-width: 1100px) { .two-col { grid-template-columns: 1fr; } }
-      .section-hd { font-size: 11px; font-weight: 600; letter-spacing: .1em; color: var(--mute); text-transform: uppercase; margin-bottom: 12px; }
-      .mini-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--hairline); }
-      .mini-row:last-child { border-bottom: none; }
-      .status-chip { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; font-family: var(--mono); flex-shrink: 0; }
-      .s-draft { background: var(--amber-soft); color: var(--amber-ink); }
-      .s-confirmed { background: var(--leaf-soft); color: var(--leaf-ink); }
-      .s-invoiced { background: var(--sea-soft); color: var(--sea-ink); }
-      .s-cancelled { background: var(--slate-soft); color: var(--slate-ink); }
-    </style>
-  </head>
-  <body>
-    <div class="admin-shell">
-      <AdminSidebar active="dashboard" />
+<AdminLayout title="儀表板" active="dashboard" pageTitle="儀表板" pageSubtitle="稻荷管理後台">
 
-      <div class="admin-main">
-        <div class="admin-top">
-          <div>
-            <div style="font-size:10px;color:var(--mute);letter-spacing:.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:2px" id="today-label">載入中</div>
-            <h1>總覽</h1>
-          </div>
-          <div style="display:flex;gap:10px">
-            <button class="btn ghost sm" onclick="window.location.reload()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
-              刷新
-            </button>
-            <a href="/admin/orders" class="btn primary sm">查看訂單 →</a>
-          </div>
-        </div>
-
-        <div class="admin-body">
-          <!-- KPI row -->
-          <div class="kpi-grid">
-            <div class="stat-card accent">
-              <div class="lbl">今日收入</div>
-              <div class="val" id="kpi-revenue">MOP —</div>
-              <div class="sub" id="kpi-orders-today">— 張訂單</div>
-            </div>
-            <div class="stat-card">
-              <div class="lbl">待確認草稿</div>
-              <div class="val" style="color:var(--amber-ink)" id="kpi-draft">—</div>
-              <div class="sub">需要處理</div>
-            </div>
-            <div class="stat-card">
-              <div class="lbl">本月訂單</div>
-              <div class="val" style="color:var(--sea-ink)" id="kpi-month">—</div>
-              <div class="sub" id="kpi-month-amt">MOP —</div>
-            </div>
-            <div class="stat-card">
-              <div class="lbl">活躍客戶</div>
-              <div class="val" id="kpi-customers">—</div>
-              <div class="sub">本月下單</div>
-            </div>
-          </div>
-
-          <div class="two-col">
-            <!-- Recent orders -->
-            <div class="card" style="padding:16px 18px">
-              <div class="section-hd">最新訂單</div>
-              <div id="recent-orders">
-                <div style="color:var(--mute);font-size:13px;padding:12px 0">載入中...</div>
-              </div>
-              <a href="/admin/orders" style="display:block;margin-top:12px;font-size:12px;color:var(--sea);font-weight:500;text-decoration:none">查看全部訂單 →</a>
-            </div>
-
-            <!-- Seasonal + quick actions -->
-            <div style="display:flex;flex-direction:column;gap:16px">
-              <div class="card" style="padding:16px 18px">
-                <div class="section-hd">本月旬物</div>
-                <div id="seasonal-items" style="color:var(--mute);font-size:13px">載入中...</div>
-                <a href="/knowledge/seasonal" style="display:block;margin-top:10px;font-size:12px;color:var(--sea);font-weight:500;text-decoration:none">旬物日曆 →</a>
-              </div>
-              <div class="card" style="padding:16px 18px">
-                <div class="section-hd">快捷入口</div>
-                <div style="display:flex;flex-direction:column;gap:8px">
-                  <a href="/admin/orders" class="btn ghost sm block" style="text-align:left;text-decoration:none">📋 訂單管理</a>
-                  <a href="/admin/products" class="btn ghost sm block" style="text-align:left;text-decoration:none">📦 商品管理</a>
-                  <a href="/admin/knowledge" class="btn ghost sm block" style="text-align:left;text-decoration:none">📚 知識庫管理</a>
-                  <a href="/shop/admin/orders" class="btn ghost sm block" style="text-align:left;text-decoration:none">🏪 員工訂單介面</a>
-                </div>
-              </div>
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-blue-lt avatar"><i class="ti ti-currency-dollar text-blue"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="kpi-today-rev">—</div>
+              <div class="text-muted small">今日收入</div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-yellow-lt avatar"><i class="ti ti-clock text-yellow"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="kpi-drafts">—</div>
+              <div class="text-muted small">待確認草稿</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-green-lt avatar"><i class="ti ti-clipboard-check text-green"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="kpi-month-orders">—</div>
+              <div class="text-muted small">本月訂單</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-cyan-lt avatar"><i class="ti ti-users text-cyan"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="kpi-month-amt">—</div>
+              <div class="text-muted small">本月金額</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <script>
-      // Set date label
-      const now = new Date();
-      const label = document.getElementById('today-label');
-      if (label) label.textContent = now.toLocaleDateString('zh-TW', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h3 class="card-title mb-0">最近訂單</h3>
+          <a href="/admin/orders" class="btn btn-sm btn-ghost-primary">查看全部 <i class="ti ti-arrow-right ms-1"></i></a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-vcenter table-hover card-table">
+            <thead>
+              <tr>
+                <th>狀態</th>
+                <th>訂單號</th>
+                <th>客戶</th>
+                <th class="text-end">金額</th>
+                <th class="d-none d-md-table-cell">時間</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="recent-orders">
+              <tr><td colspan="6" class="text-center py-4 text-muted">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-      // Fetch recent orders
-      async function loadDashboard() {
-        try {
-          const r = await fetch('/api/orders?limit=10&status=&sort=desc');
-          const d = await r.json();
-          const orders = d.orders || d.items || [];
+    <div class="col-lg-4">
+      <div class="card mb-3">
+        <div class="card-header">
+          <h3 class="card-title mb-0">本月旬物 <span id="seasonal-month" class="text-muted small ms-1"></span></h3>
+        </div>
+        <div class="card-body p-0" id="seasonal-list">
+          <div class="text-muted text-center py-3 small">載入中…</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3 class="card-title mb-0">快速操作</h3></div>
+        <div class="list-group list-group-flush">
+          <a href="/admin/orders" class="list-group-item list-group-item-action"><i class="ti ti-clipboard-list me-2 text-muted"></i>待確認訂單</a>
+          <a href="/admin/customers" class="list-group-item list-group-item-action"><i class="ti ti-users me-2 text-muted"></i>客戶管理</a>
+          <a href="/admin/analytics" class="list-group-item list-group-item-action"><i class="ti ti-chart-bar me-2 text-muted"></i>報表分析</a>
+          <a href="/shop/order/new" class="list-group-item list-group-item-action"><i class="ti ti-microphone me-2 text-muted"></i>語音下單</a>
+        </div>
+      </div>
+    </div>
+  </div>
 
-          // KPI calc
-          const today = now.toISOString().slice(0, 10);
-          const todayOrders = orders.filter((o: {created_at:string}) => o.created_at?.startsWith(today));
-          const todayRevenue = todayOrders.reduce((s: number, o: {total_amount?:number}) => s + (o.total_amount || 0), 0);
-          const drafts = orders.filter((o: {status:string}) => o.status === 'draft').length;
+  <script>
+    const statusMap = { draft:'草稿', confirmed:'已確認', invoiced:'已開單', cancelled:'已取消' };
+    const statusColor = { draft:'warning', confirmed:'success', invoiced:'primary', cancelled:'secondary' };
+    const today = new Date().toISOString().slice(0, 10);
+    const thisMonth = new Date().toISOString().slice(0, 7);
 
-          const kpiRev = document.getElementById('kpi-revenue');
-          const kpiOrd = document.getElementById('kpi-orders-today');
-          const kpiDraft = document.getElementById('kpi-draft');
-          if (kpiRev) kpiRev.textContent = `MOP ${todayRevenue.toLocaleString('zh-TW', {minimumFractionDigits:0, maximumFractionDigits:0})}`;
-          if (kpiOrd) kpiOrd.textContent = `${todayOrders.length} 張訂單`;
-          if (kpiDraft) kpiDraft.textContent = String(drafts);
+    async function loadOrders() {
+      const resp = await fetch('/api/orders?limit=50');
+      if (!resp.ok) return;
+      const { orders } = await resp.json();
+      const todayAmt = orders.filter(o => o.order_date === today && o.status !== 'cancelled').reduce((s, o) => s + (o.total_amount || 0), 0);
+      const drafts = orders.filter(o => o.status === 'draft').length;
+      const monthOrders = orders.filter(o => o.created_at?.startsWith(thisMonth));
+      const monthAmt = monthOrders.reduce((s, o) => s + (o.total_amount || 0), 0);
+      document.getElementById('kpi-today-rev').textContent = 'MOP ' + todayAmt.toLocaleString('zh-TW', { maximumFractionDigits: 0 });
+      document.getElementById('kpi-drafts').textContent = drafts;
+      document.getElementById('kpi-month-orders').textContent = monthOrders.length;
+      document.getElementById('kpi-month-amt').textContent = 'MOP ' + monthAmt.toLocaleString('zh-TW', { maximumFractionDigits: 0 });
+      const tbody = document.getElementById('recent-orders');
+      const recent = orders.slice(0, 8);
+      if (!recent.length) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">無訂單記錄</td></tr>'; return; }
+      tbody.innerHTML = recent.map(o => {
+        const color = statusColor[o.status] || 'secondary';
+        const amt = o.total_amount ? `MOP ${Number(o.total_amount).toLocaleString()}` : '—';
+        const dt = new Date(o.created_at).toLocaleString('zh-TW', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+        return `<tr>
+          <td><span class="badge bg-${color}-lt text-${color}">${statusMap[o.status] || o.status}</span></td>
+          <td class="font-mono small fw-semibold">${o.order_no || '—'}</td>
+          <td class="small">${o.customer_name || o.customer_code || '—'}</td>
+          <td class="text-end font-mono small fw-semibold">${amt}</td>
+          <td class="text-muted small d-none d-md-table-cell">${dt}</td>
+          <td><a href="/admin/orders/${o.id}" class="btn btn-sm btn-ghost-secondary px-1"><i class="ti ti-arrow-right"></i></a></td>
+        </tr>`;
+      }).join('');
+    }
 
-          // Recent orders list
-          const list = document.getElementById('recent-orders');
-          if (list) {
-            if (!orders.length) { list.innerHTML = '<div style="color:var(--mute);font-size:13px;padding:8px 0">暫無訂單</div>'; return; }
-            list.innerHTML = orders.slice(0, 8).map((o: {order_no?:string;customer_code?:string;status:string;total_amount?:number;created_at:string}) => {
-              const statusMap: Record<string,string> = { draft:'草稿', confirmed:'已確認', invoiced:'已開單', cancelled:'已取消' };
-              const statusCls: Record<string,string> = { draft:'s-draft', confirmed:'s-confirmed', invoiced:'s-invoiced', cancelled:'s-cancelled' };
-              const amt = o.total_amount ? `MOP ${Number(o.total_amount).toLocaleString()}` : '—';
-              const time = new Date(o.created_at).toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit' });
-              return `<div class="mini-row">
-                <span class="status-chip ${statusCls[o.status] || 's-draft'}">${statusMap[o.status] || o.status}</span>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.order_no || '—'}</div>
-                  <div style="font-size:11px;color:var(--mute)">${o.customer_code || '—'} · ${time}</div>
-                </div>
-                <div style="font-size:12px;font-family:var(--mono);font-weight:600;flex-shrink:0">${amt}</div>
-              </div>`;
-            }).join('');
-          }
-        } catch {
-          const list = document.getElementById('recent-orders');
-          if (list) list.innerHTML = '<div style="color:var(--mute);font-size:13px;padding:8px 0">載入失敗</div>';
-        }
-      }
+    async function loadSeasonal() {
+      const month = new Date().getMonth() + 1;
+      document.getElementById('seasonal-month').textContent = `${month}月`;
+      const resp = await fetch(`/api/seasonal?month=${month}`);
+      if (!resp.ok) return;
+      const { items } = await resp.json();
+      const el = document.getElementById('seasonal-list');
+      if (!items?.length) { el.innerHTML = '<div class="text-muted text-center py-3 small">暫無資料</div>'; return; }
+      el.innerHTML = items.slice(0, 4).map(item => `
+        <div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom">
+          <div class="flex-fill"><div class="fw-medium small">${item.item_name_zh || '—'}</div><div class="text-muted" style="font-size:11px">${item.origin || ''}</div></div>
+          <span class="badge bg-green-lt text-green">旺季</span>
+        </div>`).join('');
+    }
 
-      // Seasonal strip
-      async function loadSeasonal() {
-        try {
-          const month = now.getMonth() + 1;
-          const r = await fetch(`/api/seasonal?month=${month}`);
-          const d = await r.json();
-          const el = document.getElementById('seasonal-items');
-          if (el && d.items?.length) {
-            el.innerHTML = d.items.map((i: {item_name_zh:string;origin?:string;category:string}) =>
-              `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--hairline)">
-                <span style="font-size:10px;padding:2px 7px;border-radius:20px;background:${i.category==='premium'?'var(--gold-soft)':'var(--sea-soft)'};color:${i.category==='premium'?'var(--gold-ink)':'var(--sea-ink)'};font-weight:600;font-family:var(--mono)">${i.category==='premium'?'★':'◎'}</span>
-                <span style="font-size:13px;font-weight:600">${i.item_name_zh}</span>
-                ${i.origin ? `<span style="font-size:11px;color:var(--mute);margin-left:auto">${i.origin}</span>` : ''}
-              </div>`
-            ).join('');
-          }
-        } catch {}
-      }
-
-      loadDashboard();
-      loadSeasonal();
-    </script>
-  </body>
-</html>
+    loadOrders();
+    loadSeasonal();
+  </script>
+</AdminLayout>

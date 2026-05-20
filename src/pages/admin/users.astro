@@ -1,0 +1,221 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="用戶管理" active="users" pageTitle="用戶管理" pageSubtitle="帳號設定">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div></div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+      <i class="ti ti-plus me-1"></i>新增用戶
+    </button>
+  </div>
+
+  <!-- User table -->
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-vcenter table-hover card-table">
+        <thead>
+          <tr>
+            <th>用戶名</th>
+            <th>類型</th>
+            <th>客戶代碼</th>
+            <th>狀態</th>
+            <th class="d-none d-md-table-cell">建立時間</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="6" class="text-center py-4 text-muted">載入中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add user modal -->
+  <div class="modal modal-blur fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">新增用戶</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label required">用戶名</label>
+            <input type="text" class="form-control" id="add-username" placeholder="英文小寫或數字" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label required">密碼</label>
+            <input type="password" class="form-control" id="add-password" placeholder="至少 6 個字元" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label required">用戶類型</label>
+            <select class="form-select" id="add-usertype">
+              <option value="wholesale">批發客戶 (wholesale)</option>
+              <option value="retail">零售客戶 (retail)</option>
+              <option value="staff">員工 (staff)</option>
+              <option value="manager">管理員 (manager)</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">客戶代碼（批發/零售必填）</label>
+            <input type="text" class="form-control font-mono" id="add-customercode" placeholder="例：C0001" />
+          </div>
+          <div id="add-error" class="alert alert-danger d-none"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-link me-auto" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="addUser()">
+            <i class="ti ti-plus me-1"></i>建立用戶
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit user modal -->
+  <div class="modal modal-blur fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">編輯用戶 — <span id="edit-username-title"></span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="edit-user-id" />
+          <div class="mb-3">
+            <label class="form-label">用戶類型</label>
+            <select class="form-select" id="edit-usertype">
+              <option value="wholesale">批發客戶 (wholesale)</option>
+              <option value="retail">零售客戶 (retail)</option>
+              <option value="staff">員工 (staff)</option>
+              <option value="manager">管理員 (manager)</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">客戶代碼</label>
+            <input type="text" class="form-control font-mono" id="edit-customercode" placeholder="例：C0001" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">新密碼（留空不修改）</label>
+            <input type="password" class="form-control" id="edit-password" placeholder="留空不修改" />
+          </div>
+          <div class="mb-3">
+            <label class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="edit-active" />
+              <span class="form-check-label">帳號啟用中</span>
+            </label>
+          </div>
+          <div id="edit-error" class="alert alert-danger d-none"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-link me-auto" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="saveEdit()">儲存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const typeLabel = { wholesale:'批發客戶', retail:'零售客戶', staff:'員工', manager:'管理員' };
+    const typeColor = { wholesale:'cyan', retail:'blue', staff:'green', manager:'purple' };
+
+    async function load() {
+      const resp = await fetch('/api/admin/users');
+      if (!resp.ok) return;
+      const { users } = await resp.json();
+      render(users);
+    }
+
+    function render(users) {
+      const tbody = document.getElementById('users-tbody');
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">無用戶資料</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => {
+        const color = typeColor[u.user_type] || 'secondary';
+        const created = u.created_at ? new Date(u.created_at).toLocaleDateString('zh-TW') : '—';
+        const activeBadge = u.is_active !== false
+          ? `<span class="badge bg-success-lt text-success">啟用</span>`
+          : `<span class="badge bg-secondary-lt text-secondary">停用</span>`;
+        return `<tr>
+          <td class="fw-medium font-mono">${u.username}</td>
+          <td><span class="badge bg-${color}-lt text-${color}">${typeLabel[u.user_type] || u.user_type}</span></td>
+          <td class="font-mono text-muted small">${u.customer_code || '—'}</td>
+          <td>${activeBadge}</td>
+          <td class="text-muted small d-none d-md-table-cell">${created}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-secondary" onclick='openEdit(${JSON.stringify(u)})'>
+              <i class="ti ti-pencil"></i>
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    window.openEdit = function(user) {
+      document.getElementById('edit-user-id').value = user.id;
+      document.getElementById('edit-username-title').textContent = user.username;
+      document.getElementById('edit-usertype').value = user.user_type || 'wholesale';
+      document.getElementById('edit-customercode').value = user.customer_code || '';
+      document.getElementById('edit-active').checked = user.is_active !== false;
+      document.getElementById('edit-password').value = '';
+      document.getElementById('edit-error').classList.add('d-none');
+      new bootstrap.Modal(document.getElementById('editUserModal')).show();
+    };
+
+    window.addUser = async function() {
+      const username = document.getElementById('add-username').value.trim();
+      const password = document.getElementById('add-password').value;
+      const user_type = document.getElementById('add-usertype').value;
+      const customer_code = document.getElementById('add-customercode').value.trim();
+      const errEl = document.getElementById('add-error');
+
+      if (!username || !password) { errEl.textContent = '請填寫用戶名和密碼'; errEl.classList.remove('d-none'); return; }
+      if (password.length < 6) { errEl.textContent = '密碼至少 6 個字元'; errEl.classList.remove('d-none'); return; }
+
+      const resp = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, user_type, customer_code }),
+      });
+      const data = await resp.json();
+      if (!data.ok) { errEl.textContent = data.error || '建立失敗'; errEl.classList.remove('d-none'); return; }
+      bootstrap.Modal.getInstance(document.getElementById('addUserModal'))?.hide();
+      document.getElementById('add-username').value = '';
+      document.getElementById('add-password').value = '';
+      document.getElementById('add-customercode').value = '';
+      errEl.classList.add('d-none');
+      load();
+    };
+
+    window.saveEdit = async function() {
+      const id = document.getElementById('edit-user-id').value;
+      const user_type = document.getElementById('edit-usertype').value;
+      const customer_code = document.getElementById('edit-customercode').value.trim();
+      const is_active = document.getElementById('edit-active').checked;
+      const password = document.getElementById('edit-password').value;
+      const errEl = document.getElementById('edit-error');
+
+      const body = { id, user_type, customer_code, is_active };
+      if (password) {
+        if (password.length < 6) { errEl.textContent = '密碼至少 6 個字元'; errEl.classList.remove('d-none'); return; }
+        body.password = password;
+      }
+
+      const resp = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await resp.json();
+      if (!data.ok) { errEl.textContent = data.error || '更新失敗'; errEl.classList.remove('d-none'); return; }
+      bootstrap.Modal.getInstance(document.getElementById('editUserModal'))?.hide();
+      load();
+    };
+
+    load();
+  </script>
+</AdminLayout>

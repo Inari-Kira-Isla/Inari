@@ -1,0 +1,218 @@
+---
+interface Props {
+  title: string;
+  active: 'dashboard' | 'orders' | 'customers' | 'products' | 'knowledge' | 'users' | 'analytics';
+  pageTitle: string;
+  pageSubtitle?: string;
+}
+const { title, active, pageTitle, pageSubtitle } = Astro.props;
+const username = Astro.locals.username || '管理員';
+---
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>{title} — 稻荷管理後台</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/[email protected]/dist/css/tabler.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.29.0/dist/tabler-icons.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Noto Sans TC', system-ui, sans-serif; }
+    .navbar-brand-text { font-weight: 700; letter-spacing: -0.03em; font-size: 1.1rem; }
+    .nav-link-title { font-size: 0.875rem; }
+    .page-title { font-family: 'Noto Sans TC', sans-serif; font-weight: 600; }
+    code, .font-mono { font-family: 'IBM Plex Mono', monospace; }
+  </style>
+</head>
+<body class="antialiased">
+  <div class="page">
+
+    <!-- ── Vertical Sidebar ── -->
+    <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+      <div class="container-fluid">
+
+        <!-- Mobile top bar toggle -->
+        <button class="navbar-toggler" type="button"
+          data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
+          aria-controls="sidebar-menu" aria-expanded="false" aria-label="開啟選單">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Brand (visible on desktop sidebar + mobile top bar) -->
+        <a href="/admin/" class="navbar-brand">
+          <span class="navbar-brand-text">稻荷 INARI</span>
+        </a>
+
+        <!-- Mobile: user avatar in top-right -->
+        <div class="navbar-nav flex-row d-lg-none ms-auto">
+          <div class="nav-item dropdown">
+            <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown">
+              <span class="avatar avatar-sm">{username[0]?.toUpperCase()}</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+              <a href="/shop" class="dropdown-item">
+                <i class="ti ti-arrow-left me-2"></i>返回商城
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item text-danger" onclick="logout();return false">
+                <i class="ti ti-logout me-2"></i>登出
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar nav menu -->
+        <div class="collapse navbar-collapse" id="sidebar-menu">
+          <ul class="navbar-nav pt-lg-3">
+
+            <li class="nav-item">
+              <a class:list={["nav-link", { active: active === 'dashboard' }]} href="/admin/">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-home"></i>
+                </span>
+                <span class="nav-link-title">儀表板</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class:list={["nav-link", { active: active === 'orders' }]} href="/admin/orders">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-clipboard-list"></i>
+                </span>
+                <span class="nav-link-title">訂單管理</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class:list={["nav-link", { active: active === 'customers' }]} href="/admin/customers">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-users"></i>
+                </span>
+                <span class="nav-link-title">客戶管理</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class:list={["nav-link", { active: active === 'products' }]} href="/admin/products">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-package"></i>
+                </span>
+                <span class="nav-link-title">商品目錄</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class:list={["nav-link", { active: active === 'knowledge' }]} href="/admin/knowledge">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-book"></i>
+                </span>
+                <span class="nav-link-title">知識庫</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class:list={["nav-link", { active: active === 'users' }]} href="/admin/users">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-user-cog"></i>
+                </span>
+                <span class="nav-link-title">用戶管理</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class:list={["nav-link", { active: active === 'analytics' }]} href="/admin/analytics">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-chart-bar"></i>
+                </span>
+                <span class="nav-link-title">報表分析</span>
+              </a>
+            </li>
+
+          </ul>
+
+          <div class="mt-auto"></div>
+
+          <!-- Sidebar footer: back to shop + logout -->
+          <div class="navbar-nav border-top pt-2 mt-2">
+            <div class="nav-item">
+              <a class="nav-link" href="/shop">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-arrow-left"></i>
+                </span>
+                <span class="nav-link-title">返回商城</span>
+              </a>
+            </div>
+            <div class="nav-item dropdown d-none d-lg-block">
+              <a href="#" class="nav-link d-flex lh-1 text-reset p-0 py-2" data-bs-toggle="dropdown">
+                <span class="avatar avatar-sm me-2">{username[0]?.toUpperCase()}</span>
+                <div class="d-none d-xl-block">
+                  <div class="small">{username}</div>
+                  <div class="text-muted" style="font-size:11px">manager</div>
+                </div>
+              </a>
+              <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                <a href="#" class="dropdown-item text-danger" onclick="logout();return false">
+                  <i class="ti ti-logout me-2"></i>登出
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Page wrapper ── -->
+    <div class="page-wrapper">
+
+      <!-- Page header -->
+      <div class="page-header d-print-none">
+        <div class="container-xl">
+          <div class="row g-2 align-items-center">
+            <div class="col">
+              {pageSubtitle && (
+                <div class="page-pretitle">{pageSubtitle}</div>
+              )}
+              <h2 class="page-title">{pageTitle}</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page body -->
+      <div class="page-body">
+        <div class="container-xl">
+          <slot />
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="footer footer-transparent d-print-none">
+        <div class="container-xl">
+          <div class="row text-center align-items-center flex-row-reverse">
+            <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+              <ul class="list-inline list-inline-dots mb-0">
+                <li class="list-inline-item text-muted">
+                  稻荷管理後台 &copy; 2026
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/[email protected]/dist/js/tabler.min.js" defer></script>
+  <script>
+    function logout() {
+      fetch('/api/auth/logout', { method: 'POST' })
+        .then(() => { window.location.href = '/shop/login'; });
+    }
+  </script>
+</body>
+</html>

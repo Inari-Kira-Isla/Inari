@@ -1,0 +1,234 @@
+---
+export const prerender = false;
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+const { id } = Astro.params;
+---
+<AdminLayout title="訂單詳情" active="orders" pageTitle="訂單詳情" pageSubtitle="訂單管理">
+  <div id="order-detail">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <a href="/admin/orders" class="btn btn-outline-secondary btn-sm">
+        <i class="ti ti-arrow-left me-1"></i>返回列表
+      </a>
+      <span id="order-no-title" class="text-muted font-mono small">載入中…</span>
+    </div>
+
+    <!-- Order header card -->
+    <div class="row g-3 mb-3">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h3 class="card-title mb-0">訂單資訊</h3>
+            <span id="status-badge" class="badge"></span>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-6 col-md-3">
+                <div class="text-muted small mb-1">訂單號</div>
+                <div id="f-order-no" class="fw-semibold font-mono">—</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-muted small mb-1">客戶代碼</div>
+                <div id="f-customer-code" class="fw-semibold font-mono">—</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-muted small mb-1">客戶名稱</div>
+                <div id="f-customer-name" class="fw-semibold">—</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-muted small mb-1">訂單日期</div>
+                <div id="f-order-date" class="fw-semibold">—</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-muted small mb-1">來源</div>
+                <div id="f-source" class="fw-semibold">—</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-muted small mb-1">建立時間</div>
+                <div id="f-created" class="fw-semibold">—</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-muted small mb-1">合計</div>
+                <div id="f-total" class="fw-bold fs-4">—</div>
+              </div>
+              <div class="col-12" id="notes-row" style="display:none">
+                <div class="text-muted small mb-1">備注</div>
+                <div id="f-notes" class="text-secondary"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action card -->
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-header"><h3 class="card-title mb-0">操作</h3></div>
+          <div class="card-body d-flex flex-column gap-2" id="action-buttons">
+            <div class="text-muted small text-center py-3">載入中…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items table -->
+    <div class="card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h3 class="card-title mb-0">商品明細</h3>
+        <span id="items-count" class="badge bg-secondary">—</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+          <thead>
+            <tr>
+              <th>商品代碼</th>
+              <th>商品名稱</th>
+              <th class="text-end">數量</th>
+              <th class="text-end">單價</th>
+              <th class="text-end">小計</th>
+              <th>信心度</th>
+            </tr>
+          </thead>
+          <tbody id="items-tbody">
+            <tr><td colspan="6" class="text-center text-muted py-4">載入中…</td></tr>
+          </tbody>
+          <tfoot id="items-tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm modal -->
+  <div class="modal modal-blur fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="modal-title" id="confirmTitle">確認操作</div>
+          <div id="confirmMsg" class="text-muted mt-1"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-link me-auto" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn" id="confirmBtn" onclick="doAction()">確認</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ orderId: id }}>
+    const statusMap = { draft:'草稿', confirmed:'已確認', invoiced:'已開單', cancelled:'已取消' };
+    const statusColor = { draft:'warning', confirmed:'success', invoiced:'primary', cancelled:'secondary' };
+    let currentOrder = null;
+    let pendingAction = null;
+
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleString('zh-TW', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    }
+
+    async function load() {
+      const resp = await fetch(`/api/admin/orders/${orderId}`);
+      if (!resp.ok) { document.getElementById('order-detail').innerHTML = '<div class="alert alert-danger">訂單不存在或載入失敗</div>'; return; }
+      const { order } = await resp.json();
+      currentOrder = order;
+      render(order);
+    }
+
+    function render(order) {
+      document.getElementById('order-no-title').textContent = order.order_no || '—';
+      document.getElementById('f-order-no').textContent = order.order_no || '—';
+      document.getElementById('f-customer-code').textContent = order.customer_code || '—';
+      document.getElementById('f-customer-name').textContent = order.customer_name || '—';
+      document.getElementById('f-order-date').textContent = order.order_date || '—';
+      document.getElementById('f-source').textContent = order.source || '—';
+      document.getElementById('f-created').textContent = fmtDate(order.created_at);
+      document.getElementById('f-total').textContent = order.total_amount
+        ? `MOP ${Number(order.total_amount).toLocaleString('zh-TW', { minimumFractionDigits: 2 })}` : '—';
+
+      const badge = document.getElementById('status-badge');
+      badge.textContent = statusMap[order.status] || order.status;
+      badge.className = `badge bg-${statusColor[order.status] || 'secondary'}-lt`;
+
+      if (order.notes) {
+        document.getElementById('notes-row').style.display = '';
+        document.getElementById('f-notes').textContent = order.notes;
+      }
+
+      renderActions(order.status);
+      renderItems(order.items || []);
+    }
+
+    function renderActions(status) {
+      const el = document.getElementById('action-buttons');
+      const btns = [];
+      if (status === 'draft') {
+        btns.push(`<button class="btn btn-success w-100" onclick="askAction('confirmed','確認訂單','確認後將通知客戶，確定要確認此訂單？')">
+          <i class="ti ti-check me-1"></i>確認訂單</button>`);
+        btns.push(`<button class="btn btn-danger w-100" onclick="askAction('cancelled','取消訂單','此操作無法復原，確定取消？')">
+          <i class="ti ti-x me-1"></i>取消訂單</button>`);
+      } else if (status === 'confirmed') {
+        btns.push(`<button class="btn btn-primary w-100" onclick="askAction('invoiced','標記開單','確認已向客戶開立發票？')">
+          <i class="ti ti-receipt me-1"></i>標記開單</button>`);
+        btns.push(`<button class="btn btn-danger w-100" onclick="askAction('cancelled','取消訂單','此操作無法復原，確定取消？')">
+          <i class="ti ti-x me-1"></i>取消訂單</button>`);
+      } else {
+        btns.push(`<div class="text-muted small text-center py-2">此訂單無可用操作</div>`);
+      }
+      el.innerHTML = btns.join('');
+    }
+
+    function renderItems(items) {
+      document.getElementById('items-count').textContent = `${items.length} 件`;
+      if (!items.length) {
+        document.getElementById('items-tbody').innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">無商品明細</td></tr>';
+        return;
+      }
+      let total = 0;
+      document.getElementById('items-tbody').innerHTML = items.map(item => {
+        const subtotal = (item.qty || 0) * (item.unit_price || 0);
+        total += subtotal;
+        const conf = item.match_confidence;
+        const confBadge = conf === 'high' ? 'success' : conf === 'medium' ? 'warning' : 'secondary';
+        return `<tr>
+          <td class="font-mono text-muted small">${item.product_code || '—'}</td>
+          <td>${item.product_name || item.raw_text || '—'}</td>
+          <td class="text-end">${item.qty ?? '—'} ${item.unit || ''}</td>
+          <td class="text-end font-mono">${item.unit_price ? 'MOP ' + Number(item.unit_price).toLocaleString() : '—'}</td>
+          <td class="text-end font-mono fw-semibold">${subtotal ? 'MOP ' + subtotal.toLocaleString() : '—'}</td>
+          <td><span class="badge bg-${confBadge}-lt text-${confBadge}">${conf || '—'}</span></td>
+        </tr>`;
+      }).join('');
+      document.getElementById('items-tfoot').innerHTML =
+        `<tr class="fw-bold"><td colspan="4" class="text-end">合計</td>
+         <td class="text-end font-mono">MOP ${total.toLocaleString('zh-TW', { minimumFractionDigits: 2 })}</td><td></td></tr>`;
+    }
+
+    window.askAction = function(action, title, msg) {
+      pendingAction = action;
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMsg').textContent = msg;
+      const btn = document.getElementById('confirmBtn');
+      btn.className = action === 'cancelled' ? 'btn btn-danger' : 'btn btn-primary';
+      btn.textContent = title;
+      new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    };
+
+    window.doAction = async function() {
+      bootstrap.Modal.getInstance(document.getElementById('confirmModal'))?.hide();
+      if (!pendingAction) return;
+      const resp = await fetch(`/api/admin/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: pendingAction }),
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        load();
+      } else {
+        alert('操作失敗：' + (data.error || '未知錯誤'));
+      }
+      pendingAction = null;
+    };
+
+    load();
+  </script>
+</AdminLayout>
