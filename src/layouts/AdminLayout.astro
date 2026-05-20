@@ -14,9 +14,8 @@ const username = Astro.locals.username || '管理員';
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>{title} — 稻荷管理後台</title>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/[email protected]/dist/css/tabler.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.29.0/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="/tabler/tabler.min.css" />
+  <link rel="stylesheet" href="/tabler/tabler-icons.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -207,7 +206,7 @@ const username = Astro.locals.username || '管理員';
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tabler/[email protected]/dist/js/tabler.min.js" defer></script>
+  <script src="/tabler/tabler.min.js" defer></script>
   <script>
     function logout() {
       fetch('/api/auth/logout', { method: 'POST' })
