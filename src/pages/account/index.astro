@@ -1,0 +1,197 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>稻荷 — 我的帳戶</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      .order-card {
+        border-radius: var(--r-lg); border: 1px solid var(--hairline);
+        background: var(--paper); margin-bottom: 10px; overflow: hidden;
+      }
+      .order-head {
+        display: flex; align-items: center; gap: 10px;
+        padding: 12px 16px; cursor: pointer;
+      }
+      .order-head:hover { background: var(--paper-2); }
+      .status-chip { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; font-family: var(--mono); flex-shrink: 0; }
+      .s-draft { background: var(--amber-soft); color: var(--amber-ink); }
+      .s-confirmed { background: var(--leaf-soft); color: var(--leaf-ink); }
+      .s-invoiced { background: var(--sea-soft); color: var(--sea-ink); }
+      .s-cancelled { background: var(--slate-soft); color: var(--slate-ink); }
+      .order-body { display: none; padding: 0 16px 12px; border-top: 1px solid var(--hairline); }
+      .order-card.open .order-body { display: block; }
+      .order-card.open .order-chevron { transform: rotate(90deg); }
+      .order-chevron { margin-left: auto; flex-shrink: 0; transition: transform .2s; color: var(--mute); }
+      .item-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--hairline); font-size: 12px; }
+      .item-row:last-child { border-bottom: none; }
+
+      .filter-tabs { display: flex; gap: 6px; padding: 0 18px 14px; overflow-x: auto; scrollbar-width: none; }
+      .filter-tabs::-webkit-scrollbar { display: none; }
+      .ftab { flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--hairline); background: var(--paper); cursor: pointer; transition: all .15s; }
+      .ftab.active { background: var(--sea); color: var(--paper); border-color: var(--sea); }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <div class="app-header">
+      <button class="icon-btn" onclick="window.history.back()" aria-label="返回">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div style="font-weight:600;font-size:14px">我的帳戶</div>
+      <button class="icon-btn" onclick="logout()" aria-label="登出">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
+    </div>
+
+    <!-- Account info card -->
+    <div style="padding:16px 18px 0">
+      <div class="card" style="padding:16px;display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,oklch(22% 0.04 240),oklch(28% 0.06 232));color:var(--paper);border:none">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--sea);display:grid;place-items:center;font-size:20px;font-weight:700;flex-shrink:0" id="user-avatar">—</div>
+        <div style="flex:1">
+          <div style="font-size:16px;font-weight:700" id="user-name">載入中...</div>
+          <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.6);margin-top:3px" id="user-meta">—</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.6)">CUSTOMER</div>
+          <div style="font-family:var(--mono);font-size:13px;font-weight:600" id="customer-code">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:12px 18px">
+      <div class="stat-card" style="padding:12px">
+        <div class="lbl">本月訂單</div>
+        <div class="val" id="stat-month">—</div>
+      </div>
+      <div class="stat-card accent" style="padding:12px">
+        <div class="lbl">本月金額</div>
+        <div class="val" id="stat-amt" style="font-size:16px">—</div>
+      </div>
+      <div class="stat-card" style="padding:12px">
+        <div class="lbl">待確認</div>
+        <div class="val" style="color:var(--amber-ink)" id="stat-draft">—</div>
+      </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="filter-tabs">
+      <button class="ftab active" data-status="" onclick="selectStatus('',this)">全部</button>
+      <button class="ftab" data-status="draft" onclick="selectStatus('draft',this)">草稿</button>
+      <button class="ftab" data-status="confirmed" onclick="selectStatus('confirmed',this)">已確認</button>
+      <button class="ftab" data-status="invoiced" onclick="selectStatus('invoiced',this)">已開單</button>
+      <button class="ftab" data-status="cancelled" onclick="selectStatus('cancelled',this)">已取消</button>
+    </div>
+
+    <!-- Orders list -->
+    <div style="padding:0 18px 32px" id="orders-list">
+      <div style="padding:24px 0;text-align:center;color:var(--mute);font-size:13px">載入中...</div>
+    </div>
+
+    <script>
+      const statusMap: Record<string,string> = { draft:'草稿', confirmed:'已確認', invoiced:'已開單', cancelled:'已取消' };
+      const statusCls: Record<string,string> = { draft:'s-draft', confirmed:'s-confirmed', invoiced:'s-invoiced', cancelled:'s-cancelled' };
+
+      let allOrders: any[] = [];
+      let currentStatus = '';
+      const now = new Date();
+      const thisMonth = now.toISOString().slice(0, 7);
+
+      // User info
+      fetch('/api/auth/me').then(r => r.json()).then(d => {
+        if (d.username) {
+          const nameEl = document.getElementById('user-name')!;
+          const metaEl = document.getElementById('user-meta')!;
+          const codeEl = document.getElementById('customer-code')!;
+          const avatarEl = document.getElementById('user-avatar')!;
+          nameEl.textContent = d.username;
+          avatarEl.textContent = d.username[0]?.toUpperCase() || '?';
+          metaEl.textContent = d.user_type?.toUpperCase() || '—';
+          codeEl.textContent = d.customer_code || '—';
+        }
+      }).catch(() => {});
+
+      async function loadOrders() {
+        try {
+          const r = await fetch('/api/orders?limit=100');
+          const d = await r.json();
+          allOrders = d.orders || d.items || [];
+
+          // Stats
+          const month = allOrders.filter((o: any) => o.created_at?.startsWith(thisMonth));
+          const monthAmt = month.reduce((s: number, o: any) => s + (o.total_amount || 0), 0);
+          const drafts = allOrders.filter((o: any) => o.status === 'draft').length;
+          document.getElementById('stat-month')!.textContent = String(month.length);
+          document.getElementById('stat-amt')!.textContent = `${monthAmt.toLocaleString()}`;
+          document.getElementById('stat-draft')!.textContent = String(drafts);
+
+          renderOrders();
+        } catch {
+          document.getElementById('orders-list')!.innerHTML =
+            '<div style="padding:24px 0;text-align:center;color:var(--mute);font-size:13px">載入失敗</div>';
+        }
+      }
+
+      function selectStatus(status: string, btn: HTMLElement) {
+        currentStatus = status;
+        document.querySelectorAll('.ftab').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+        renderOrders();
+      }
+
+      function renderOrders() {
+        const list = document.getElementById('orders-list')!;
+        const filtered = currentStatus ? allOrders.filter(o => o.status === currentStatus) : allOrders;
+
+        if (!filtered.length) {
+          list.innerHTML = '<div style="padding:24px 0;text-align:center;color:var(--mute);font-size:13px">無訂單記錄</div>';
+          return;
+        }
+
+        list.innerHTML = filtered.map((o: any, i: number) => {
+          const amt = o.total_amount ? `MOP ${Number(o.total_amount).toLocaleString('zh-TW', {minimumFractionDigits:2})}` : '—';
+          const dt = new Date(o.created_at).toLocaleDateString('zh-TW', { year:'2-digit', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+          const items = o.items || o.order_items || [];
+          return `<div class="order-card" id="oc-${i}">
+            <div class="order-head" onclick="toggleOrder(${i})">
+              <span class="status-chip ${statusCls[o.status] || 's-draft'}">${statusMap[o.status] || o.status}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:600;font-family:var(--mono)">${o.order_no || '—'}</div>
+                <div style="font-size:11px;color:var(--mute)">${dt}</div>
+              </div>
+              <div style="font-family:var(--mono);font-size:13px;font-weight:600;flex-shrink:0;margin-right:8px">${amt}</div>
+              <svg class="order-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="m9 6 6 6-6 6"/></svg>
+            </div>
+            <div class="order-body">
+              ${items.length ? items.map((item: any) => `
+                <div class="item-row">
+                  <span style="font-family:var(--mono);font-size:10px;color:var(--mute);flex-shrink:0">${item.item_code||item.product_code||'—'}</span>
+                  <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.product_name||item.name||'—'}</span>
+                  <span style="flex-shrink:0;font-size:11px;color:var(--mute)">${item.quantity||'?'} ${item.unit||''}</span>
+                  <span style="flex-shrink:0;font-family:var(--mono);font-size:12px;font-weight:600">${item.unit_price ? 'MOP ' + Number(item.unit_price*item.quantity).toLocaleString() : '—'}</span>
+                </div>`).join('') : '<div style="padding:12px 0;font-size:12px;color:var(--mute)">詳細商品資料暫不顯示</div>'}
+              ${o.notes ? `<div style="margin-top:8px;font-size:11px;color:var(--mute);padding:8px;background:var(--paper-2);border-radius:var(--r-sm)">備注：${o.notes}</div>` : ''}
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      function toggleOrder(i: number) {
+        document.getElementById(`oc-${i}`)?.classList.toggle('open');
+      }
+
+      function logout() {
+        fetch('/api/auth/logout', { method: 'POST' }).then(() => { window.location.href = '/shop/login'; });
+      }
+
+      loadOrders();
+    </script>
+  </body>
+</html>

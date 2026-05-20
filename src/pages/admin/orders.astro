@@ -1,0 +1,264 @@
+---
+import AdminSidebar from '../../components/AdminSidebar.astro';
+---
+<!doctype html>
+<html lang="zh-TW" class="admin-layout">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>稻荷後台 — 訂單管理</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      html.admin-layout body { max-width: none; display: block; min-height: 100vh; }
+      .status-chip { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; font-family: var(--mono); }
+      .s-draft { background: var(--amber-soft); color: var(--amber-ink); }
+      .s-confirmed { background: var(--leaf-soft); color: var(--leaf-ink); }
+      .s-invoiced { background: var(--sea-soft); color: var(--sea-ink); }
+      .s-cancelled { background: var(--slate-soft); color: var(--slate-ink); }
+    </style>
+  </head>
+  <body>
+    <div class="admin-shell">
+      <AdminSidebar active="orders" />
+
+      <div class="admin-main">
+        <div class="admin-top">
+          <div>
+            <div style="font-size:10px;color:var(--mute);letter-spacing:.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:2px" id="today-label">—</div>
+            <h1>訂單管理</h1>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="btn ghost sm" onclick="exportCSV()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              匯出 CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-body">
+          <!-- Stats -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px">
+            <div class="stat-card accent">
+              <div class="lbl">今日金額</div>
+              <div class="val" id="stat-amount">MOP —</div>
+              <div class="sub" id="stat-today-count">— 張</div>
+            </div>
+            <div class="stat-card">
+              <div class="lbl">草稿待確認</div>
+              <div class="val" style="color:var(--amber-ink)" id="stat-draft">—</div>
+              <div class="sub">需 staff 處理</div>
+            </div>
+            <div class="stat-card">
+              <div class="lbl">已確認</div>
+              <div class="val" style="color:var(--leaf-ink)" id="stat-confirmed">—</div>
+              <div class="sub">準備出貨</div>
+            </div>
+            <div class="stat-card">
+              <div class="lbl">已開單</div>
+              <div class="val" style="color:var(--sea-ink)" id="stat-invoiced">—</div>
+              <div class="sub">本次查詢</div>
+            </div>
+          </div>
+
+          <!-- Filter bar -->
+          <div class="card" style="padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <input class="input" id="f-date" type="date" style="width:160px;padding:8px 12px" onchange="loadOrders()" />
+            <select class="input select" id="f-status" style="width:150px;padding:8px 12px" onchange="loadOrders()">
+              <option value="">全部狀態</option>
+              <option value="draft">草稿</option>
+              <option value="confirmed">已確認</option>
+              <option value="invoiced">已開單</option>
+              <option value="cancelled">已取消</option>
+            </select>
+            <input class="input" id="f-customer" type="text" style="flex:1;min-width:150px;padding:8px 12px" placeholder="搜尋客戶代號或訂單號…" />
+            <button class="btn primary sm" onclick="loadOrders()">查詢</button>
+            <button class="btn ghost sm" onclick="clearFilters()">清除</button>
+          </div>
+
+          <!-- Table -->
+          <div class="card" style="overflow:hidden">
+            <div style="overflow-x:auto">
+              <table class="tbl" id="orders-table">
+                <thead>
+                  <tr>
+                    <th>訂單號</th>
+                    <th>狀態</th>
+                    <th>客戶代號</th>
+                    <th>金額 (MOP)</th>
+                    <th>下單時間</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="orders-tbody">
+                  <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--mute)">載入中...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--hairline)">
+              <span style="font-size:12px;color:var(--mute)" id="orders-count">—</span>
+              <button class="btn ghost sm" id="load-more-btn" style="display:none" onclick="loadMore()">載入更多</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirm modal -->
+    <div id="confirm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:center;justify-content:center">
+      <div style="background:var(--paper);border-radius:var(--r-xl);padding:24px;width:340px;max-width:90vw">
+        <h3 style="margin:0 0 8px;font-size:16px" id="modal-title">確認操作</h3>
+        <p style="font-size:13px;color:var(--ink-2);margin:0 0 20px" id="modal-desc">確定要執行此操作嗎？</p>
+        <div style="display:flex;gap:10px">
+          <button class="btn ghost sm" onclick="closeModal()" style="flex:1">取消</button>
+          <button class="btn primary sm" onclick="confirmAction()" style="flex:1" id="modal-confirm-btn">確認</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+      let allOrders: any[] = [];
+      let pendingAction: (() => Promise<void>) | null = null;
+      let offset = 0;
+      const PAGE = 50;
+
+      const label = document.getElementById('today-label');
+      if (label) label.textContent = now.toLocaleDateString('zh-TW', { year:'numeric', month:'long', day:'numeric', weekday:'short' });
+
+      // Set today's date as default filter
+      const dateInput = document.getElementById('f-date') as HTMLInputElement;
+      if (dateInput) dateInput.value = todayStr;
+
+      function clearFilters() {
+        (document.getElementById('f-date') as HTMLInputElement).value = '';
+        (document.getElementById('f-status') as HTMLSelectElement).value = '';
+        (document.getElementById('f-customer') as HTMLInputElement).value = '';
+        loadOrders();
+      }
+
+      async function loadOrders(reset = true) {
+        if (reset) offset = 0;
+        const date = (document.getElementById('f-date') as HTMLInputElement).value;
+        const status = (document.getElementById('f-status') as HTMLSelectElement).value;
+        const customer = (document.getElementById('f-customer') as HTMLInputElement).value.trim();
+
+        let url = `/api/orders?limit=${PAGE}&offset=${offset}`;
+        if (date) url += `&date=${date}`;
+        if (status) url += `&status=${status}`;
+        if (customer) url += `&customer=${encodeURIComponent(customer)}`;
+
+        const tbody = document.getElementById('orders-tbody')!;
+        if (reset) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--mute)">載入中...</td></tr>';
+
+        try {
+          const r = await fetch(url);
+          const d = await r.json();
+          const orders: any[] = d.orders || d.items || [];
+
+          if (reset) allOrders = orders;
+          else allOrders = [...allOrders, ...orders];
+
+          renderOrders(allOrders);
+
+          // Stats
+          const today = allOrders.filter(o => o.created_at?.startsWith(todayStr));
+          const todayAmt = today.reduce((s: number, o: any) => s + (o.total_amount || 0), 0);
+          document.getElementById('stat-amount')!.textContent = `MOP ${todayAmt.toLocaleString()}`;
+          document.getElementById('stat-today-count')!.textContent = `${today.length} 張`;
+          document.getElementById('stat-draft')!.textContent = String(allOrders.filter(o => o.status === 'draft').length);
+          document.getElementById('stat-confirmed')!.textContent = String(allOrders.filter(o => o.status === 'confirmed').length);
+          document.getElementById('stat-invoiced')!.textContent = String(allOrders.filter(o => o.status === 'invoiced').length);
+
+          // Pagination
+          offset += orders.length;
+          const moreBtn = document.getElementById('load-more-btn')!;
+          moreBtn.style.display = orders.length < PAGE ? 'none' : 'block';
+          document.getElementById('orders-count')!.textContent = `共 ${allOrders.length} 筆${orders.length >= PAGE ? '（還有更多）' : ''}`;
+        } catch {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--mute)">載入失敗，請稍後再試</td></tr>';
+        }
+      }
+
+      function renderOrders(orders: any[]) {
+        const tbody = document.getElementById('orders-tbody')!;
+        if (!orders.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--mute)">無訂單記錄</td></tr>';
+          return;
+        }
+        const statusMap: Record<string,string> = { draft:'草稿', confirmed:'已確認', invoiced:'已開單', cancelled:'已取消' };
+        const statusCls: Record<string,string> = { draft:'s-draft', confirmed:'s-confirmed', invoiced:'s-invoiced', cancelled:'s-cancelled' };
+
+        tbody.innerHTML = orders.map(o => {
+          const dt = new Date(o.created_at).toLocaleString('zh-TW', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+          const amt = o.total_amount ? Number(o.total_amount).toLocaleString('zh-TW', {minimumFractionDigits:2}) : '—';
+          const canConfirm = o.status === 'draft';
+          const canCancel = o.status !== 'cancelled';
+          return `<tr>
+            <td class="mono">${o.order_no || '—'}</td>
+            <td><span class="status-chip ${statusCls[o.status] || 's-draft'}">${statusMap[o.status] || o.status}</span></td>
+            <td class="mono">${o.customer_code || '—'}</td>
+            <td class="num">${amt}</td>
+            <td style="font-size:12px;color:var(--mute)">${dt}</td>
+            <td>
+              <div style="display:flex;gap:6px">
+                ${canConfirm ? `<button class="btn ghost sm" onclick="doConfirm('${o.id}')">確認</button>` : ''}
+                ${canCancel ? `<button class="btn ghost sm" style="color:var(--coral)" onclick="doCancel('${o.id}')">取消</button>` : ''}
+              </div>
+            </td>
+          </tr>`;
+        }).join('');
+      }
+
+      function loadMore() { loadOrders(false); }
+
+      function doConfirm(id: string) {
+        document.getElementById('modal-title')!.textContent = '確認訂單';
+        document.getElementById('modal-desc')!.textContent = `確定要確認訂單 ${id} 嗎？`;
+        pendingAction = async () => {
+          await fetch(`/api/orders/${id}/confirm`, { method: 'POST' });
+          closeModal(); loadOrders();
+        };
+        showModal();
+      }
+
+      function doCancel(id: string) {
+        document.getElementById('modal-title')!.textContent = '取消訂單';
+        document.getElementById('modal-desc')!.textContent = `確定要取消此訂單嗎？此操作不可逆。`;
+        (document.getElementById('modal-confirm-btn') as HTMLButtonElement).style.background = 'var(--coral)';
+        pendingAction = async () => {
+          await fetch(`/api/orders/${id}/cancel`, { method: 'POST' });
+          closeModal(); loadOrders();
+        };
+        showModal();
+      }
+
+      function showModal() { document.getElementById('confirm-modal')!.style.display = 'flex'; }
+      function closeModal() {
+        document.getElementById('confirm-modal')!.style.display = 'none';
+        (document.getElementById('modal-confirm-btn') as HTMLButtonElement).style.background = '';
+        pendingAction = null;
+      }
+      async function confirmAction() { if (pendingAction) await pendingAction(); }
+
+      function exportCSV() {
+        if (!allOrders.length) return;
+        const header = ['訂單號','狀態','客戶代號','金額(MOP)','下單時間'];
+        const rows = allOrders.map(o => [
+          o.order_no||'', o.status||'', o.customer_code||'',
+          o.total_amount||'', o.created_at||''
+        ]);
+        const csv = [header, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+        const a = document.createElement('a');
+        a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + csv);
+        a.download = `orders-${todayStr}.csv`;
+        a.click();
+      }
+
+      loadOrders();
+    </script>
+  </body>
+</html>

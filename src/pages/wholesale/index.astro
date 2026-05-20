@@ -1,0 +1,259 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>稻荷批發 — 採購員入口</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      .wh-header {
+        background: linear-gradient(160deg, oklch(22% 0.04 240) 0%, oklch(30% 0.06 232) 100%);
+        padding: 16px 18px 20px;
+        color: var(--paper);
+      }
+      .wh-greeting { font-size: 11px; opacity: .65; letter-spacing: .06em; margin-bottom: 6px; }
+      .wh-name { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+      .wh-code { font-family: var(--mono); font-size: 10px; color: var(--gold); margin-top: 4px; }
+      .wh-stats { display: flex; gap: 20px; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.12); }
+      .wh-stat-val { font-family: var(--mono); font-size: 18px; font-weight: 600; }
+      .wh-stat-lbl { font-size: 10px; opacity: .6; margin-top: 2px; letter-spacing: .04em; }
+
+      .section { padding: 0 18px 24px; }
+      .section-hd { font-size: 10px; font-weight: 600; letter-spacing: .12em; color: var(--mute); text-transform: uppercase; padding: 18px 0 10px; }
+
+      .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .quick-tile {
+        border-radius: var(--r-lg); padding: 16px 14px;
+        display: flex; flex-direction: column; gap: 8px;
+        border: 1px solid var(--hairline); background: var(--paper);
+        text-decoration: none; color: inherit;
+        transition: border-color .15s;
+      }
+      .quick-tile:hover { border-color: var(--sea); }
+      .quick-tile.dark { background: var(--ink); color: var(--paper); border-color: transparent; }
+      .quick-tile.sea { background: var(--sea); color: white; border-color: transparent; }
+      .tile-icon { width: 40px; height: 40px; border-radius: var(--r-md); background: var(--mist); display: grid; place-items: center; }
+      .quick-tile.dark .tile-icon { background: oklch(28% 0.03 245); }
+      .quick-tile.sea .tile-icon { background: oklch(32% 0.06 232); }
+      .tile-title { font-size: 13px; font-weight: 600; }
+      .tile-sub { font-size: 11px; color: var(--mute); }
+      .quick-tile.dark .tile-sub, .quick-tile.sea .tile-sub { color: rgba(255,255,255,.6); }
+
+      .order-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--hairline); }
+      .order-row:last-child { border-bottom: none; }
+      .order-status { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; font-family: var(--mono); flex-shrink: 0; }
+      .s-draft { background: var(--amber-soft); color: var(--amber-ink); }
+      .s-confirmed { background: var(--leaf-soft); color: var(--leaf-ink); }
+      .s-invoiced { background: var(--sea-soft); color: var(--sea-ink); }
+      .s-cancelled { background: var(--slate-soft); color: var(--slate-ink); }
+
+      .seasonal-list { display: flex; flex-direction: column; gap: 0; }
+      .seasonal-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--hairline); }
+      .seasonal-row:last-child { border-bottom: none; }
+    </style>
+  </head>
+  <body>
+    <!-- Header bar -->
+    <div class="app-header">
+      <div class="brand">
+        <div class="mark">稻</div>
+        <div>
+          <div class="name">稻荷批發</div>
+          <div class="sub">WHOLESALE PORTAL</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="icon-btn" onclick="window.location.href='/account'" aria-label="帳號">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+        </button>
+        <button class="icon-btn" onclick="logout()" aria-label="登出">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Welcome header -->
+    <div class="wh-header">
+      <div class="wh-greeting" id="time-greeting">歡迎回來</div>
+      <div class="wh-name" id="user-name">採購員</div>
+      <div class="wh-code" id="customer-code">載入中...</div>
+      <div class="wh-stats">
+        <div>
+          <div class="wh-stat-val" id="stat-orders">—</div>
+          <div class="wh-stat-lbl">本月訂單</div>
+        </div>
+        <div>
+          <div class="wh-stat-val" id="stat-amount">MOP —</div>
+          <div class="wh-stat-lbl">本月金額</div>
+        </div>
+        <div>
+          <div class="wh-stat-val" id="stat-pending">—</div>
+          <div class="wh-stat-lbl">待確認</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll body -->
+    <div class="screen-scroll" style="flex:1;padding-bottom:4px">
+      <!-- Quick actions -->
+      <div class="section">
+        <div class="section-hd">快捷操作</div>
+        <div class="quick-grid">
+          <a href="/shop/order/new" class="quick-tile dark">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+            </div>
+            <div>
+              <div class="tile-title">語音下單</div>
+              <div class="tile-sub">說出即下單</div>
+            </div>
+          </a>
+          <a href="/shop/catalog" class="quick-tile sea">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </div>
+            <div>
+              <div class="tile-title">商品目錄</div>
+              <div class="tile-sub">649 件商品</div>
+            </div>
+          </a>
+          <a href="/account" class="quick-tile">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--sea)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M9 4h6a2 2 0 0 1 2 2v14l-5-2-5 2V6a2 2 0 0 1 2-2z"/></svg>
+            </div>
+            <div>
+              <div class="tile-title">訂單歷史</div>
+              <div class="tile-sub">全部訂單記錄</div>
+            </div>
+          </a>
+          <a href="/knowledge" class="quick-tile">
+            <div class="tile-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <div>
+              <div class="tile-title">旬物知識</div>
+              <div class="tile-sub">季節推介</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent orders -->
+      <div class="section">
+        <div class="section-hd">最近訂單</div>
+        <div class="card" style="padding:4px 16px 4px" id="recent-orders">
+          <div style="padding:16px 0;color:var(--mute);font-size:13px;text-align:center">載入中...</div>
+        </div>
+        <a href="/account" style="display:block;margin-top:10px;font-size:12px;color:var(--sea);font-weight:500;text-decoration:none">查看全部訂單 →</a>
+      </div>
+
+      <!-- Seasonal -->
+      <div class="section">
+        <div class="section-hd">本月旬物</div>
+        <div class="card" style="padding:4px 16px 4px" id="seasonal-block">
+          <div style="padding:16px 0;color:var(--mute);font-size:13px;text-align:center">載入中...</div>
+        </div>
+        <a href="/knowledge/seasonal" style="display:block;margin-top:10px;font-size:12px;color:var(--sea);font-weight:500;text-decoration:none">旬物日曆 →</a>
+      </div>
+
+      <!-- Info strip -->
+      <div style="margin:0 18px 28px;padding:16px;background:var(--sea-soft);border-radius:var(--r-lg)">
+        <div style="font-size:12px;font-weight:600;color:var(--sea-ink);margin-bottom:6px">批發採購員須知</div>
+        <div style="font-size:12px;color:var(--sea-ink);opacity:.8;line-height:1.7">
+          · 語音/文字下單均可<br>
+          · 訂單須由 staff 確認後生效<br>
+          · 月結帳期：每月 1 日 / 15 日截數<br>
+          · 如有問題，請直接聯絡稻荷客服
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Time greeting
+      const h = new Date().getHours();
+      const greeting = h < 12 ? '早安' : h < 18 ? '午安' : '晚安';
+      const months = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+      const now = new Date();
+      document.getElementById('time-greeting')!.textContent = `${greeting}・${months[now.getMonth()]}月 ${now.getDate()} 日`;
+
+      // Fetch user info
+      fetch('/api/auth/me').then(r => r.json()).then(d => {
+        if (d.username) {
+          document.getElementById('user-name')!.textContent = d.username;
+          document.getElementById('customer-code')!.textContent = d.customer_code ? `客戶代號 · ${d.customer_code}` : 'WHOLESALE MEMBER';
+        }
+      }).catch(() => {});
+
+      // Fetch orders
+      async function loadOrders() {
+        try {
+          const r = await fetch('/api/orders?limit=20');
+          const d = await r.json();
+          const orders: any[] = d.orders || d.items || [];
+
+          // Stats
+          const thisMonth = now.toISOString().slice(0, 7);
+          const monthOrders = orders.filter((o: any) => o.created_at?.startsWith(thisMonth));
+          const monthAmt = monthOrders.reduce((s: number, o: any) => s + (o.total_amount || 0), 0);
+          const pending = orders.filter((o: any) => o.status === 'draft').length;
+
+          document.getElementById('stat-orders')!.textContent = String(monthOrders.length);
+          document.getElementById('stat-amount')!.textContent = `MOP ${monthAmt.toLocaleString()}`;
+          document.getElementById('stat-pending')!.textContent = String(pending);
+
+          // Recent orders list
+          const el = document.getElementById('recent-orders')!;
+          if (!orders.length) { el.innerHTML = '<div style="padding:16px 0;color:var(--mute);font-size:13px;text-align:center">暫無訂單記錄</div>'; return; }
+          const statusMap: Record<string,string> = { draft:'草稿', confirmed:'已確認', invoiced:'已開單', cancelled:'已取消' };
+          const statusCls: Record<string,string> = { draft:'s-draft', confirmed:'s-confirmed', invoiced:'s-invoiced', cancelled:'s-cancelled' };
+          el.innerHTML = orders.slice(0, 5).map((o: any) => {
+            const amt = o.total_amount ? `MOP ${Number(o.total_amount).toLocaleString()}` : '—';
+            const dt = new Date(o.created_at).toLocaleDateString('zh-TW', { month:'2-digit', day:'2-digit' });
+            return `<div class="order-row">
+              <span class="order-status ${statusCls[o.status] || 's-draft'}">${statusMap[o.status] || o.status}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:600;font-family:var(--mono)">${o.order_no || '—'}</div>
+                <div style="font-size:11px;color:var(--mute)">${dt}</div>
+              </div>
+              <div style="font-family:var(--mono);font-size:13px;font-weight:600;flex-shrink:0">${amt}</div>
+            </div>`;
+          }).join('');
+        } catch {
+          document.getElementById('recent-orders')!.innerHTML = '<div style="padding:16px 0;color:var(--mute);font-size:13px">載入失敗</div>';
+        }
+      }
+
+      // Seasonal items
+      async function loadSeasonal() {
+        try {
+          const month = now.getMonth() + 1;
+          const r = await fetch(`/api/seasonal?month=${month}`);
+          const d = await r.json();
+          const el = document.getElementById('seasonal-block')!;
+          if (!d.items?.length) { el.innerHTML = '<div style="padding:16px 0;color:var(--mute);font-size:13px">暫無資料</div>'; return; }
+          el.innerHTML = d.items.map((i: any) => `
+            <div class="seasonal-row">
+              <span style="font-size:10px;padding:2px 7px;border-radius:20px;background:${i.category==='premium'?'var(--gold-soft)':'var(--sea-soft)'};color:${i.category==='premium'?'var(--gold-ink)':'var(--sea-ink)'};font-weight:600;font-family:var(--mono);flex-shrink:0">${i.category==='premium'?'★ 精選':'當令'}</span>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:600">${i.item_name_zh}</div>
+                ${i.item_name_ja ? `<div style="font-size:10px;color:var(--mute);font-family:var(--mono)">${i.item_name_ja}</div>` : ''}
+              </div>
+              ${i.origin ? `<div style="font-size:11px;color:var(--mute);flex-shrink:0">${i.origin}</div>` : ''}
+            </div>`).join('');
+        } catch {}
+      }
+
+      function logout() {
+        fetch('/api/auth/logout', { method: 'POST' }).then(() => { window.location.href = '/shop/login'; });
+      }
+
+      loadOrders();
+      loadSeasonal();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,159 @@
+---
+import AdminSidebar from '../../components/AdminSidebar.astro';
+---
+<!doctype html>
+<html lang="zh-TW" class="admin-layout">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>稻荷後台 — 商品管理</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      html.admin-layout body { max-width: none; display: block; min-height: 100vh; }
+      .cat-chip { padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 500; font-family: var(--mono); background: var(--sea-soft); color: var(--sea-ink); }
+    </style>
+  </head>
+  <body>
+    <div class="admin-shell">
+      <AdminSidebar active="products" />
+
+      <div class="admin-main">
+        <div class="admin-top">
+          <div>
+            <div style="font-size:10px;color:var(--mute);letter-spacing:.1em;text-transform:uppercase;font-family:var(--mono);margin-bottom:2px">PRODUCT MANAGEMENT</div>
+            <h1>商品管理</h1>
+          </div>
+          <div id="product-count" style="font-size:13px;color:var(--mute)">載入中...</div>
+        </div>
+
+        <div class="admin-body">
+          <!-- Filter bar -->
+          <div class="card" style="padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <input class="input" id="f-search" type="text" style="flex:1;min-width:200px;padding:8px 12px" placeholder="搜尋商品名稱或代號…" oninput="debouncedSearch()" />
+            <select class="input select" id="f-category" style="width:180px;padding:8px 12px" onchange="loadProducts()">
+              <option value="">全部分類</option>
+            </select>
+            <button class="btn ghost sm" onclick="clearFilters()">清除</button>
+          </div>
+
+          <!-- Table -->
+          <div class="card" style="overflow:hidden">
+            <div style="overflow-x:auto">
+              <table class="tbl" id="products-table">
+                <thead>
+                  <tr>
+                    <th>商品代號</th>
+                    <th>中文名稱</th>
+                    <th>分類</th>
+                    <th>單位</th>
+                    <th>參考價 (MOP)</th>
+                    <th>狀態</th>
+                    <th>備注</th>
+                  </tr>
+                </thead>
+                <tbody id="products-tbody">
+                  <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mute)">載入中...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div style="padding:12px 16px;display:flex;justify-content:space-between;border-top:1px solid var(--hairline)">
+              <span style="font-size:12px;color:var(--mute)" id="product-table-count">—</span>
+              <button class="btn ghost sm" id="load-more-btn" style="display:none" onclick="loadMore()">載入更多</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let allCategories: string[] = [];
+      let offset = 0;
+      const PAGE = 50;
+      let searchTimer: ReturnType<typeof setTimeout>;
+
+      function debouncedSearch() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => loadProducts(), 300);
+      }
+
+      function clearFilters() {
+        (document.getElementById('f-search') as HTMLInputElement).value = '';
+        (document.getElementById('f-category') as HTMLSelectElement).value = '';
+        loadProducts();
+      }
+
+      async function loadProducts(reset = true) {
+        if (reset) offset = 0;
+        const search = (document.getElementById('f-search') as HTMLInputElement).value.trim();
+        const category = (document.getElementById('f-category') as HTMLSelectElement).value;
+
+        let url = `/api/products/search?limit=${PAGE}&offset=${offset}`;
+        if (search) url += `&q=${encodeURIComponent(search)}`;
+        if (category) url += `&category=${encodeURIComponent(category)}`;
+
+        const tbody = document.getElementById('products-tbody')!;
+        if (reset) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mute)">載入中...</td></tr>';
+
+        try {
+          const r = await fetch(url);
+          const d = await r.json();
+          const products: any[] = d.products || d.items || d || [];
+
+          // Build category filter on first load
+          if (reset && !allCategories.length) {
+            const cats = [...new Set<string>(products.map((p: any) => p.category).filter(Boolean))].sort();
+            allCategories = cats;
+            const sel = document.getElementById('f-category') as HTMLSelectElement;
+            cats.forEach(cat => {
+              const opt = document.createElement('option');
+              opt.value = cat; opt.textContent = cat;
+              sel.appendChild(opt);
+            });
+          }
+
+          renderProducts(products, reset);
+
+          document.getElementById('product-table-count')!.textContent = `共 ${products.length} 筆${products.length >= PAGE ? '（還有更多）' : ''}`;
+          const countEl = document.getElementById('product-count');
+          if (countEl && reset) countEl.textContent = `${products.length}+ 件商品`;
+
+          offset += products.length;
+          (document.getElementById('load-more-btn') as HTMLElement).style.display = products.length < PAGE ? 'none' : 'block';
+        } catch {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mute)">載入失敗</td></tr>';
+        }
+      }
+
+      function renderProducts(products: any[], reset: boolean) {
+        const tbody = document.getElementById('products-tbody')!;
+        if (reset && !products.length) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--mute)">無商品記錄</td></tr>';
+          return;
+        }
+        const rows = products.map(p => {
+          const statusColor = p.is_active === false ? 'var(--slate-ink)' : 'var(--leaf-ink)';
+          const statusText = p.is_active === false ? '停用' : '啟用';
+          const price = p.unit_price ? Number(p.unit_price).toLocaleString('zh-TW', {minimumFractionDigits:2}) : '—';
+          return `<tr>
+            <td class="mono">${p.item_code || p.product_code || '—'}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name_zh || p.name || '—'}</td>
+            <td>${p.category ? `<span class="cat-chip">${p.category}</span>` : '—'}</td>
+            <td style="font-size:12px">${p.unit || '—'}</td>
+            <td class="num">${price}</td>
+            <td style="font-size:12px;color:${statusColor};font-weight:600">${statusText}</td>
+            <td style="font-size:11px;color:var(--mute);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.notes || p.description_zh || '—'}</td>
+          </tr>`;
+        });
+        if (reset) tbody.innerHTML = rows.join('');
+        else tbody.innerHTML += rows.join('');
+      }
+
+      function loadMore() { loadProducts(false); }
+
+      loadProducts();
+    </script>
+  </body>
+</html>
