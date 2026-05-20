@@ -1,4 +1,4 @@
-// GET /api/product-knowledge — reads product_knowledge table (food/brand knowledge)
+// GET /api/product-knowledge — unified knowledge API (product_knowledge + zukan + food_md)
 import type { APIRoute } from 'astro';
 
 const SUPABASE_URL = 'https://cqartwwsbxnjjatmndtt.supabase.co';
@@ -11,24 +11,110 @@ function json(data: unknown, status = 200) {
 }
 
 export const OPTIONS: APIRoute = async () =>
-  new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,OPTIONS' } });
+  new Response(null, {
+    status: 204,
+    headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,OPTIONS' },
+  });
+
+// Unified shape
+interface KnowledgeItem {
+  id: string;
+  source: 'product_knowledge' | 'zukan' | 'food_md';
+  category: string;
+  title: string;
+  content: string;
+  extra: string;
+}
 
 export const GET: APIRoute = async ({ url }) => {
   const key = import.meta.env.SUPABASE_SERVICE_KEY || import.meta.env.SUPABASE_ANON_KEY;
   if (!key) return json({ error: 'Database not configured' }, 500);
 
-  const category = url.searchParams.get('category') || '';
-  const limit = Math.min(200, parseInt(url.searchParams.get('limit') || '200'));
+  const sourceParam = url.searchParams.get('source') || 'all';
+  const q = (url.searchParams.get('q') || '').toLowerCase();
+  const categoryFilter = url.searchParams.get('category') || '';
 
-  let endpoint = `${SUPABASE_URL}/rest/v1/product_knowledge?select=*&order=id.asc&limit=${limit}`;
-  if (category) endpoint += `&product_category=eq.${encodeURIComponent(category)}`;
+  const headers = {
+    apikey: key,
+    Authorization: `Bearer ${key}`,
+    'Content-Type': 'application/json',
+  };
 
-  const resp = await fetch(endpoint, {
-    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+  const fetchSB = async (path: string) => {
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers });
+    if (!resp.ok) throw new Error(`${path}: HTTP ${resp.status} ${await resp.text()}`);
+    return resp.json();
+  };
+
+  // Determine which sources to fetch
+  const wantPK = sourceParam === 'all' || sourceParam === 'product_knowledge';
+  const wantZukan = sourceParam === 'all' || sourceParam === 'zukan';
+  const wantFood = sourceParam === 'all' || sourceParam === 'food_md';
+
+  const promises: Promise<any[]>[] = [
+    wantPK
+      ? fetchSB('product_knowledge?select=id,item_code,item_name,category,subcategory,notes,peak_seasons,grade_system&order=id.asc&limit=500')
+      : Promise.resolve([]),
+    wantZukan
+      ? fetchSB('inari_zukan_species?select=id,name_ja,scientific_name,category,taste,season,market_note,importance,knowledge_level&order=id.asc&limit=500')
+      : Promise.resolve([]),
+    wantFood
+      ? fetchSB('inari_food_knowledge?select=id,filename,title,content,category,source_dir&order=id.asc&limit=500')
+      : Promise.resolve([]),
+  ];
+
+  let [pkRows, zukanRows, foodRows] = await Promise.all(promises.map(p => p.catch(() => [])));
+
+  // ── Normalise into unified shape ────────────────────────────────────────
+  const pkItems: KnowledgeItem[] = (pkRows as any[]).map((r: any) => {
+    const seasons = Array.isArray(r.peak_seasons) ? r.peak_seasons.join(', ') : '';
+    const content = [r.notes, seasons].filter(Boolean).join(' | ');
+    return {
+      id: `pk_${r.id}`,
+      source: 'product_knowledge',
+      category: r.category || '',
+      title: r.item_name || r.item_code || '',
+      content,
+      extra: r.subcategory || '',
+    };
   });
 
-  if (!resp.ok) return json({ error: await resp.text() }, 500);
+  const zukanItems: KnowledgeItem[] = (zukanRows as any[]).map((r: any) => {
+    const parts = [r.taste, r.season, r.market_note].filter(Boolean);
+    return {
+      id: `zukan_${r.id}`,
+      source: 'zukan',
+      category: r.category || '',
+      title: r.name_ja || '',
+      content: parts.join(' | '),
+      extra: r.scientific_name || '',
+    };
+  });
 
-  const items = await resp.json();
+  const foodItems: KnowledgeItem[] = (foodRows as any[]).map((r: any) => ({
+    id: `food_${r.id}`,
+    source: 'food_md',
+    category: r.category || '',
+    title: r.title || r.filename || '',
+    content: (r.content || '').slice(0, 300),
+    extra: r.source_dir || '',
+  }));
+
+  let items: KnowledgeItem[] = [...pkItems, ...zukanItems, ...foodItems];
+
+  // ── Apply filters ───────────────────────────────────────────────────────
+  if (categoryFilter) {
+    items = items.filter(i => i.category === categoryFilter);
+  }
+  if (q) {
+    items = items.filter(
+      i =>
+        i.category.toLowerCase().includes(q) ||
+        i.title.toLowerCase().includes(q) ||
+        i.content.toLowerCase().includes(q) ||
+        i.extra.toLowerCase().includes(q),
+    );
+  }
+
   return json({ items });
 };

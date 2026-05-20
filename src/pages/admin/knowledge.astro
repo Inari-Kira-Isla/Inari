@@ -70,8 +70,16 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <div class="col">
           <div class="input-group">
             <span class="input-group-text"><i class="ti ti-search"></i></span>
-            <input type="text" class="form-control" id="prod-search" placeholder="搜尋商品分類或知識內容…" />
+            <input type="text" class="form-control" id="prod-search" placeholder="搜尋品類、名稱或知識內容…" />
           </div>
+        </div>
+        <div class="col-auto">
+          <select class="form-select" id="prod-source-filter">
+            <option value="">全部來源</option>
+            <option value="product_knowledge">商品知識卡</option>
+            <option value="zukan">圖鑑生物</option>
+            <option value="food_md">產業研究文件</option>
+          </select>
         </div>
         <div class="col-auto">
           <select class="form-select" id="prod-cat-filter">
@@ -80,7 +88,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         </div>
       </div>
     </div>
-    <div class="d-flex gap-2 mb-3" id="prod-stats-row">
+    <div class="d-flex gap-2 mb-3 flex-wrap" id="prod-stats-row">
       <span class="badge bg-secondary-lt text-secondary px-3 py-2">載入中…</span>
     </div>
     <div class="card">
@@ -88,13 +96,14 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <table class="table table-vcenter table-hover card-table">
           <thead>
             <tr>
-              <th style="width:160px">品類</th>
-              <th>知識內容</th>
-              <th class="d-none d-md-table-cell">來源 / 類型</th>
+              <th style="width:80px">來源</th>
+              <th style="width:140px">品類</th>
+              <th>標題 / 內容</th>
+              <th class="d-none d-md-table-cell" style="width:160px">附加資訊</th>
             </tr>
           </thead>
           <tbody id="prod-tbody">
-            <tr><td colspan="3" class="text-center py-4 text-muted">載入中…</td></tr>
+            <tr><td colspan="4" class="text-center py-4 text-muted">載入中…</td></tr>
           </tbody>
         </table>
       </div>
@@ -406,15 +415,26 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     load();
 
     // ── Product knowledge tab ────────────────────────────────────────────
-    let allProdItems = [], filteredProd = [], prodSearch = '', prodCat = '';
+    let allProdItems = [], filteredProd = [], prodSearch = '', prodCat = '', prodSource = '';
     let prodTimer = null;
+
+    const SOURCE_LABELS = {
+      product_knowledge: { label: '商品知識卡', color: 'orange' },
+      zukan:             { label: '圖鑑生物',   color: 'blue'   },
+      food_md:           { label: '產業研究',   color: 'green'  },
+    };
+
+    function sourceBadge(source) {
+      const s = SOURCE_LABELS[source] || { label: source, color: 'secondary' };
+      return `<span class="badge bg-${s.color}-lt text-${s.color}" style="white-space:nowrap">${s.label}</span>`;
+    }
 
     async function loadProductKnowledge() {
       const tbody = document.getElementById('prod-tbody');
       try {
-        const resp = await fetch('/api/product-knowledge?limit=200');
+        const resp = await fetch('/api/product-knowledge');
         if (!resp.ok) {
-          tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-danger">載入失敗 (${resp.status})</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-danger">載入失敗 (${resp.status})</td></tr>`;
           return;
         }
         const { items } = await resp.json();
@@ -423,36 +443,45 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         updateProdStats(allProdItems);
         applyProdFilter();
       } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-danger">網路錯誤：${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-danger">網路錯誤：${e.message}</td></tr>`;
       }
     }
 
     function populateProdCategories(items) {
-      const cats = [...new Set(items.map(i => i.product_category || i.category).filter(Boolean))].sort();
+      const cats = [...new Set(items.map(i => i.category).filter(Boolean))].sort();
       const sel = document.getElementById('prod-cat-filter');
+      // clear non-default options first to avoid duplicates on reload
+      while (sel.options.length > 1) sel.remove(1);
       cats.forEach(c => {
-        if (!sel.querySelector(`option[value="${c}"]`)) {
-          const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
-        }
+        const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
       });
     }
 
     function updateProdStats(items) {
-      const cats = new Set(items.map(i => i.product_category || i.category).filter(Boolean));
+      const total = items.length;
+      const cats = new Set(items.map(i => i.category).filter(Boolean));
+      const pkCount = items.filter(i => i.source === 'product_knowledge').length;
+      const zukanCount = items.filter(i => i.source === 'zukan').length;
+      const foodCount = items.filter(i => i.source === 'food_md').length;
       document.getElementById('prod-stats-row').innerHTML =
-        `<span class="badge bg-orange-lt text-orange px-3 py-2">共 <b>${items.length}</b> 筆</span>
-         <span class="badge bg-green-lt text-green px-3 py-2"><b>${cats.size}</b> 個品類</span>`;
+        `<span class="badge bg-secondary-lt text-secondary px-3 py-2">共 <b>${total}</b> 筆</span>
+         <span class="badge bg-orange-lt text-orange px-3 py-2">商品知識卡 <b>${pkCount}</b></span>
+         <span class="badge bg-blue-lt text-blue px-3 py-2">圖鑑生物 <b>${zukanCount}</b></span>
+         <span class="badge bg-green-lt text-green px-3 py-2">產業研究 <b>${foodCount}</b></span>
+         <span class="badge bg-purple-lt text-purple px-3 py-2"><b>${cats.size}</b> 個品類</span>`;
     }
 
     function applyProdFilter() {
       prodCat = document.getElementById('prod-cat-filter').value;
+      prodSource = document.getElementById('prod-source-filter').value;
       filteredProd = allProdItems.filter(item => {
         const q = prodSearch.toLowerCase();
-        const cat = item.product_category || item.category || '';
-        const content = item.knowledge_text || item.content || item.description || item.notes || '';
-        const title = item.title || item.name || '';
-        return (!prodCat || cat === prodCat) &&
-          (!q || cat.toLowerCase().includes(q) || content.toLowerCase().includes(q) || title.toLowerCase().includes(q));
+        return (!prodSource || item.source === prodSource) &&
+          (!prodCat || item.category === prodCat) &&
+          (!q || (item.category || '').toLowerCase().includes(q) ||
+                 (item.title || '').toLowerCase().includes(q) ||
+                 (item.content || '').toLowerCase().includes(q) ||
+                 (item.extra || '').toLowerCase().includes(q));
       });
       renderProdTable();
     }
@@ -460,21 +489,20 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     function renderProdTable() {
       const tbody = document.getElementById('prod-tbody');
       if (!filteredProd.length) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">無資料</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">無資料</td></tr>';
         return;
       }
       tbody.innerHTML = filteredProd.map(item => {
-        const cat = item.product_category || item.category || '—';
-        const content = (item.knowledge_text || item.content || item.description || item.notes || '').slice(0, 120);
-        const title = item.title || item.name || '';
-        const source = item.source_type || item.source || item.knowledge_type || '—';
+        const excerpt = (item.content || '').slice(0, 120);
+        const hasMore = (item.content || '').length > 120;
         return `<tr>
-          <td><span class="badge bg-orange-lt text-orange">${cat}</span></td>
+          <td>${sourceBadge(item.source)}</td>
+          <td>${item.category ? `<span class="badge bg-secondary-lt text-secondary">${item.category}</span>` : '—'}</td>
           <td>
-            ${title ? `<div class="fw-medium small">${title}</div>` : ''}
-            ${content ? `<div class="text-muted small mt-1" style="font-size:11px">${content}${(item.knowledge_text||item.content||'').length > 120 ? '…' : ''}</div>` : ''}
+            <div class="fw-medium">${item.title || '—'}</div>
+            ${excerpt ? `<div class="text-muted small mt-1" style="font-size:11px">${excerpt}${hasMore ? '…' : ''}</div>` : ''}
           </td>
-          <td class="text-muted small d-none d-md-table-cell">${source}</td>
+          <td class="text-muted small d-none d-md-table-cell" style="font-size:11px;max-width:160px;word-break:break-word">${item.extra || '—'}</td>
         </tr>`;
       }).join('');
     }
@@ -484,6 +512,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       prodTimer = setTimeout(() => { prodSearch = e.target.value; applyProdFilter(); }, 300);
     });
     document.getElementById('prod-cat-filter').addEventListener('change', applyProdFilter);
+    document.getElementById('prod-source-filter').addEventListener('change', applyProdFilter);
 
     // ── Tab switching ────────────────────────────────────────────────────
     let prodLoaded = false;
