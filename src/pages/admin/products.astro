@@ -8,23 +8,21 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     <div class="col">
       <div class="input-group">
         <span class="input-group-text"><i class="ti ti-search"></i></span>
-        <input type="text" class="form-control" id="search-input"
-          placeholder="搜尋 SKU 或商品名稱…" oninput="debounceSearch(this.value)" />
+        <input type="text" class="form-control" id="search-input" placeholder="搜尋 SKU 或商品名稱…" />
       </div>
     </div>
     <div class="col-auto">
-      <select class="form-select" id="cat-filter" onchange="applyFilter()">
+      <select class="form-select" id="cat-filter">
         <option value="">全部類別</option>
       </select>
     </div>
     <div class="col-auto">
-      <!-- 3-way status selector -->
-      <div class="btn-group" id="status-tabs" role="group">
-        <input type="radio" class="btn-check" name="status" id="s-active" value="active" checked autocomplete="off" onchange="loadProducts(true)" />
+      <div class="btn-group" role="group">
+        <input type="radio" class="btn-check" name="status" id="s-active" value="active" checked autocomplete="off" />
         <label class="btn btn-outline-secondary" for="s-active">上架中</label>
-        <input type="radio" class="btn-check" name="status" id="s-inactive" value="inactive" autocomplete="off" onchange="loadProducts(true)" />
+        <input type="radio" class="btn-check" name="status" id="s-inactive" value="inactive" autocomplete="off" />
         <label class="btn btn-outline-secondary" for="s-inactive">未上架</label>
-        <input type="radio" class="btn-check" name="status" id="s-all" value="all" autocomplete="off" onchange="loadProducts(true)" />
+        <input type="radio" class="btn-check" name="status" id="s-all" value="all" autocomplete="off" />
         <label class="btn btn-outline-secondary" for="s-all">全部</label>
       </div>
     </div>
@@ -33,7 +31,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   <div class="card">
     <div class="card-header d-flex align-items-center justify-content-between">
       <span id="count-label" class="text-muted small">—</span>
-      <button class="btn btn-sm btn-outline-secondary" onclick="loadProducts(true)">
+      <button class="btn btn-sm btn-outline-secondary" id="refresh-btn">
         <i class="ti ti-refresh me-1"></i>重新整理
       </button>
     </div>
@@ -59,7 +57,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     </div>
     <div class="card-footer d-flex align-items-center justify-content-between">
       <span id="page-label" class="text-muted small">—</span>
-      <button id="load-more-btn" class="btn btn-sm btn-outline-secondary" style="display:none" onclick="loadMore()">載入更多</button>
+      <button id="load-more-btn" class="btn btn-sm btn-outline-secondary" style="display:none">載入更多</button>
     </div>
   </div>
 
@@ -68,47 +66,52 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     const PAGE_SIZE = 50;
     let searchTimer = null;
 
+    // ── helpers ──────────────────────────────────────────────────────────
     function getStatus() {
-      return document.querySelector('input[name="status"]:checked')?.value || 'active';
+      return (document.querySelector('input[name="status"]:checked') as HTMLInputElement)?.value || 'active';
     }
 
+    // ── load from API ────────────────────────────────────────────────────
     async function loadProducts(reset = false) {
       if (reset) {
         page = 1;
         allProducts = [];
-        const catSel = document.getElementById('cat-filter');
+        const catSel = document.getElementById('cat-filter') as HTMLSelectElement;
         while (catSel.options.length > 1) catSel.remove(1);
-        document.getElementById('products-tbody').innerHTML =
+        currentCat = '';
+        document.getElementById('products-tbody')!.innerHTML =
           '<tr><td colspan="9" class="text-center py-5 text-muted">載入中…</td></tr>';
       }
 
       const status = getStatus();
       const resp = await fetch(`/api/admin/products?status=${status}`);
       if (!resp.ok) {
-        document.getElementById('products-tbody').innerHTML =
+        document.getElementById('products-tbody')!.innerHTML =
           '<tr><td colspan="9" class="text-center py-5 text-danger">載入失敗</td></tr>';
         return;
       }
       const data = await resp.json();
       allProducts = data.products || [];
 
-      document.getElementById('status-th').style.display = status !== 'active' ? '' : 'none';
+      document.getElementById('status-th')!.style.display = status !== 'active' ? '' : 'none';
 
-      const cats = [...new Set(allProducts.map(p => p.category).filter(Boolean))].sort();
-      const catSel = document.getElementById('cat-filter');
-      cats.forEach(c => {
-        if (!catSel.querySelector(`option[value="${c}"]`)) {
-          const opt = document.createElement('option'); opt.value = c; opt.textContent = c;
-          catSel.appendChild(opt);
-        }
+      // populate category dropdown
+      const cats = [...new Set(allProducts.map((p: any) => p.category).filter(Boolean))].sort();
+      const catSel = document.getElementById('cat-filter') as HTMLSelectElement;
+      cats.forEach((c: any) => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        catSel.appendChild(opt);
       });
 
       applyFilter();
     }
 
+    // ── filter + render ──────────────────────────────────────────────────
     function applyFilter() {
-      currentCat = document.getElementById('cat-filter').value;
-      filtered = allProducts.filter(p => {
+      currentCat = (document.getElementById('cat-filter') as HTMLSelectElement).value;
+      filtered = allProducts.filter((p: any) => {
         const q = currentSearch.toLowerCase();
         return (!currentCat || p.category === currentCat) &&
           (!q || (p.sku || '').toLowerCase().includes(q) ||
@@ -124,28 +127,28 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       const slice = filtered.slice(0, page * PAGE_SIZE);
 
       if (status === 'all') {
-        const aC = filtered.filter(p => p.is_active !== false).length;
+        const aC = filtered.filter((p: any) => p.is_active !== false).length;
         const iC = filtered.length - aC;
-        document.getElementById('count-label').innerHTML =
+        document.getElementById('count-label')!.innerHTML =
           `共 ${filtered.length} 件 &nbsp;` +
           `<span class="badge bg-success-lt text-success">上架 ${aC}</span> ` +
           `<span class="badge bg-secondary-lt text-muted">未上架 ${iC}</span>`;
       } else {
-        document.getElementById('count-label').textContent = `共 ${filtered.length} 件商品`;
+        document.getElementById('count-label')!.textContent = `共 ${filtered.length} 件商品`;
       }
 
-      document.getElementById('page-label').textContent = `顯示 ${slice.length} / ${filtered.length}`;
-      document.getElementById('load-more-btn').style.display = filtered.length > slice.length ? '' : 'none';
+      document.getElementById('page-label')!.textContent = `顯示 ${slice.length} / ${filtered.length}`;
+      const loadMoreBtn = document.getElementById('load-more-btn')!;
+      loadMoreBtn.style.display = filtered.length > slice.length ? '' : 'none';
 
-      const tbody = document.getElementById('products-tbody');
+      const tbody = document.getElementById('products-tbody')!;
       if (!slice.length) {
         const msg = status === 'inactive' ? '目前沒有未上架商品' : '無符合商品';
         tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted">${msg}</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = slice.map(p => {
-        const name = p.name || '—';
+      tbody.innerHTML = (slice as any[]).map(p => {
         const price = p.sales_price ?? p.price;
         const priceFmt = price != null ? `MOP ${Number(price).toLocaleString()}` : '—';
         const storeBadge = p.is_air_freight
@@ -165,17 +168,16 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           : '';
 
         const toggleBtn = isActive
-          ? `<button class="btn btn-sm btn-ghost-danger" title="下架" onclick="toggleActive(${p.id}, false, this)">
+          ? `<button class="btn btn-sm btn-ghost-danger" data-id="${p.id}" data-active="false" title="下架">
                <i class="ti ti-eye-off"></i>
              </button>`
-          : `<button class="btn btn-sm btn-ghost-success" title="上架" onclick="toggleActive(${p.id}, true, this)">
+          : `<button class="btn btn-sm btn-ghost-success" data-id="${p.id}" data-active="true" title="上架">
                <i class="ti ti-eye"></i>
              </button>`;
 
-        const rowClass = !isActive ? 'opacity-50' : '';
-        return `<tr class="${rowClass}" id="row-${p.id}">
+        return `<tr class="${!isActive ? 'opacity-50' : ''}" id="row-${p.id}">
           <td class="font-mono text-muted small">${p.sku || '—'}</td>
-          <td class="fw-medium">${name}</td>
+          <td class="fw-medium">${p.name || '—'}</td>
           <td class="text-muted small">${p.category || '—'}</td>
           <td class="text-end font-mono small fw-semibold">${priceFmt}</td>
           <td class="text-muted small d-none d-md-table-cell">${p.unit || '—'}</td>
@@ -187,7 +189,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       }).join('');
     }
 
-    window.toggleActive = async function(id, newActive, btn) {
+    // ── toggle active via event delegation ───────────────────────────────
+    async function handleToggle(id: number, newActive: boolean, btn: HTMLButtonElement) {
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
@@ -204,17 +207,34 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         return;
       }
 
-      // Update local data and re-render
-      const p = allProducts.find(x => x.id === id);
-      if (p) p.is_active = newActive;
+      const p = allProducts.find((x: any) => x.id === id);
+      if (p) (p as any).is_active = newActive;
       applyFilter();
-    };
+    }
 
-    window.debounceSearch = function(val) {
+    // ── wire up all event listeners ──────────────────────────────────────
+    document.getElementById('search-input')!.addEventListener('input', (e) => {
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => { currentSearch = val; applyFilter(); }, 300);
-    };
-    window.loadMore = function() { page++; render(); };
+      const val = (e.target as HTMLInputElement).value;
+      searchTimer = setTimeout(() => { currentSearch = val; applyFilter(); }, 300) as any;
+    });
+
+    document.getElementById('cat-filter')!.addEventListener('change', applyFilter);
+    document.getElementById('refresh-btn')!.addEventListener('click', () => loadProducts(true));
+    document.getElementById('load-more-btn')!.addEventListener('click', () => { page++; render(); });
+
+    document.querySelectorAll('input[name="status"]').forEach(radio => {
+      radio.addEventListener('change', () => loadProducts(true));
+    });
+
+    // event delegation for toggle buttons (rendered dynamically)
+    document.getElementById('products-tbody')!.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('button[data-id]') as HTMLButtonElement | null;
+      if (!btn) return;
+      const id = parseInt(btn.dataset.id!);
+      const newActive = btn.dataset.active === 'true';
+      handleToggle(id, newActive, btn);
+    });
 
     loadProducts(true);
   </script>

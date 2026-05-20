@@ -66,15 +66,15 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       <div class="input-group flex-fill" style="max-width:360px">
         <span class="input-group-text"><i class="ti ti-search"></i></span>
         <input type="text" class="form-control" id="search-input"
-          placeholder="搜尋客戶代碼或名稱…" oninput="debounce(this.value)" />
+          placeholder="搜尋客戶代碼或名稱…" />
       </div>
       <div class="ms-auto d-flex gap-2">
-        <select class="form-select" id="status-filter" onchange="load()" style="width:auto">
+        <select class="form-select" id="status-filter" style="width:auto">
           <option value="">全部狀態</option>
           <option value="active">活躍</option>
           <option value="inactive">停用</option>
         </select>
-        <select class="form-select" id="payment-filter" onchange="applyClientFilter()" style="width:auto">
+        <select class="form-select" id="payment-filter" style="width:auto">
           <option value="">全部結款</option>
           <option value="月結">月結</option>
           <option value="過數">過數</option>
@@ -266,11 +266,14 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       `;
     };
 
-    window.debounce = function(val) {
+    document.getElementById('search-input').addEventListener('input', (e) => {
       clearTimeout(timer);
-      currentSearch = val;
+      currentSearch = e.target.value;
       timer = setTimeout(() => load(), 350);
-    };
+    });
+
+    document.getElementById('status-filter').addEventListener('change', () => load());
+    document.getElementById('payment-filter').addEventListener('change', () => applyClientFilter());
 
     load();
   </script>

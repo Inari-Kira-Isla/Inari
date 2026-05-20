@@ -9,11 +9,11 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       <div class="col">
         <div class="input-group">
           <span class="input-group-text"><i class="ti ti-search"></i></span>
-          <input type="text" class="form-control" id="search-input" placeholder="搜尋標題或行動建議…" oninput="debounceSearch(this.value)" />
+          <input type="text" class="form-control" id="search-input" placeholder="搜尋標題或行動建議…" />
         </div>
       </div>
       <div class="col-auto">
-        <select class="form-select" id="domain-filter" onchange="applyFilter()">
+        <select class="form-select" id="domain-filter">
           <option value="">全部領域</option>
         </select>
       </div>
@@ -341,10 +341,13 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       load();
     };
 
-    window.debounceSearch = function(val) {
+    document.getElementById('search-input').addEventListener('input', (e) => {
       clearTimeout(searchTimer);
+      const val = e.target.value;
       searchTimer = setTimeout(() => { currentSearch = val; applyFilter(); }, 300);
-    };
+    });
+
+    document.getElementById('domain-filter').addEventListener('change', applyFilter);
 
     load();
   </script>
