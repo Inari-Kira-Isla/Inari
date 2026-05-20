@@ -56,10 +56,10 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
     async function loadProducts(reset = false) {
       if (reset) page = 1;
-      const resp = await fetch('/api/products/search?limit=500');
+      const resp = await fetch('/api/admin/products');
       if (!resp.ok) return;
       const data = await resp.json();
-      allProducts = data.items || data.products || [];
+      allProducts = data.products || data.items || [];
 
       // Populate categories
       const cats = [...new Set(allProducts.map(p => p.category).filter(Boolean))].sort();

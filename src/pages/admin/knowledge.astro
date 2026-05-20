@@ -9,7 +9,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       <div class="col">
         <div class="input-group">
           <span class="input-group-text"><i class="ti ti-search"></i></span>
-          <input type="text" class="form-control" id="search-input" placeholder="搜尋知識條目…" oninput="debounceSearch(this.value)" />
+          <input type="text" class="form-control" id="search-input" placeholder="搜尋問題或答案…" oninput="debounceSearch(this.value)" />
         </div>
       </div>
       <div class="col-auto">
@@ -33,9 +33,9 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       <table class="table table-vcenter table-hover card-table">
         <thead>
           <tr>
-            <th>標題</th>
             <th>分類</th>
-            <th class="d-none d-md-table-cell">摘要</th>
+            <th>問題</th>
+            <th class="d-none d-md-table-cell">答案摘要</th>
             <th></th>
           </tr>
         </thead>
@@ -50,15 +50,24 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   <div class="modal modal-blur fade" id="addModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">新增知識條目</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-header">
+          <h5 class="modal-title">新增知識條目</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
         <div class="modal-body">
           <div class="row g-3">
-            <div class="col-md-8"><label class="form-label required">標題（中文）</label><input type="text" class="form-control" id="add-title" /></div>
-            <div class="col-md-4"><label class="form-label required">分類</label><input type="text" class="form-control" id="add-category" placeholder="例：銷售管理" /></div>
-            <div class="col-12"><label class="form-label">摘要</label><textarea class="form-control" id="add-summary" rows="2"></textarea></div>
-            <div class="col-12"><label class="form-label">正文內容</label><textarea class="form-control" id="add-content" rows="5"></textarea></div>
-            <div class="col-md-4"><label class="form-label">標籤（逗號分隔）</label><input type="text" class="form-control" id="add-tags" /></div>
-            <div class="col-md-4"><label class="form-label">重要度（1-5）</label><input type="number" class="form-control" id="add-importance" min="1" max="5" value="3" /></div>
+            <div class="col-md-4">
+              <label class="form-label required">分類</label>
+              <input type="text" class="form-control" id="add-category" placeholder="例：銷售管理" />
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">問題</label>
+              <input type="text" class="form-control" id="add-question" placeholder="選填：問題描述" />
+            </div>
+            <div class="col-12">
+              <label class="form-label required">答案 / 知識內容</label>
+              <textarea class="form-control" id="add-answer" rows="6" placeholder="輸入知識內容或答案…"></textarea>
+            </div>
           </div>
           <div id="add-error" class="alert alert-danger d-none mt-2"></div>
         </div>
@@ -74,16 +83,25 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   <div class="modal modal-blur fade" id="editModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">編輯知識條目</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-header">
+          <h5 class="modal-title">編輯知識條目</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
         <div class="modal-body">
           <input type="hidden" id="edit-id" />
           <div class="row g-3">
-            <div class="col-md-8"><label class="form-label required">標題（中文）</label><input type="text" class="form-control" id="edit-title" /></div>
-            <div class="col-md-4"><label class="form-label required">分類</label><input type="text" class="form-control" id="edit-category" /></div>
-            <div class="col-12"><label class="form-label">摘要</label><textarea class="form-control" id="edit-summary" rows="2"></textarea></div>
-            <div class="col-12"><label class="form-label">正文內容</label><textarea class="form-control" id="edit-content" rows="5"></textarea></div>
-            <div class="col-md-4"><label class="form-label">標籤</label><input type="text" class="form-control" id="edit-tags" /></div>
-            <div class="col-md-4"><label class="form-label">重要度（1-5）</label><input type="number" class="form-control" id="edit-importance" min="1" max="5" /></div>
+            <div class="col-md-4">
+              <label class="form-label required">分類</label>
+              <input type="text" class="form-control" id="edit-category" />
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">問題</label>
+              <input type="text" class="form-control" id="edit-question" />
+            </div>
+            <div class="col-12">
+              <label class="form-label required">答案 / 知識內容</label>
+              <textarea class="form-control" id="edit-answer" rows="6"></textarea>
+            </div>
           </div>
           <div id="edit-error" class="alert alert-danger d-none mt-2"></div>
         </div>
@@ -101,8 +119,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     let searchTimer = null;
 
     async function load() {
-      const resp = await fetch('/api/knowledge?limit=200');
-      if (!resp.ok) return;
+      const resp = await fetch('/api/knowledge?limit=50');
+      if (!resp.ok) { showLoadError(); return; }
       const data = await resp.json();
       allItems = data.items || [];
       populateCategories(allItems);
@@ -110,11 +128,16 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       applyFilter();
     }
 
+    function showLoadError() {
+      document.getElementById('knowledge-tbody').innerHTML =
+        '<tr><td colspan="4" class="text-center py-4 text-danger">載入失敗，請重新整理</td></tr>';
+    }
+
     function populateCategories(items) {
       const cats = [...new Set(items.map(i => i.category).filter(Boolean))].sort();
       const sel = document.getElementById('cat-filter');
       cats.forEach(c => {
-        if (!sel.querySelector(`option[value="${c}"]`)) {
+        if (!sel.querySelector(`option[value="${CSS.escape(c)}"]`)) {
           const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
         }
       });
@@ -132,20 +155,26 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       filtered = allItems.filter(item => {
         const q = currentSearch.toLowerCase();
         return (!currentCat || item.category === currentCat) &&
-          (!q || (item.title_zh||'').toLowerCase().includes(q) || (item.summary||'').toLowerCase().includes(q));
+          (!q || (item.question||'').toLowerCase().includes(q) ||
+                 (item.answer||'').toLowerCase().includes(q) ||
+                 (item.category||'').toLowerCase().includes(q));
       });
       render();
     }
 
     function render() {
       const tbody = document.getElementById('knowledge-tbody');
-      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">無條目</td></tr>'; return; }
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">無條目</td></tr>';
+        return;
+      }
       tbody.innerHTML = filtered.map(item => {
-        const stars = '★'.repeat(item.importance_score || 3) + '☆'.repeat(5 - (item.importance_score || 3));
+        const answerPreview = (item.answer || '').slice(0, 120).replace(/</g,'&lt;');
+        const hasMore = (item.answer || '').length > 120 ? '…' : '';
         return `<tr>
-          <td class="fw-medium">${item.title_zh || '—'}</td>
           <td><span class="badge bg-blue-lt text-blue">${item.category || '—'}</span></td>
-          <td class="text-muted small d-none d-md-table-cell" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.summary || '—'}</td>
+          <td class="fw-medium">${item.question || '<span class="text-muted fst-italic">（無問題）</span>'}</td>
+          <td class="text-muted small d-none d-md-table-cell" style="max-width:340px;white-space:pre-line">${answerPreview}${hasMore}</td>
           <td class="text-end">
             <button class="btn btn-sm btn-outline-secondary" onclick='openEdit(${JSON.stringify(item)})'>
               <i class="ti ti-pencil"></i>
@@ -157,53 +186,73 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
     window.openEdit = function(item) {
       document.getElementById('edit-id').value = item.id;
-      document.getElementById('edit-title').value = item.title_zh || '';
       document.getElementById('edit-category').value = item.category || '';
-      document.getElementById('edit-summary').value = item.summary || '';
-      document.getElementById('edit-content').value = item.content || '';
-      document.getElementById('edit-tags').value = (item.tags || []).join(', ');
-      document.getElementById('edit-importance').value = item.importance_score || 3;
+      document.getElementById('edit-question').value = item.question || '';
+      document.getElementById('edit-answer').value = item.answer || '';
       document.getElementById('edit-error').classList.add('d-none');
       new bootstrap.Modal(document.getElementById('editModal')).show();
     };
 
     window.addItem = async function() {
-      const title_zh = document.getElementById('add-title').value.trim();
       const category = document.getElementById('add-category').value.trim();
+      const answer = document.getElementById('add-answer').value.trim();
       const errEl = document.getElementById('add-error');
-      if (!title_zh || !category) { errEl.textContent = '標題和分類為必填'; errEl.classList.remove('d-none'); return; }
+      if (!category || !answer) {
+        errEl.textContent = '分類和答案為必填';
+        errEl.classList.remove('d-none');
+        return;
+      }
       const body = {
-        title_zh,
         category,
-        summary: document.getElementById('add-summary').value.trim(),
-        content: document.getElementById('add-content').value.trim(),
-        tags: document.getElementById('add-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
-        importance_score: parseInt(document.getElementById('add-importance').value) || 3,
+        question: document.getElementById('add-question').value.trim() || null,
+        answer,
       };
-      const resp = await fetch('/api/knowledge', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+      const resp = await fetch('/api/knowledge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       const data = await resp.json();
-      if (!data.ok && !data.id) { errEl.textContent = data.error || '建立失敗'; errEl.classList.remove('d-none'); return; }
+      if (!data.ok && !data.id) {
+        errEl.textContent = data.error || '建立失敗';
+        errEl.classList.remove('d-none');
+        return;
+      }
       bootstrap.Modal.getInstance(document.getElementById('addModal'))?.hide();
-      ['add-title','add-category','add-summary','add-content','add-tags'].forEach(id => document.getElementById(id).value = '');
+      ['add-category', 'add-question', 'add-answer'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
       errEl.classList.add('d-none');
       load();
     };
 
     window.saveEdit = async function() {
       const id = document.getElementById('edit-id').value;
+      const category = document.getElementById('edit-category').value.trim();
+      const answer = document.getElementById('edit-answer').value.trim();
       const errEl = document.getElementById('edit-error');
+      if (!category || !answer) {
+        errEl.textContent = '分類和答案為必填';
+        errEl.classList.remove('d-none');
+        return;
+      }
       const body = {
         id,
-        title_zh: document.getElementById('edit-title').value.trim(),
-        category: document.getElementById('edit-category').value.trim(),
-        summary: document.getElementById('edit-summary').value.trim(),
-        content: document.getElementById('edit-content').value.trim(),
-        tags: document.getElementById('edit-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
-        importance_score: parseInt(document.getElementById('edit-importance').value) || 3,
+        category,
+        question: document.getElementById('edit-question').value.trim() || null,
+        answer,
       };
-      const resp = await fetch('/api/knowledge', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+      const resp = await fetch('/api/knowledge', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       const data = await resp.json();
-      if (!data.ok) { errEl.textContent = data.error || '更新失敗'; errEl.classList.remove('d-none'); return; }
+      if (!data.ok) {
+        errEl.textContent = data.error || '更新失敗';
+        errEl.classList.remove('d-none');
+        return;
+      }
       bootstrap.Modal.getInstance(document.getElementById('editModal'))?.hide();
       load();
     };
@@ -211,7 +260,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     window.deleteItem = async function() {
       const id = document.getElementById('edit-id').value;
       if (!confirm('確定刪除此條目？')) return;
-      await fetch(`/api/knowledge?id=${id}`, { method:'DELETE' });
+      await fetch(`/api/knowledge?id=${id}`, { method: 'DELETE' });
       bootstrap.Modal.getInstance(document.getElementById('editModal'))?.hide();
       load();
     };
