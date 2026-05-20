@@ -8,7 +8,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     <div class="col">
       <div class="input-group">
         <span class="input-group-text"><i class="ti ti-search"></i></span>
-        <input type="text" class="form-control" id="search-input" placeholder="搜尋 SKU 或商品名稱…" oninput="debounceSearch(this.value)" />
+        <input type="text" class="form-control" id="search-input"
+          placeholder="搜尋 SKU 或商品名稱…" oninput="debounceSearch(this.value)" />
       </div>
     </div>
     <div class="col-auto">
@@ -16,11 +17,12 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <option value="">全部類別</option>
       </select>
     </div>
-    <div class="col-auto d-flex align-items-center">
-      <label class="form-check form-switch mb-0">
-        <input class="form-check-input" type="checkbox" id="show-inactive" onchange="loadProducts(true)" />
-        <span class="form-check-label text-muted">顯示停用商品</span>
-      </label>
+    <div class="col-auto">
+      <select class="form-select" id="status-filter" onchange="loadProducts(true)">
+        <option value="active">上架中</option>
+        <option value="inactive">未上架</option>
+        <option value="all">全部商品</option>
+      </select>
     </div>
   </div>
 
@@ -42,7 +44,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
             <th class="d-none d-md-table-cell">單位</th>
             <th class="d-none d-md-table-cell">產地</th>
             <th class="d-none d-lg-table-cell">類型</th>
-            <th class="d-none d-lg-table-cell" id="status-col" style="display:none!important">狀態</th>
+            <th id="status-th" style="display:none">狀態</th>
           </tr>
         </thead>
         <tbody id="products-tbody">
@@ -65,61 +67,68 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       if (reset) {
         page = 1;
         allProducts = [];
-        document.getElementById('products-tbody').innerHTML =
-          '<tr><td colspan="8" class="text-center py-5 text-muted">載入中…</td></tr>';
-        // Reset category filter
         const catSel = document.getElementById('cat-filter');
         while (catSel.options.length > 1) catSel.remove(1);
+        document.getElementById('products-tbody').innerHTML =
+          '<tr><td colspan="8" class="text-center py-5 text-muted">載入中…</td></tr>';
       }
 
-      const showInactive = document.getElementById('show-inactive').checked;
-      const url = '/api/admin/products' + (showInactive ? '?inactive=1' : '');
-
-      const resp = await fetch(url);
+      const status = document.getElementById('status-filter').value;
+      const resp = await fetch(`/api/admin/products?status=${status}`);
       if (!resp.ok) {
         document.getElementById('products-tbody').innerHTML =
           '<tr><td colspan="8" class="text-center py-5 text-danger">載入失敗</td></tr>';
         return;
       }
       const data = await resp.json();
-      allProducts = data.products || data.items || [];
+      allProducts = data.products || [];
+
+      // Show/hide status column
+      const showStatus = status !== 'active';
+      document.getElementById('status-th').style.display = showStatus ? '' : 'none';
 
       // Populate category filter
       const cats = [...new Set(allProducts.map(p => p.category).filter(Boolean))].sort();
       const catSel = document.getElementById('cat-filter');
       cats.forEach(c => {
         if (!catSel.querySelector(`option[value="${c}"]`)) {
-          const opt = document.createElement('option'); opt.value = c; opt.textContent = c; catSel.appendChild(opt);
+          const opt = document.createElement('option'); opt.value = c; opt.textContent = c;
+          catSel.appendChild(opt);
         }
       });
-
-      // Show/hide status column
-      const statusCol = document.getElementById('status-col');
-      if (showInactive) {
-        statusCol.style.removeProperty('display');
-      } else {
-        statusCol.style.setProperty('display', 'none', 'important');
-      }
 
       applyFilter();
     }
 
     function applyFilter() {
       currentCat = document.getElementById('cat-filter').value;
-      const showInactive = document.getElementById('show-inactive').checked;
       filtered = allProducts.filter(p => {
         const q = currentSearch.toLowerCase();
         return (!currentCat || p.category === currentCat) &&
-          (!q || (p.sku||'').toLowerCase().includes(q) ||
-                 (p.name||p.product_name||'').toLowerCase().includes(q));
+          (!q || (p.sku || '').toLowerCase().includes(q) ||
+                 (p.name || '').toLowerCase().includes(q));
       });
       page = 1;
-      render(showInactive);
+      render();
     }
 
-    function render(showInactive) {
+    function render() {
+      const status = document.getElementById('status-filter').value;
+      const showStatus = status !== 'active';
       const slice = filtered.slice(0, page * PAGE_SIZE);
-      document.getElementById('count-label').textContent = `共 ${filtered.length} 件商品`;
+
+      // Count badge labels
+      if (status === 'all') {
+        const activeCount = filtered.filter(p => p.is_active).length;
+        const inactiveCount = filtered.length - activeCount;
+        document.getElementById('count-label').innerHTML =
+          `共 ${filtered.length} 件商品 &nbsp;` +
+          `<span class="badge bg-success-lt text-success me-1">上架 ${activeCount}</span>` +
+          `<span class="badge bg-secondary-lt text-muted">未上架 ${inactiveCount}</span>`;
+      } else {
+        document.getElementById('count-label').textContent = `共 ${filtered.length} 件商品`;
+      }
+
       document.getElementById('page-label').textContent = `顯示 ${slice.length} / ${filtered.length}`;
       document.getElementById('load-more-btn').style.display = filtered.length > slice.length ? '' : 'none';
 
@@ -130,7 +139,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       }
 
       tbody.innerHTML = slice.map(p => {
-        const name = p.name || p.product_name || '—';
+        const name = p.name || '—';
         const price = p.sales_price ?? p.price;
         const priceFmt = price != null ? `MOP ${Number(price).toLocaleString()}` : '—';
         const storeBadge = p.is_air_freight
@@ -139,12 +148,12 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
             ? `<span class="badge bg-blue-lt text-blue">冷凍</span>`
             : p.storage_type
               ? `<span class="badge bg-green-lt text-green">${p.storage_type}</span>`
-              : `<span class="badge bg-secondary-lt text-secondary">—</span>`;
-        const statusCell = showInactive
-          ? `<td class="d-none d-lg-table-cell">${p.is_active !== false ? '<span class="badge bg-success-lt text-success">上架</span>' : '<span class="badge bg-secondary-lt text-muted">停用</span>'}</td>`
+              : `<span class="text-muted">—</span>`;
+        const statusCell = showStatus
+          ? `<td>${p.is_active ? '<span class="badge bg-success-lt text-success">上架</span>' : '<span class="badge bg-secondary-lt text-muted">未上架</span>'}</td>`
           : '';
-        const inactiveClass = p.is_active === false ? 'text-muted opacity-50' : '';
-        return `<tr class="${inactiveClass}">
+        const rowClass = (!p.is_active && showStatus) ? 'opacity-50' : '';
+        return `<tr class="${rowClass}">
           <td class="font-mono text-muted small">${p.sku || '—'}</td>
           <td class="fw-medium">${name}</td>
           <td class="text-muted small">${p.category || '—'}</td>
@@ -161,7 +170,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       clearTimeout(searchTimer);
       searchTimer = setTimeout(() => { currentSearch = val; applyFilter(); }, 300);
     };
-    window.loadMore = function() { page++; render(document.getElementById('show-inactive').checked); };
+    window.loadMore = function() { page++; render(); };
+
     loadProducts(true);
   </script>
 </AdminLayout>
