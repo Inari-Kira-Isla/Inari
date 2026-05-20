@@ -60,7 +60,7 @@
           <input class="input" id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
         </div>
         <p id="error-msg" style="font-size:12px;color:var(--coral-deep);min-height:16px;margin:0"></p>
-        <button class="btn primary lg block" id="submit-btn" style="margin-top:4px" onclick="handleLogin()">
+        <button class="btn primary lg block" id="submit-btn" style="margin-top:4px">
           登入
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
@@ -72,11 +72,12 @@
     </div>
 
     <script>
+      const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+      const errorMsg = document.getElementById('error-msg') as HTMLParagraphElement;
+
       async function handleLogin() {
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-        const errorMsg = document.getElementById('error-msg');
-        const submitBtn = document.getElementById('submit-btn');
+        const username = (document.getElementById('username') as HTMLInputElement).value.trim();
+        const password = (document.getElementById('password') as HTMLInputElement).value;
 
         errorMsg.textContent = '';
         submitBtn.disabled = true;
@@ -95,8 +96,8 @@
             window.location.href = '/shop';
           } else {
             errorMsg.textContent = data.error || '登入失敗，請再試一次';
-            document.getElementById('password').value = '';
-            document.getElementById('password').focus();
+            (document.getElementById('password') as HTMLInputElement).value = '';
+            (document.getElementById('password') as HTMLInputElement).focus();
           }
         } catch {
           errorMsg.textContent = '網絡錯誤，請稍後再試';
@@ -106,7 +107,7 @@
         }
       }
 
-      // Allow Enter key
+      submitBtn.addEventListener('click', handleLogin);
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleLogin();
       });
