@@ -57,3 +57,45 @@ export const GET: APIRoute = async ({ locals, url }) => {
     headers: { 'Content-Type': 'application/json' },
   });
 };
+
+// PATCH /api/admin/products — toggle is_active
+export const PATCH: APIRoute = async ({ locals, request }) => {
+  if (locals.userType !== 'manager') {
+    return new Response(JSON.stringify({ error: '權限不足' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const key = import.meta.env.SUPABASE_SERVICE_KEY || import.meta.env.SUPABASE_ANON_KEY;
+  const body = await request.json();
+  const { id, is_active } = body;
+  if (!id || typeof is_active !== 'boolean') {
+    return new Response(JSON.stringify({ error: 'id 和 is_active 為必填' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/inari_products?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({ is_active }),
+  });
+
+  if (!resp.ok) {
+    return new Response(JSON.stringify({ error: await resp.text() }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  return new Response(JSON.stringify({ ok: true }), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+};

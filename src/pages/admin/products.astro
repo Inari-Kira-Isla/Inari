@@ -18,11 +18,15 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       </select>
     </div>
     <div class="col-auto">
-      <select class="form-select" id="status-filter" onchange="loadProducts(true)">
-        <option value="active">上架中</option>
-        <option value="inactive">未上架</option>
-        <option value="all">全部商品</option>
-      </select>
+      <!-- 3-way status selector -->
+      <div class="btn-group" id="status-tabs" role="group">
+        <input type="radio" class="btn-check" name="status" id="s-active" value="active" checked autocomplete="off" onchange="loadProducts(true)" />
+        <label class="btn btn-outline-secondary" for="s-active">上架中</label>
+        <input type="radio" class="btn-check" name="status" id="s-inactive" value="inactive" autocomplete="off" onchange="loadProducts(true)" />
+        <label class="btn btn-outline-secondary" for="s-inactive">未上架</label>
+        <input type="radio" class="btn-check" name="status" id="s-all" value="all" autocomplete="off" onchange="loadProducts(true)" />
+        <label class="btn btn-outline-secondary" for="s-all">全部</label>
+      </div>
     </div>
   </div>
 
@@ -45,10 +49,11 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
             <th class="d-none d-md-table-cell">產地</th>
             <th class="d-none d-lg-table-cell">類型</th>
             <th id="status-th" style="display:none">狀態</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="products-tbody">
-          <tr><td colspan="8" class="text-center py-5 text-muted">載入中…</td></tr>
+          <tr><td colspan="9" class="text-center py-5 text-muted">載入中…</td></tr>
         </tbody>
       </table>
     </div>
@@ -63,6 +68,10 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     const PAGE_SIZE = 50;
     let searchTimer = null;
 
+    function getStatus() {
+      return document.querySelector('input[name="status"]:checked')?.value || 'active';
+    }
+
     async function loadProducts(reset = false) {
       if (reset) {
         page = 1;
@@ -70,24 +79,21 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         const catSel = document.getElementById('cat-filter');
         while (catSel.options.length > 1) catSel.remove(1);
         document.getElementById('products-tbody').innerHTML =
-          '<tr><td colspan="8" class="text-center py-5 text-muted">載入中…</td></tr>';
+          '<tr><td colspan="9" class="text-center py-5 text-muted">載入中…</td></tr>';
       }
 
-      const status = document.getElementById('status-filter').value;
+      const status = getStatus();
       const resp = await fetch(`/api/admin/products?status=${status}`);
       if (!resp.ok) {
         document.getElementById('products-tbody').innerHTML =
-          '<tr><td colspan="8" class="text-center py-5 text-danger">載入失敗</td></tr>';
+          '<tr><td colspan="9" class="text-center py-5 text-danger">載入失敗</td></tr>';
         return;
       }
       const data = await resp.json();
       allProducts = data.products || [];
 
-      // Show/hide status column
-      const showStatus = status !== 'active';
-      document.getElementById('status-th').style.display = showStatus ? '' : 'none';
+      document.getElementById('status-th').style.display = status !== 'active' ? '' : 'none';
 
-      // Populate category filter
       const cats = [...new Set(allProducts.map(p => p.category).filter(Boolean))].sort();
       const catSel = document.getElementById('cat-filter');
       cats.forEach(c => {
@@ -113,18 +119,17 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     }
 
     function render() {
-      const status = document.getElementById('status-filter').value;
-      const showStatus = status !== 'active';
+      const status = getStatus();
+      const showStatusCol = status !== 'active';
       const slice = filtered.slice(0, page * PAGE_SIZE);
 
-      // Count badge labels
       if (status === 'all') {
-        const activeCount = filtered.filter(p => p.is_active).length;
-        const inactiveCount = filtered.length - activeCount;
+        const aC = filtered.filter(p => p.is_active !== false).length;
+        const iC = filtered.length - aC;
         document.getElementById('count-label').innerHTML =
-          `共 ${filtered.length} 件商品 &nbsp;` +
-          `<span class="badge bg-success-lt text-success me-1">上架 ${activeCount}</span>` +
-          `<span class="badge bg-secondary-lt text-muted">未上架 ${inactiveCount}</span>`;
+          `共 ${filtered.length} 件 &nbsp;` +
+          `<span class="badge bg-success-lt text-success">上架 ${aC}</span> ` +
+          `<span class="badge bg-secondary-lt text-muted">未上架 ${iC}</span>`;
       } else {
         document.getElementById('count-label').textContent = `共 ${filtered.length} 件商品`;
       }
@@ -134,7 +139,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
       const tbody = document.getElementById('products-tbody');
       if (!slice.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">無符合商品</td></tr>';
+        const msg = status === 'inactive' ? '目前沒有未上架商品' : '無符合商品';
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted">${msg}</td></tr>`;
         return;
       }
 
@@ -149,11 +155,25 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
             : p.storage_type
               ? `<span class="badge bg-green-lt text-green">${p.storage_type}</span>`
               : `<span class="text-muted">—</span>`;
-        const statusCell = showStatus
-          ? `<td>${p.is_active ? '<span class="badge bg-success-lt text-success">上架</span>' : '<span class="badge bg-secondary-lt text-muted">未上架</span>'}</td>`
+
+        const isActive = p.is_active !== false;
+        const statusCell = showStatusCol
+          ? `<td>${isActive
+              ? '<span class="badge bg-success-lt text-success">上架</span>'
+              : '<span class="badge bg-secondary-lt text-muted">未上架</span>'
+            }</td>`
           : '';
-        const rowClass = (!p.is_active && showStatus) ? 'opacity-50' : '';
-        return `<tr class="${rowClass}">
+
+        const toggleBtn = isActive
+          ? `<button class="btn btn-sm btn-ghost-danger" title="下架" onclick="toggleActive(${p.id}, false, this)">
+               <i class="ti ti-eye-off"></i>
+             </button>`
+          : `<button class="btn btn-sm btn-ghost-success" title="上架" onclick="toggleActive(${p.id}, true, this)">
+               <i class="ti ti-eye"></i>
+             </button>`;
+
+        const rowClass = !isActive ? 'opacity-50' : '';
+        return `<tr class="${rowClass}" id="row-${p.id}">
           <td class="font-mono text-muted small">${p.sku || '—'}</td>
           <td class="fw-medium">${name}</td>
           <td class="text-muted small">${p.category || '—'}</td>
@@ -162,9 +182,33 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <td class="text-muted small d-none d-md-table-cell">${p.origin || '—'}</td>
           <td class="d-none d-lg-table-cell">${storeBadge}</td>
           ${statusCell}
+          <td class="text-end">${toggleBtn}</td>
         </tr>`;
       }).join('');
     }
+
+    window.toggleActive = async function(id, newActive, btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+      const resp = await fetch('/api/admin/products', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_active: newActive }),
+      });
+
+      if (!resp.ok) {
+        btn.disabled = false;
+        btn.innerHTML = newActive ? '<i class="ti ti-eye"></i>' : '<i class="ti ti-eye-off"></i>';
+        alert('操作失敗');
+        return;
+      }
+
+      // Update local data and re-render
+      const p = allProducts.find(x => x.id === id);
+      if (p) p.is_active = newActive;
+      applyFilter();
+    };
 
     window.debounceSearch = function(val) {
       clearTimeout(searchTimer);
