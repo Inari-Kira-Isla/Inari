@@ -9,12 +9,12 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       <div class="col">
         <div class="input-group">
           <span class="input-group-text"><i class="ti ti-search"></i></span>
-          <input type="text" class="form-control" id="search-input" placeholder="搜尋問題或答案…" oninput="debounceSearch(this.value)" />
+          <input type="text" class="form-control" id="search-input" placeholder="搜尋標題或行動建議…" oninput="debounceSearch(this.value)" />
         </div>
       </div>
       <div class="col-auto">
-        <select class="form-select" id="cat-filter" onchange="applyFilter()">
-          <option value="">全部分類</option>
+        <select class="form-select" id="domain-filter" onchange="applyFilter()">
+          <option value="">全部領域</option>
         </select>
       </div>
     </div>
@@ -33,14 +33,15 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       <table class="table table-vcenter table-hover card-table">
         <thead>
           <tr>
-            <th>分類</th>
-            <th>問題</th>
-            <th class="d-none d-md-table-cell">答案摘要</th>
-            <th></th>
+            <th style="width:140px">領域</th>
+            <th>標題 / 洞察</th>
+            <th class="d-none d-md-table-cell">行動建議</th>
+            <th class="text-center d-none d-lg-table-cell" style="width:60px">分數</th>
+            <th style="width:48px"></th>
           </tr>
         </thead>
         <tbody id="knowledge-tbody">
-          <tr><td colspan="4" class="text-center py-4 text-muted">載入中…</td></tr>
+          <tr><td colspan="5" class="text-center py-4 text-muted">載入中…</td></tr>
         </tbody>
       </table>
     </div>
@@ -56,17 +57,34 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         </div>
         <div class="modal-body">
           <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label required">分類</label>
-              <input type="text" class="form-control" id="add-category" placeholder="例：銷售管理" />
+            <div class="col-md-5">
+              <label class="form-label required">知識領域</label>
+              <input type="text" class="form-control" id="add-domain" placeholder="例：銷售管理" list="domain-list" />
+              <datalist id="domain-list"></datalist>
             </div>
-            <div class="col-md-8">
-              <label class="form-label">問題</label>
-              <input type="text" class="form-control" id="add-question" placeholder="選填：問題描述" />
+            <div class="col-md-5">
+              <label class="form-label required">標題</label>
+              <input type="text" class="form-control" id="add-title" placeholder="書名或知識來源標題" />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">重要度（1-5）</label>
+              <input type="number" class="form-control" id="add-score" min="1" max="5" value="3" />
             </div>
             <div class="col-12">
-              <label class="form-label required">答案 / 知識內容</label>
-              <textarea class="form-control" id="add-answer" rows="6" placeholder="輸入知識內容或答案…"></textarea>
+              <label class="form-label">關鍵洞察</label>
+              <textarea class="form-control" id="add-insight" rows="3" placeholder="核心研究結論或數據…"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label required">對稻荷的行動建議</label>
+              <textarea class="form-control" id="add-action" rows="4" placeholder="具體可執行的業務行動…"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">來源類型</label>
+              <input type="text" class="form-control" id="add-source-type" placeholder="書籍 / 論文 / 報告…" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">標籤（逗號分隔）</label>
+              <input type="text" class="form-control" id="add-tags" placeholder="收款, 應收, 月結" />
             </div>
           </div>
           <div id="add-error" class="alert alert-danger d-none mt-2"></div>
@@ -90,17 +108,33 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <div class="modal-body">
           <input type="hidden" id="edit-id" />
           <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label required">分類</label>
-              <input type="text" class="form-control" id="edit-category" />
+            <div class="col-md-5">
+              <label class="form-label required">知識領域</label>
+              <input type="text" class="form-control" id="edit-domain" list="domain-list" />
             </div>
-            <div class="col-md-8">
-              <label class="form-label">問題</label>
-              <input type="text" class="form-control" id="edit-question" />
+            <div class="col-md-5">
+              <label class="form-label required">標題</label>
+              <input type="text" class="form-control" id="edit-title" />
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">重要度（1-5）</label>
+              <input type="number" class="form-control" id="edit-score" min="1" max="5" />
             </div>
             <div class="col-12">
-              <label class="form-label required">答案 / 知識內容</label>
-              <textarea class="form-control" id="edit-answer" rows="6"></textarea>
+              <label class="form-label">關鍵洞察</label>
+              <textarea class="form-control" id="edit-insight" rows="3"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label required">對稻荷的行動建議</label>
+              <textarea class="form-control" id="edit-action" rows="4"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">來源類型</label>
+              <input type="text" class="form-control" id="edit-source-type" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">標籤（逗號分隔）</label>
+              <input type="text" class="form-control" id="edit-tags" />
             </div>
           </div>
           <div id="edit-error" class="alert alert-danger d-none mt-2"></div>
@@ -115,49 +149,68 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   </div>
 
   <script>
-    let allItems = [], filtered = [], currentSearch = '', currentCat = '';
+    let allItems = [], filtered = [], currentSearch = '', currentDomain = '';
     let searchTimer = null;
 
+    const DOMAIN_COLORS = {
+      '銷售管理': 'blue', '應收帳款管理': 'red', '市場學': 'purple',
+      '日本料理': 'orange', '管理會計': 'green', '行為經濟學': 'cyan',
+    };
+
+    function domainBadge(d) {
+      const color = DOMAIN_COLORS[d] || 'secondary';
+      return `<span class="badge bg-${color}-lt text-${color}">${d || '—'}</span>`;
+    }
+
     async function load() {
-      const resp = await fetch('/api/knowledge?limit=50');
-      if (!resp.ok) { showLoadError(); return; }
-      const data = await resp.json();
-      allItems = data.items || [];
-      populateCategories(allItems);
-      updateStats(allItems);
-      applyFilter();
+      const tbody = document.getElementById('knowledge-tbody');
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">載入中…</td></tr>';
+      try {
+        const resp = await fetch('/api/knowledge?limit=100');
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">載入失敗：${err.error || resp.status}</td></tr>`;
+          return;
+        }
+        const data = await resp.json();
+        allItems = data.items || [];
+        populateDomains(allItems);
+        updateStats(allItems);
+        applyFilter();
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">網路錯誤：${e.message}</td></tr>`;
+      }
     }
 
-    function showLoadError() {
-      document.getElementById('knowledge-tbody').innerHTML =
-        '<tr><td colspan="4" class="text-center py-4 text-danger">載入失敗，請重新整理</td></tr>';
-    }
-
-    function populateCategories(items) {
-      const cats = [...new Set(items.map(i => i.category).filter(Boolean))].sort();
-      const sel = document.getElementById('cat-filter');
-      cats.forEach(c => {
-        if (!sel.querySelector(`option[value="${CSS.escape(c)}"]`)) {
-          const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
+    function populateDomains(items) {
+      const domains = [...new Set(items.map(i => i.domain).filter(Boolean))].sort();
+      const sel = document.getElementById('domain-filter');
+      const dl = document.getElementById('domain-list');
+      domains.forEach(d => {
+        if (!sel.querySelector(`option[value="${d}"]`)) {
+          const o = document.createElement('option'); o.value = d; o.textContent = d; sel.appendChild(o);
+        }
+        if (!dl.querySelector(`option[value="${d}"]`)) {
+          const o2 = document.createElement('option'); o2.value = d; dl.appendChild(o2);
         }
       });
     }
 
     function updateStats(items) {
-      const cats = new Set(items.map(i => i.category).filter(Boolean));
+      const domains = new Set(items.map(i => i.domain).filter(Boolean));
       document.getElementById('stats-row').innerHTML =
         `<span class="badge bg-blue-lt text-blue px-3 py-2">共 <b>${items.length}</b> 筆</span>
-         <span class="badge bg-green-lt text-green px-3 py-2"><b>${cats.size}</b> 個分類</span>`;
+         <span class="badge bg-green-lt text-green px-3 py-2"><b>${domains.size}</b> 個領域</span>`;
     }
 
     function applyFilter() {
-      currentCat = document.getElementById('cat-filter').value;
+      currentDomain = document.getElementById('domain-filter').value;
       filtered = allItems.filter(item => {
         const q = currentSearch.toLowerCase();
-        return (!currentCat || item.category === currentCat) &&
-          (!q || (item.question||'').toLowerCase().includes(q) ||
-                 (item.answer||'').toLowerCase().includes(q) ||
-                 (item.category||'').toLowerCase().includes(q));
+        return (!currentDomain || item.domain === currentDomain) &&
+          (!q || (item.title||'').toLowerCase().includes(q) ||
+                 (item.action_for_inari||'').toLowerCase().includes(q) ||
+                 (item.key_insight||'').toLowerCase().includes(q));
       });
       render();
     }
@@ -165,18 +218,26 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     function render() {
       const tbody = document.getElementById('knowledge-tbody');
       if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">無條目</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">無條目</td></tr>';
         return;
       }
       tbody.innerHTML = filtered.map(item => {
-        const answerPreview = (item.answer || '').slice(0, 120).replace(/</g,'&lt;');
-        const hasMore = (item.answer || '').length > 120 ? '…' : '';
+        const score = item.relevance_score || 3;
+        const scoreStars = '★'.repeat(score) + '☆'.repeat(5 - score);
+        const insight = (item.key_insight || '').slice(0, 80);
+        const action = (item.action_for_inari || '').slice(0, 100);
         return `<tr>
-          <td><span class="badge bg-blue-lt text-blue">${item.category || '—'}</span></td>
-          <td class="fw-medium">${item.question || '<span class="text-muted fst-italic">（無問題）</span>'}</td>
-          <td class="text-muted small d-none d-md-table-cell" style="max-width:340px;white-space:pre-line">${answerPreview}${hasMore}</td>
-          <td class="text-end">
-            <button class="btn btn-sm btn-outline-secondary" onclick='openEdit(${JSON.stringify(item)})'>
+          <td>${domainBadge(item.domain)}</td>
+          <td>
+            <div class="fw-medium">${item.title || '—'}</div>
+            ${insight ? `<div class="text-muted small mt-1" style="font-size:11px">${insight}${item.key_insight?.length > 80 ? '…' : ''}</div>` : ''}
+          </td>
+          <td class="text-muted small d-none d-md-table-cell" style="max-width:280px">
+            ${action}${(item.action_for_inari||'').length > 100 ? '…' : ''}
+          </td>
+          <td class="text-center d-none d-lg-table-cell" style="color:#f6a623;font-size:11px">${scoreStars}</td>
+          <td>
+            <button class="btn btn-sm btn-ghost-secondary" onclick='openEdit(${JSON.stringify(item)})'>
               <i class="ti ti-pencil"></i>
             </button>
           </td>
@@ -186,26 +247,35 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
     window.openEdit = function(item) {
       document.getElementById('edit-id').value = item.id;
-      document.getElementById('edit-category').value = item.category || '';
-      document.getElementById('edit-question').value = item.question || '';
-      document.getElementById('edit-answer').value = item.answer || '';
+      document.getElementById('edit-domain').value = item.domain || '';
+      document.getElementById('edit-title').value = item.title || '';
+      document.getElementById('edit-score').value = item.relevance_score || 3;
+      document.getElementById('edit-insight').value = item.key_insight || '';
+      document.getElementById('edit-action').value = item.action_for_inari || '';
+      document.getElementById('edit-source-type').value = item.source_type || '';
+      document.getElementById('edit-tags').value = Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || '');
       document.getElementById('edit-error').classList.add('d-none');
       new bootstrap.Modal(document.getElementById('editModal')).show();
     };
 
     window.addItem = async function() {
-      const category = document.getElementById('add-category').value.trim();
-      const answer = document.getElementById('add-answer').value.trim();
+      const domain = document.getElementById('add-domain').value.trim();
+      const title = document.getElementById('add-title').value.trim();
+      const action_for_inari = document.getElementById('add-action').value.trim();
       const errEl = document.getElementById('add-error');
-      if (!category || !answer) {
-        errEl.textContent = '分類和答案為必填';
+      if (!domain || !title || !action_for_inari) {
+        errEl.textContent = '領域、標題、行動建議為必填';
         errEl.classList.remove('d-none');
         return;
       }
       const body = {
-        category,
-        question: document.getElementById('add-question').value.trim() || null,
-        answer,
+        domain,
+        title,
+        action_for_inari,
+        key_insight: document.getElementById('add-insight').value.trim() || null,
+        source_type: document.getElementById('add-source-type').value.trim() || null,
+        relevance_score: parseInt(document.getElementById('add-score').value) || 3,
+        tags: document.getElementById('add-tags').value.split(',').map(t => t.trim()).filter(Boolean),
       };
       const resp = await fetch('/api/knowledge', {
         method: 'POST',
@@ -219,28 +289,34 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         return;
       }
       bootstrap.Modal.getInstance(document.getElementById('addModal'))?.hide();
-      ['add-category', 'add-question', 'add-answer'].forEach(id => {
+      ['add-domain','add-title','add-insight','add-action','add-source-type','add-tags'].forEach(id => {
         document.getElementById(id).value = '';
       });
+      document.getElementById('add-score').value = '3';
       errEl.classList.add('d-none');
       load();
     };
 
     window.saveEdit = async function() {
       const id = document.getElementById('edit-id').value;
-      const category = document.getElementById('edit-category').value.trim();
-      const answer = document.getElementById('edit-answer').value.trim();
+      const domain = document.getElementById('edit-domain').value.trim();
+      const title = document.getElementById('edit-title').value.trim();
+      const action_for_inari = document.getElementById('edit-action').value.trim();
       const errEl = document.getElementById('edit-error');
-      if (!category || !answer) {
-        errEl.textContent = '分類和答案為必填';
+      if (!domain || !title || !action_for_inari) {
+        errEl.textContent = '領域、標題、行動建議為必填';
         errEl.classList.remove('d-none');
         return;
       }
       const body = {
         id,
-        category,
-        question: document.getElementById('edit-question').value.trim() || null,
-        answer,
+        domain,
+        title,
+        action_for_inari,
+        key_insight: document.getElementById('edit-insight').value.trim() || null,
+        source_type: document.getElementById('edit-source-type').value.trim() || null,
+        relevance_score: parseInt(document.getElementById('edit-score').value) || 3,
+        tags: document.getElementById('edit-tags').value.split(',').map(t => t.trim()).filter(Boolean),
       };
       const resp = await fetch('/api/knowledge', {
         method: 'PUT',

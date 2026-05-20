@@ -28,10 +28,13 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   const q = url.searchParams.get('q') || '';
   const category = url.searchParams.get('category') || '';
+  const showInactive = url.searchParams.get('inactive') === '1';
   const limit = Math.min(700, parseInt(url.searchParams.get('limit') || '700'));
 
-  let filter = `${SUPABASE_URL}/rest/v1/inari_products?is_active=eq.true&order=category.asc,name.asc&limit=${limit}`;
-  filter += `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight,origin`;
+  // By default only show active products; ?inactive=1 fetches inactive only
+  let filter = `${SUPABASE_URL}/rest/v1/inari_products?order=category.asc,name.asc&limit=${limit}`;
+  filter += `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight,origin,is_active`;
+  filter += showInactive ? `&is_active=eq.false` : `&is_active=eq.true`;
   if (category) filter += `&category=eq.${encodeURIComponent(category)}`;
   if (q) filter += `&or=(name.ilike.%25${encodeURIComponent(q)}%25,sku.ilike.%25${encodeURIComponent(q)}%25)`;
 
