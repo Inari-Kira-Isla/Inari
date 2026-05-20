@@ -193,9 +193,9 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <td class="text-center d-none d-lg-table-cell">${webOrders}${draftBadge}</td>
           <td class="text-center">${statusBadge}</td>
           <td>
-            <button class="btn btn-sm btn-ghost-secondary" onclick="showDetail(${JSON.stringify(c).replace(/'/g, '&#39;')})">
+            <a href="/admin/customers/${c.id}" class="btn btn-sm btn-ghost-secondary">
               <i class="ti ti-eye"></i>
-            </button>
+            </a>
           </td>
         </tr>`;
       }).join('');

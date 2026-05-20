@@ -46,12 +46,13 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
             <th class="d-none d-md-table-cell">單位</th>
             <th class="d-none d-md-table-cell">產地</th>
             <th class="d-none d-lg-table-cell">類型</th>
+            <th class="d-none d-lg-table-cell">庫存</th>
             <th id="status-th" style="display:none">狀態</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="products-tbody">
-          <tr><td colspan="9" class="text-center py-5 text-muted">載入中…</td></tr>
+          <tr><td colspan="10" class="text-center py-5 text-muted">載入中…</td></tr>
         </tbody>
       </table>
     </div>
@@ -80,14 +81,14 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         while (catSel.options.length > 1) catSel.remove(1);
         currentCat = '';
         document.getElementById('products-tbody')!.innerHTML =
-          '<tr><td colspan="9" class="text-center py-5 text-muted">載入中…</td></tr>';
+          '<tr><td colspan="10" class="text-center py-5 text-muted">載入中…</td></tr>';
       }
 
       const status = getStatus();
       const resp = await fetch(`/api/admin/products?status=${status}`);
       if (!resp.ok) {
         document.getElementById('products-tbody')!.innerHTML =
-          '<tr><td colspan="9" class="text-center py-5 text-danger">載入失敗</td></tr>';
+          '<tr><td colspan="10" class="text-center py-5 text-danger">載入失敗</td></tr>';
         return;
       }
       const data = await resp.json();
@@ -144,7 +145,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       const tbody = document.getElementById('products-tbody')!;
       if (!slice.length) {
         const msg = status === 'inactive' ? '目前沒有未上架商品' : '無符合商品';
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted">${msg}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted">${msg}</td></tr>`;
         return;
       }
 
@@ -175,6 +176,26 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
                <i class="ti ti-eye"></i>
              </button>`;
 
+        let stockDisplay;
+        if (p.stock_qty == null) {
+          stockDisplay = '<span class="text-muted">—</span>';
+        } else if (p.stock_qty === 0) {
+          stockDisplay = '<span class="text-muted small">無庫存</span>';
+        } else {
+          stockDisplay = `<span class="fw-semibold">${p.stock_qty}</span>${p.stock_unit ? ` <span class="text-muted small">${p.stock_unit}</span>` : ''}`;
+        }
+
+        const stockEditBtn = `<button class="btn btn-sm btn-ghost-secondary ms-1 p-0 px-1"
+          data-action="stock"
+          data-id="${p.id}"
+          data-sku="${(p.sku || '').replace(/"/g, '&quot;')}"
+          data-name="${(p.name || '').replace(/"/g, '&quot;')}"
+          data-stock="${p.stock_qty ?? ''}"
+          data-unit="${(p.stock_unit || '').replace(/"/g, '&quot;')}"
+          title="編輯庫存">
+          <i class="ti ti-pencil" style="font-size:12px"></i>
+        </button>`;
+
         return `<tr class="${!isActive ? 'opacity-50' : ''}" id="row-${p.id}">
           <td class="font-mono text-muted small">${p.sku || '—'}</td>
           <td class="fw-medium">${p.name || '—'}</td>
@@ -183,6 +204,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <td class="text-muted small d-none d-md-table-cell">${p.unit || '—'}</td>
           <td class="text-muted small d-none d-md-table-cell">${p.origin || '—'}</td>
           <td class="d-none d-lg-table-cell">${storeBadge}</td>
+          <td class="d-none d-lg-table-cell">${stockDisplay}${stockEditBtn}</td>
           ${statusCell}
           <td class="text-end">${toggleBtn}</td>
         </tr>`;
@@ -227,15 +249,103 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       radio.addEventListener('change', () => loadProducts(true));
     });
 
-    // event delegation for toggle buttons (rendered dynamically)
+    // event delegation for toggle and stock buttons (rendered dynamically)
     document.getElementById('products-tbody')!.addEventListener('click', (e) => {
       const btn = (e.target as HTMLElement).closest('button[data-id]') as HTMLButtonElement | null;
       if (!btn) return;
+
+      if (btn.dataset.action === 'stock') {
+        (document.getElementById('stock-id') as HTMLInputElement).value = btn.dataset.id!;
+        (document.getElementById('stock-name-display') as HTMLElement).textContent = btn.dataset.name || '—';
+        (document.getElementById('stock-sku-display') as HTMLElement).textContent = btn.dataset.sku || '';
+        (document.getElementById('stock-qty-input') as HTMLInputElement).value = btn.dataset.stock || '0';
+        (document.getElementById('stock-unit-input') as HTMLInputElement).value = btn.dataset.unit || '';
+        (document.getElementById('stock-notes-input') as HTMLTextAreaElement).value = '';
+        new (window as any).bootstrap.Modal(document.getElementById('stockModal')).show();
+        return;
+      }
+
       const id = parseInt(btn.dataset.id!);
       const newActive = btn.dataset.active === 'true';
       handleToggle(id, newActive, btn);
     });
 
+    document.getElementById('stock-save-btn')!.addEventListener('click', async () => {
+      const id = parseInt((document.getElementById('stock-id') as HTMLInputElement).value);
+      if (!id) return;
+
+      const spinner = document.getElementById('stock-spinner')!;
+      const saveBtn = document.getElementById('stock-save-btn') as HTMLButtonElement;
+      spinner.style.display = '';
+      saveBtn.disabled = true;
+
+      const stock_qty = parseFloat((document.getElementById('stock-qty-input') as HTMLInputElement).value) || 0;
+      const stock_unit = (document.getElementById('stock-unit-input') as HTMLInputElement).value.trim();
+      const stock_notes = (document.getElementById('stock-notes-input') as HTMLTextAreaElement).value.trim();
+
+      try {
+        const resp = await fetch('/api/admin/products', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, stock_qty, stock_unit: stock_unit || null, stock_notes: stock_notes || null }),
+        });
+        if (!resp.ok) {
+          alert('儲存失敗');
+        } else {
+          (window as any).bootstrap.Modal.getInstance(document.getElementById('stockModal'))?.hide();
+          const p = allProducts.find((x: any) => x.id === id);
+          if (p) {
+            (p as any).stock_qty = stock_qty;
+            (p as any).stock_unit = stock_unit || null;
+          }
+          applyFilter();
+        }
+      } catch {
+        alert('網路錯誤');
+      } finally {
+        spinner.style.display = 'none';
+        saveBtn.disabled = false;
+      }
+    });
+
     loadProducts(true);
   </script>
+
+  <!-- Stock Edit Modal -->
+  <div class="modal modal-blur fade" id="stockModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">編輯庫存</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="stock-id" />
+          <div class="mb-2">
+            <div class="fw-semibold" id="stock-name-display">—</div>
+            <div class="font-mono text-muted small" id="stock-sku-display"></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="stock-qty-input">庫存數量</label>
+            <input type="number" class="form-control" id="stock-qty-input" min="0" step="any" value="0" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="stock-unit-input">單位</label>
+            <input type="text" class="form-control" id="stock-unit-input" placeholder="例：箱、kg、盒" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="stock-notes-input">備註</label>
+            <textarea class="form-control" id="stock-notes-input" rows="2" placeholder="庫存備註…"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" id="stock-save-btn">
+            <span class="spinner-border spinner-border-sm me-1" id="stock-spinner" style="display:none"></span>
+            儲存
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </AdminLayout>

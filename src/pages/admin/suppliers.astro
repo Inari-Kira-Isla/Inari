@@ -1,0 +1,297 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="供應商管理" active="suppliers" pageTitle="供應商管理" pageSubtitle="全部供應商">
+
+  <!-- Stats row -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-blue-lt avatar"><i class="ti ti-truck text-blue"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="stat-total">—</div>
+              <div class="text-muted small">供應商總數</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-green-lt avatar"><i class="ti ti-tag text-green"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="stat-quotes">—</div>
+              <div class="text-muted small">報價總筆數</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading-state" class="text-center py-5 text-muted">載入中…</div>
+  <div id="error-state" class="alert alert-danger" style="display:none"></div>
+
+  <div id="suppliers-grid" class="row g-3" style="display:none"></div>
+
+  <!-- Quotes Offcanvas Drawer -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="quotesDrawer" style="width:480px">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="quotes-drawer-title">報價單</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+      <div class="table-responsive">
+        <table class="table table-vcenter table-sm card-table">
+          <thead>
+            <tr>
+              <th>商品名稱</th>
+              <th>規格</th>
+              <th class="text-end">單價</th>
+              <th>單位</th>
+              <th class="d-none d-md-table-cell">報價日期</th>
+            </tr>
+          </thead>
+          <tbody id="quotes-tbody">
+            <tr><td colspan="5" class="text-center py-4 text-muted">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal modal-blur fade" id="editModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">編輯供應商</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="edit-id" />
+          <div class="mb-3">
+            <label class="form-label">供應商名稱</label>
+            <div class="fw-semibold" id="edit-name-display">—</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="edit-contact">聯絡人</label>
+            <input type="text" class="form-control" id="edit-contact" placeholder="聯絡人姓名" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="edit-phone">電話</label>
+            <input type="text" class="form-control" id="edit-phone" placeholder="電話號碼" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="edit-email">電子郵件</label>
+            <input type="email" class="form-control" id="edit-email" placeholder="email@example.com" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="edit-address">地址</label>
+            <input type="text" class="form-control" id="edit-address" placeholder="公司地址" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="edit-payment-terms">結款條件</label>
+            <input type="text" class="form-control" id="edit-payment-terms" placeholder="例：月結 30 天" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="edit-notes">備註</label>
+            <textarea class="form-control" id="edit-notes" rows="3" placeholder="備註內容…"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" id="edit-save-btn">
+            <span class="spinner-border spinner-border-sm me-1" id="edit-spinner" style="display:none"></span>
+            儲存
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allSuppliers = [];
+
+    async function load() {
+      try {
+        const resp = await fetch('/api/admin/suppliers');
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          document.getElementById('loading-state').style.display = 'none';
+          const errEl = document.getElementById('error-state');
+          errEl.textContent = err.error || `載入失敗 (${resp.status})`;
+          errEl.style.display = '';
+          return;
+        }
+        const { suppliers } = await resp.json();
+        allSuppliers = suppliers || [];
+        renderStats();
+        renderCards();
+      } catch (e) {
+        document.getElementById('loading-state').style.display = 'none';
+        const errEl = document.getElementById('error-state');
+        errEl.textContent = `網路錯誤：${e.message}`;
+        errEl.style.display = '';
+      }
+    }
+
+    function renderStats() {
+      document.getElementById('stat-total').textContent = allSuppliers.length;
+      const totalQuotes = allSuppliers.reduce((s, sup) => s + (sup.quote_count || 0), 0);
+      document.getElementById('stat-quotes').textContent = totalQuotes;
+    }
+
+    function renderCards() {
+      document.getElementById('loading-state').style.display = 'none';
+      const grid = document.getElementById('suppliers-grid');
+      grid.style.display = '';
+
+      if (!allSuppliers.length) {
+        grid.innerHTML = '<div class="col-12 text-center py-5 text-muted">無供應商資料</div>';
+        return;
+      }
+
+      grid.innerHTML = allSuppliers.map(s => {
+        const phone = s.phone ? `<div class="text-muted small"><i class="ti ti-phone me-1"></i>${s.phone}</div>` : '';
+        const email = s.email ? `<div class="text-muted small"><i class="ti ti-mail me-1"></i>${s.email}</div>` : '';
+        const address = s.address ? `<div class="text-muted small"><i class="ti ti-map-pin me-1"></i>${s.address}</div>` : '';
+        const contact = s.contact_person ? `<div class="text-muted small"><i class="ti ti-user me-1"></i>${s.contact_person}</div>` : '';
+        const noContact = !s.phone && !s.email && !s.address && !s.contact_person
+          ? '<div class="text-muted small">—</div>' : '';
+
+        return `<div class="col-12 col-md-6 col-lg-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-start justify-content-between mb-2">
+                <div class="fw-semibold">${s.supplier_name || '—'}</div>
+                <span class="badge bg-blue-lt text-blue ms-2">${s.quote_count || 0} 報價</span>
+              </div>
+              <div class="mb-3">
+                ${contact}${phone}${email}${address}${noContact}
+              </div>
+              ${s.payment_terms ? `<div class="text-muted small mb-2"><i class="ti ti-receipt me-1"></i>${s.payment_terms}</div>` : ''}
+            </div>
+            <div class="card-footer d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary flex-fill"
+                data-action="quotes"
+                data-id="${s.id}"
+                data-name="${(s.supplier_name || '').replace(/"/g, '&quot;')}">
+                <i class="ti ti-file-invoice me-1"></i>查看報價
+              </button>
+              <button class="btn btn-sm btn-outline-primary"
+                data-action="edit"
+                data-id="${s.id}"
+                data-name="${(s.supplier_name || '').replace(/"/g, '&quot;')}"
+                data-contact="${(s.contact_person || '').replace(/"/g, '&quot;')}"
+                data-phone="${(s.phone || '').replace(/"/g, '&quot;')}"
+                data-email="${(s.email || '').replace(/"/g, '&quot;')}"
+                data-address="${(s.address || '').replace(/"/g, '&quot;')}"
+                data-payment-terms="${(s.payment_terms || '').replace(/"/g, '&quot;')}"
+                data-notes="${(s.notes || '').replace(/"/g, '&quot;')}">
+                <i class="ti ti-pencil"></i>
+              </button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // Event delegation on suppliers grid
+    document.getElementById('suppliers-grid').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+
+      if (action === 'quotes') {
+        const id = parseInt(btn.dataset.id);
+        const name = btn.dataset.name;
+        const supplier = allSuppliers.find(s => s.id === id);
+        if (!supplier) return;
+
+        document.getElementById('quotes-drawer-title').textContent = `${name} — 報價單`;
+        const tbody = document.getElementById('quotes-tbody');
+
+        if (!supplier.quotes || !supplier.quotes.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">無報價資料</td></tr>';
+        } else {
+          tbody.innerHTML = supplier.quotes.map(q => {
+            const price = q.unit_price != null
+              ? `MOP ${Number(q.unit_price).toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : '—';
+            const date = q.quote_date ? new Date(q.quote_date).toLocaleDateString('zh-TW') : '—';
+            return `<tr>
+              <td class="fw-medium">${q.product_name || '—'}</td>
+              <td class="text-muted small">${q.spec || '—'}</td>
+              <td class="text-end font-mono small">${price}</td>
+              <td class="text-muted small">${q.unit || '—'}</td>
+              <td class="text-muted small d-none d-md-table-cell">${date}</td>
+            </tr>`;
+          }).join('');
+        }
+
+        new bootstrap.Offcanvas(document.getElementById('quotesDrawer')).show();
+      }
+
+      if (action === 'edit') {
+        document.getElementById('edit-id').value = btn.dataset.id;
+        document.getElementById('edit-name-display').textContent = btn.dataset.name;
+        document.getElementById('edit-contact').value = btn.dataset.contact || '';
+        document.getElementById('edit-phone').value = btn.dataset.phone || '';
+        document.getElementById('edit-email').value = btn.dataset.email || '';
+        document.getElementById('edit-address').value = btn.dataset.address || '';
+        document.getElementById('edit-payment-terms').value = btn.dataset.paymentTerms || '';
+        document.getElementById('edit-notes').value = btn.dataset.notes || '';
+        new bootstrap.Modal(document.getElementById('editModal')).show();
+      }
+    });
+
+    document.getElementById('edit-save-btn').addEventListener('click', async () => {
+      const id = parseInt(document.getElementById('edit-id').value);
+      if (!id) return;
+
+      const spinner = document.getElementById('edit-spinner');
+      const saveBtn = document.getElementById('edit-save-btn');
+      spinner.style.display = '';
+      saveBtn.disabled = true;
+
+      const payload = {
+        id,
+        contact_person: document.getElementById('edit-contact').value,
+        phone: document.getElementById('edit-phone').value,
+        email: document.getElementById('edit-email').value,
+        address: document.getElementById('edit-address').value,
+        payment_terms: document.getElementById('edit-payment-terms').value,
+        notes: document.getElementById('edit-notes').value,
+      };
+
+      try {
+        const resp = await fetch('/api/admin/suppliers', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          alert(`儲存失敗：${err.error || resp.status}`);
+        } else {
+          bootstrap.Modal.getInstance(document.getElementById('editModal'))?.hide();
+          load();
+        }
+      } catch (e) {
+        alert(`網路錯誤：${e.message}`);
+      } finally {
+        spinner.style.display = 'none';
+        saveBtn.disabled = false;
+      }
+    });
+
+    load();
+  </script>
+</AdminLayout>

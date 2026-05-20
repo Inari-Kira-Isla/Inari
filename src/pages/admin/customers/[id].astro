@@ -1,0 +1,222 @@
+---
+export const prerender = false;
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+const { id } = Astro.params;
+---
+<AdminLayout title="客戶詳情" active="customers" pageTitle="客戶詳情" pageSubtitle="客戶管理">
+
+  <div class="mb-3">
+    <a href="/admin/customers" class="btn btn-outline-secondary btn-sm">
+      <i class="ti ti-arrow-left me-1"></i>返回客戶列表
+    </a>
+  </div>
+
+  <div id="loading-state" class="text-center py-5 text-muted">載入中…</div>
+
+  <div id="page-content" style="display:none">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <h2 class="page-title mb-0" id="customer-name">—</h2>
+      <span id="status-badge"></span>
+      <span class="font-mono text-muted small" id="customer-code"></span>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="row g-3 mb-3">
+      <div class="col-6 col-md-3">
+        <div class="card card-sm">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-auto"><span class="bg-blue-lt avatar"><i class="ti ti-clipboard-list text-blue"></i></span></div>
+              <div class="col">
+                <div class="fw-semibold" id="kpi-orders">—</div>
+                <div class="text-muted small">總訂單數</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card card-sm">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-auto"><span class="bg-green-lt avatar"><i class="ti ti-currency-dollar text-green"></i></span></div>
+              <div class="col">
+                <div class="fw-semibold font-mono" id="kpi-total">—</div>
+                <div class="text-muted small">訂單總額</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card card-sm">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-auto"><span class="bg-cyan-lt avatar"><i class="ti ti-chart-bar text-cyan"></i></span></div>
+              <div class="col">
+                <div class="fw-semibold font-mono" id="kpi-avg">—</div>
+                <div class="text-muted small">平均訂單</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card card-sm">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col-auto"><span class="bg-yellow-lt avatar"><i class="ti ti-calendar text-yellow"></i></span></div>
+              <div class="col">
+                <div class="fw-semibold small" id="kpi-lastorder">—</div>
+                <div class="text-muted small">最後下單日期</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <!-- Customer details datagrid -->
+      <div class="col-12 col-md-4">
+        <div class="card h-100">
+          <div class="card-header">
+            <h4 class="card-title">客戶資料</h4>
+          </div>
+          <div class="card-body">
+            <div class="datagrid" id="customer-datagrid">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order history -->
+      <div class="col-12 col-md-8">
+        <div class="card">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h4 class="card-title mb-0">訂單記錄</h4>
+            <span id="draft-badge"></span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-vcenter table-hover card-table">
+              <thead>
+                <tr>
+                  <th>狀態</th>
+                  <th>訂單號</th>
+                  <th class="d-none d-md-table-cell">日期</th>
+                  <th class="text-end">金額</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="orders-tbody">
+                <tr><td colspan="5" class="text-center py-4 text-muted">載入中…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="error-state" style="display:none" class="alert alert-danger"></div>
+
+  <script define:vars={{ customerId: id }}>
+    const STATUS_COLOR = { draft: 'warning', confirmed: 'success', invoiced: 'primary', cancelled: 'secondary' };
+    const STATUS_LABEL = { draft: '草稿', confirmed: '已確認', invoiced: '已開單', cancelled: '已取消' };
+
+    function fmt(n) {
+      return n != null ? `MOP ${Number(n).toLocaleString('zh-TW', { maximumFractionDigits: 0 })}` : '—';
+    }
+    function fmtDate(s) {
+      if (!s) return '—';
+      return new Date(s).toLocaleDateString('zh-TW');
+    }
+
+    async function load() {
+      try {
+        const resp = await fetch(`/api/admin/customers/${customerId}`);
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          document.getElementById('loading-state').style.display = 'none';
+          const errEl = document.getElementById('error-state');
+          errEl.textContent = err.error || `載入失敗 (${resp.status})`;
+          errEl.style.display = '';
+          return;
+        }
+
+        const { customer: c, orders, stats } = await resp.json();
+
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('page-content').style.display = '';
+
+        document.getElementById('customer-name').textContent = c.customer_name || '—';
+        document.getElementById('customer-code').textContent = c.customer_code || '';
+        document.getElementById('status-badge').innerHTML = c.is_active
+          ? '<span class="badge bg-success-lt text-success">活躍</span>'
+          : '<span class="badge bg-secondary-lt text-muted">停用</span>';
+
+        document.getElementById('kpi-orders').textContent = stats.total_orders;
+        document.getElementById('kpi-total').textContent = fmt(stats.total_amount);
+        document.getElementById('kpi-avg').textContent = fmt(stats.avg_order_amount);
+        document.getElementById('kpi-lastorder').textContent = fmtDate(stats.last_order_date);
+
+        if (stats.draft_count > 0) {
+          document.getElementById('draft-badge').innerHTML =
+            `<span class="badge bg-warning-lt text-warning">${stats.draft_count} 草稿</span>`;
+        }
+
+        const credit = c.credit_limit ? fmt(c.credit_limit) : '—';
+        const payInfo = [c.payment_type, c.payment_terms_days ? `${c.payment_terms_days}天` : null]
+          .filter(Boolean).join(' ');
+
+        const fields = [
+          ['客戶代碼', `<span class="font-mono">${c.customer_code || '—'}</span>`],
+          ['業態', c.business_type || '—'],
+          ['結款方式', payInfo || '—'],
+          ['信用額度', `<span class="font-mono">${credit}</span>`],
+          ['業務', c.salesperson || '—'],
+          ['收款方式', c.collection_method || '—'],
+          ['集團', c.group_name || '—'],
+        ];
+
+        document.getElementById('customer-datagrid').innerHTML = fields.map(([title, val]) =>
+          `<div class="datagrid-item">
+            <div class="datagrid-title">${title}</div>
+            <div class="datagrid-content">${val}</div>
+          </div>`
+        ).join('');
+
+        const tbody = document.getElementById('orders-tbody');
+        if (!orders.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">無訂單記錄</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = orders.map(o => {
+          const color = STATUS_COLOR[o.status] || 'secondary';
+          const label = STATUS_LABEL[o.status] || o.status;
+          const date = fmtDate(o.order_date || o.created_at);
+          const amount = fmt(o.total_amount);
+          return `<tr>
+            <td><span class="badge bg-${color}-lt text-${color}">${label}</span></td>
+            <td class="font-mono small fw-semibold">${o.order_no || '—'}</td>
+            <td class="text-muted small d-none d-md-table-cell">${date}</td>
+            <td class="text-end font-mono small">${amount}</td>
+            <td>
+              <a href="/admin/orders/${o.id}" class="btn btn-sm btn-ghost-secondary px-1">
+                <i class="ti ti-arrow-right"></i>
+              </a>
+            </td>
+          </tr>`;
+        }).join('');
+      } catch (e) {
+        document.getElementById('loading-state').style.display = 'none';
+        const errEl = document.getElementById('error-state');
+        errEl.textContent = `網路錯誤：${e.message}`;
+        errEl.style.display = '';
+      }
+    }
+
+    load();
+  </script>
+</AdminLayout>

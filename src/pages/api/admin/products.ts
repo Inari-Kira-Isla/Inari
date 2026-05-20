@@ -33,7 +33,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
   const limit = Math.min(700, parseInt(url.searchParams.get('limit') || '700'));
 
   let filter = `${SUPABASE_URL}/rest/v1/inari_products?order=is_active.desc,category.asc,name.asc&limit=${limit}`;
-  filter += `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight,origin,is_active`;
+  filter += `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight,origin,is_active,stock_qty,stock_unit,stock_min_qty`;
   if (status === 'active')   filter += `&is_active=eq.true`;
   if (status === 'inactive') filter += `&is_active=eq.false`;
   // status === 'all' → no filter
@@ -58,9 +58,9 @@ export const GET: APIRoute = async ({ locals, url }) => {
   });
 };
 
-// PATCH /api/admin/products — toggle is_active
+// PATCH /api/admin/products — toggle is_active (manager) or update stock_qty (staff+manager)
 export const PATCH: APIRoute = async ({ locals, request }) => {
-  if (locals.userType !== 'manager') {
+  if (locals.userType !== 'manager' && locals.userType !== 'staff') {
     return new Response(JSON.stringify({ error: '權限不足' }), {
       status: 403,
       headers: { 'Content-Type': 'application/json' },
@@ -69,9 +69,31 @@ export const PATCH: APIRoute = async ({ locals, request }) => {
 
   const key = import.meta.env.SUPABASE_SERVICE_KEY || import.meta.env.SUPABASE_ANON_KEY;
   const body = await request.json();
-  const { id, is_active } = body;
-  if (!id || typeof is_active !== 'boolean') {
-    return new Response(JSON.stringify({ error: 'id 和 is_active 為必填' }), {
+  const { id, is_active, stock_qty, stock_unit, stock_notes } = body;
+
+  if (!id) {
+    return new Response(JSON.stringify({ error: 'id 為必填' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // is_active toggle requires manager
+  if (typeof is_active === 'boolean' && locals.userType !== 'manager') {
+    return new Response(JSON.stringify({ error: '權限不足' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const patch: Record<string, any> = {};
+  if (typeof is_active === 'boolean') patch.is_active = is_active;
+  if (stock_qty !== undefined) patch.stock_qty = stock_qty;
+  if (stock_unit !== undefined) patch.stock_unit = stock_unit;
+  if (stock_notes !== undefined) patch.stock_notes = stock_notes;
+
+  if (!Object.keys(patch).length) {
+    return new Response(JSON.stringify({ error: '無可更新欄位' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -85,7 +107,7 @@ export const PATCH: APIRoute = async ({ locals, request }) => {
       'Content-Type': 'application/json',
       Prefer: 'return=minimal',
     },
-    body: JSON.stringify({ is_active }),
+    body: JSON.stringify(patch),
   });
 
   if (!resp.ok) {
