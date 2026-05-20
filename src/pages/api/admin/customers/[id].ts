@@ -55,11 +55,15 @@ export const GET: APIRoute = async ({ locals, params }) => {
   }
   const customer = customers[0];
 
-  const ordersResp = await fetch(
+  const ordersBase =
     `${SUPABASE_URL}/rest/v1/inari_customer_orders` +
-    `?customer_code=eq.${encodeURIComponent(customer.customer_code)}&tenant_id=eq.${TENANT_ID}` +
+    `?tenant_id=eq.${TENANT_ID}` +
     `&select=id,order_no,status,order_date,created_at,inari_customer_order_items(id,amount)` +
-    `&order=created_at.desc&limit=50`,
+    `&order=created_at.desc&limit=50`;
+
+  // Try matching by customer_code first, then fall back to customer_name
+  let ordersResp = await fetch(
+    ordersBase + `&customer_code=eq.${encodeURIComponent(customer.customer_code)}`,
     { headers: sbHeaders(key) }
   );
 
@@ -72,6 +76,23 @@ export const GET: APIRoute = async ({ locals, params }) => {
       const { inari_customer_order_items: _items, ...rest } = o;
       return { ...rest, total_amount };
     });
+  }
+
+  // Fallback: match by customer_name if no orders found via code
+  if (!orders.length && customer.customer_name) {
+    const nameResp = await fetch(
+      ordersBase + `&customer_name=ilike.${encodeURIComponent('*' + customer.customer_name + '*')}`,
+      { headers: sbHeaders(key) }
+    );
+    if (nameResp.ok) {
+      const raw = await nameResp.json();
+      orders = raw.map((o: any) => {
+        const items: any[] = o.inari_customer_order_items || [];
+        const total_amount = items.reduce((s: number, i: any) => s + (i.amount || 0), 0);
+        const { inari_customer_order_items: _items, ...rest } = o;
+        return { ...rest, total_amount };
+      });
+    }
   }
 
   const total_orders = orders.length;

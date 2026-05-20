@@ -36,15 +36,13 @@ export const GET: APIRoute = async ({ locals }) => {
   const [suppResp, quotesResp] = await Promise.all([
     fetch(
       `${SUPABASE_URL}/rest/v1/inari_suppliers` +
-      `?tenant_id=eq.${TENANT_ID}` +
-      `&select=id,supplier_name,contact_person,phone,email,address,payment_terms,notes,is_active` +
+      `?select=id,supplier_name,contact_person,phone,email,address,payment_terms,notes,is_active` +
       `&order=id.asc`,
       { headers: sbHeaders(key) }
     ),
     fetch(
       `${SUPABASE_URL}/rest/v1/inari_supplier_quotes` +
-      `?tenant_id=eq.${TENANT_ID}` +
-      `&select=id,supplier_id,product_id,product_name,unit_price,unit,spec,quote_date` +
+      `?select=id,supplier_id,product_id,product_name,unit_price,unit,spec,quote_date` +
       `&order=supplier_id.asc,product_name.asc&limit=2000`,
       { headers: sbHeaders(key) }
     ),
@@ -114,7 +112,7 @@ export const PATCH: APIRoute = async ({ locals, request }) => {
   if (notes !== undefined) patch.notes = notes;
 
   const resp = await fetch(
-    `${SUPABASE_URL}/rest/v1/inari_suppliers?id=eq.${id}&tenant_id=eq.${TENANT_ID}`,
+    `${SUPABASE_URL}/rest/v1/inari_suppliers?id=eq.${id}`,
     {
       method: 'PATCH',
       headers: { ...sbHeaders(key), Prefer: 'return=minimal' },
