@@ -1,0 +1,83 @@
+---
+/**
+ * ProductCard — reusable product card for catalog and retail pages.
+ * Used by: shop/catalog.astro (JS template), future /retail page (SSR).
+ *
+ * When used in SSR context, pass props directly.
+ * When used in JS context, render HTML via the exported `productCardHTML()` helper.
+ */
+
+interface Props {
+  sku: string;
+  name: string;
+  price: number;
+  unit?: string;
+  origin?: string;
+  category?: string;
+  qty?: number;
+}
+
+const { sku, name, price, unit = '件', origin, category = '', qty = 0 } = Astro.props;
+
+function thumbClass(cat: string) {
+  if (/海膽|uni/i.test(cat)) return 'cat-uni';
+  if (/三文魚|鮭魚|salmon/i.test(cat)) return 'cat-salmon';
+  if (/帆立|scallop/i.test(cat)) return 'cat-scallop';
+  if (/蟹|crab/i.test(cat)) return 'cat-crab';
+  if (/蝦|prawn|shrimp/i.test(cat)) return 'cat-prawn';
+  return 'cat-misc';
+}
+
+function glyphFor(cat: string) {
+  if (/海膽/i.test(cat)) return '🦔';
+  if (/三文魚|鮭魚/i.test(cat)) return '🐟';
+  if (/帆立/i.test(cat)) return '🐚';
+  if (/蟹/i.test(cat)) return '🦀';
+  if (/蝦/i.test(cat)) return '🦐';
+  return '🐠';
+}
+
+const cls = thumbClass(category);
+const glyph = glyphFor(name + category);
+const fmtPrice = Number(price).toLocaleString('en-US', { maximumFractionDigits: 0 });
+---
+
+<div class="product-card" data-sku={sku}>
+  <div class={`thumb ${cls}`}>
+    <span class="glyph">{glyph}</span>
+    {origin && <div class="origin-tag">{origin}</div>}
+    <span class="sku-strip">{sku}</span>
+  </div>
+  <div class="body">
+    <div class="name">{name}</div>
+    <div class="price-row">
+      <div class="price">
+        <span class="cur">MOP</span>
+        <span class="num">{fmtPrice}</span>
+        <span class="unit">/ {unit}</span>
+      </div>
+      {qty === 0 ? (
+        <button
+          class="add"
+          data-sku={sku}
+          data-name={name}
+          data-price={price}
+          data-unit={unit}
+          aria-label="加入購物車"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      ) : (
+        <div class="stepper">
+          <button data-sku={sku} data-action="dec" aria-label="減少">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 12h14"/></svg>
+          </button>
+          <span class="val">{qty}</span>
+          <button data-sku={sku} data-action="inc" aria-label="增加">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
+</div>

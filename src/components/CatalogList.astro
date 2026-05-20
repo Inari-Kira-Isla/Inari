@@ -1,0 +1,81 @@
+---
+import ProductCard from './ProductCard.astro';
+
+interface ProductItem {
+  sku: string;
+  name?: string;
+  product_name?: string;
+  sales_price?: number;
+  price?: number;
+  unit?: string;
+  origin?: string;
+  category?: string;
+}
+
+interface Props {
+  products: ProductItem[];
+  cols?: 2 | 3;
+  emptyMessage?: string;
+}
+
+const { products, cols = 2, emptyMessage = '無商品資料' } = Astro.props;
+
+function itemQty(_sku: string): number {
+  return 0; // SSR context: qty always 0, client JS updates via data-sku
+}
+---
+
+<div
+  class="catalog-list"
+  style={`display:grid;grid-template-columns:repeat(${cols},1fr);gap:12px;padding:4px 18px 18px`}
+>
+  {products.length === 0 ? (
+    <div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--mute);font-size:13px">
+      {emptyMessage}
+    </div>
+  ) : products.map(item => (
+    <ProductCard
+      sku={item.sku}
+      name={item.name || item.product_name || ''}
+      price={item.sales_price ?? item.price ?? 0}
+      unit={item.unit}
+      origin={item.origin}
+      category={item.category}
+      qty={itemQty(item.sku)}
+    />
+  ))}
+</div>
+
+<script>
+  // Sync cart state from localStorage into all ProductCard steppers on this page
+  function syncCartState() {
+    let cart: { items: Array<{ sku: string; qty: number }> } = { items: [] };
+    try {
+      const raw = localStorage.getItem('inari_cart');
+      if (raw) cart = JSON.parse(raw);
+    } catch { /* ignore */ }
+
+    const qtyMap = new Map<string, number>();
+    for (const item of (cart.items || [])) {
+      qtyMap.set(item.sku, item.qty || 0);
+    }
+
+    document.querySelectorAll<HTMLElement>('.product-card[data-sku]').forEach(card => {
+      const sku = card.dataset.sku!;
+      const qty = qtyMap.get(sku) || 0;
+      const addBtn = card.querySelector<HTMLElement>('.add');
+      const stepper = card.querySelector<HTMLElement>('.stepper');
+      const val = stepper?.querySelector<HTMLElement>('.val');
+      if (qty > 0) {
+        if (addBtn) addBtn.style.display = 'none';
+        if (stepper) { stepper.style.display = 'inline-flex'; if (val) val.textContent = String(qty); }
+      } else {
+        if (addBtn) addBtn.style.display = 'grid';
+        if (stepper) stepper.style.display = 'none';
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', syncCartState);
+  window.addEventListener('storage', e => { if (e.key === 'inari_cart') syncCartState(); });
+</script>
