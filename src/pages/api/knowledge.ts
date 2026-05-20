@@ -38,8 +38,10 @@ export const GET: APIRoute = async ({ url }) => {
 
     const SUPABASE_URL = 'https://cqartwwsbxnjjatmndtt.supabase.co';
     const category = url.searchParams.get('category');
+    const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') || '50', 10)));
+    const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0', 10));
 
-    let endpoint = `${SUPABASE_URL}/rest/v1/inari_knowledge_items?select=id,category,question,answer,created_at,updated_at&order=category.asc,id.asc`;
+    let endpoint = `${SUPABASE_URL}/rest/v1/inari_knowledge_items?select=id,category,question,answer,created_at,updated_at&order=category.asc,id.asc&limit=${limit}&offset=${offset}`;
     if (category) {
       endpoint += `&category=eq.${encodeURIComponent(category)}`;
     }

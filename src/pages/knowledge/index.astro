@@ -1,0 +1,212 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>海鮮知識庫 — 稻荷環球食品</title>
+    <meta name="description" content="日本海鮮產地、品種、季節、分級完整知識庫。北海道海膽、挪威三文魚、帆立貝等。" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      html, body { height: 100%; max-width: none; }
+      body { max-width: none; }
+      .page-max { max-width: 640px; margin: 0 auto; }
+
+      .knl-nav {
+        position: sticky; top: 0; z-index: 40;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 20px; background: var(--paper);
+        border-bottom: 1px solid var(--hairline);
+      }
+      .knl-back {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 13px; font-weight: 500; color: var(--sea);
+        text-decoration: none;
+      }
+      .knl-hero {
+        padding: 32px 20px 28px;
+        background: linear-gradient(160deg, oklch(22% 0.04 240) 0%, oklch(30% 0.06 232) 100%);
+        color: var(--paper);
+      }
+      .knl-hero-sub { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; color: var(--gold); margin-bottom: 10px; }
+      .knl-hero-h1 { font-size: 26px; font-weight: 300; margin: 0 0 10px; }
+      .knl-hero-h1 strong { font-weight: 700; }
+      .knl-hero-desc { font-size: 13px; opacity: .75; line-height: 1.6; margin: 0; }
+
+      .hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
+      .hub-card {
+        border-radius: var(--r-lg); border: 1px solid var(--hairline);
+        padding: 16px 14px; display: flex; flex-direction: column; gap: 10px;
+        text-decoration: none; color: inherit;
+        background: var(--paper); transition: border-color .15s, transform .1s;
+      }
+      .hub-card:hover { border-color: var(--sea); transform: translateY(-1px); }
+      .hub-card.wide { grid-column: span 2; flex-direction: row; align-items: center; gap: 14px; }
+      .hub-card.sea { background: var(--sea-soft); border-color: transparent; }
+      .hub-icon {
+        width: 44px; height: 44px; border-radius: var(--r-md);
+        background: var(--mist); display: grid; place-items: center;
+        font-size: 22px; flex-shrink: 0;
+      }
+      .hub-card.sea .hub-icon { background: var(--sea); }
+      .hub-title { font-size: 14px; font-weight: 600; }
+      .hub-sub { font-size: 11px; color: var(--mute); margin-top: 2px; }
+      .hub-desc { font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+
+      .section { padding: 0 20px 28px; }
+      .section-hd {
+        font-size: 10px; font-weight: 600; letter-spacing: .14em;
+        color: var(--mute); text-transform: uppercase;
+        padding: 20px 0 12px; border-bottom: 1px solid var(--hairline); margin-bottom: 14px;
+      }
+      .knl-list { display: flex; flex-direction: column; gap: 0; }
+      .knl-item {
+        display: flex; align-items: flex-start; gap: 12px;
+        padding: 12px 0; border-bottom: 1px solid var(--hairline);
+      }
+      .knl-item:last-child { border-bottom: none; }
+      .knl-cat {
+        font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: .06em;
+        padding: 2px 7px; border-radius: 20px; flex-shrink: 0; margin-top: 2px;
+        background: var(--sea-soft); color: var(--sea-ink);
+      }
+      .knl-q { font-size: 13px; font-weight: 600; }
+      .knl-a { font-size: 12px; color: var(--ink-2); line-height: 1.6; margin-top: 4px; }
+      .load-more { margin: 0 20px 28px; }
+    </style>
+  </head>
+  <body>
+    <div class="page-max">
+      <!-- Nav -->
+      <nav class="knl-nav">
+        <a href="/brand" class="knl-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="m15 18-6-6 6-6"/></svg>
+          稻荷
+        </a>
+        <span style="font-size:13px;font-weight:600">知識庫</span>
+        <a href="/shop/login" style="font-size:12px;color:var(--sea);font-weight:500;text-decoration:none">商城 →</a>
+      </nav>
+
+      <!-- Hero -->
+      <div class="knl-hero">
+        <div class="knl-hero-sub">KNOWLEDGE BASE · 海鮮知識庫</div>
+        <h1 class="knl-hero-h1">從產地到<strong>餐桌</strong><br>的完整知識。</h1>
+        <p class="knl-hero-desc">品種、產地、季節、分級 — 讓採購決策更有依據。</p>
+      </div>
+
+      <!-- Hub grid -->
+      <div class="hub-grid">
+        <a href="/knowledge/seasonal" class="hub-card wide sea">
+          <div class="hub-icon" style="font-size:26px;width:52px;height:52px">🌊</div>
+          <div style="flex:1">
+            <div class="hub-title">本月旬物</div>
+            <div class="hub-sub" id="seasonal-preview">載入中...</div>
+            <div class="hub-desc" style="margin-top:4px">當令食材最新情報，每月更新</div>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:var(--sea-ink);flex-shrink:0"><path d="m9 6 6 6-6 6"/></svg>
+        </a>
+        <a href="/sea-urchin/varieties" class="hub-card">
+          <div class="hub-icon">🦔</div>
+          <div>
+            <div class="hub-title">海膽品種</div>
+            <div class="hub-sub">馬糞・紫・加拿大</div>
+          </div>
+        </a>
+        <a href="/knowledge/regions" class="hub-card">
+          <div class="hub-icon">🗺</div>
+          <div>
+            <div class="hub-title">產地指南</div>
+            <div class="hub-sub">北海道・三陸・九州</div>
+          </div>
+        </a>
+        <a href="/salmon/varieties" class="hub-card">
+          <div class="hub-icon">🐟</div>
+          <div>
+            <div class="hub-title">三文魚指南</div>
+            <div class="hub-sub">挪威・蘇格蘭・智利</div>
+          </div>
+        </a>
+        <a href="/knowledge/seafood" class="hub-card">
+          <div class="hub-icon">📖</div>
+          <div>
+            <div class="hub-title">海鮮知識</div>
+            <div class="hub-sub">品種・分級・保存</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Knowledge items from API -->
+      <div class="section">
+        <div class="section-hd">熱門知識條目</div>
+        <div class="knl-list" id="knl-list">
+          <div style="padding:20px 0;text-align:center;color:var(--mute);font-size:13px">載入中...</div>
+        </div>
+      </div>
+
+      <div class="load-more">
+        <button class="btn block" id="load-more-btn" style="display:none" onclick="loadMore()">載入更多</button>
+      </div>
+    </div>
+
+    <script>
+      const MONTHS_ZH = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+      const month = new Date().getMonth() + 1;
+
+      // Seasonal preview
+      fetch(`/api/seasonal?month=${month}`)
+        .then(r => r.json())
+        .then(d => {
+          const el = document.getElementById('seasonal-preview');
+          if (el && d.items?.length) {
+            el.textContent = `${MONTHS_ZH[month-1]}月當令：` + d.items.slice(0,2).map((i: {item_name_zh:string}) => i.item_name_zh).join('、');
+          }
+        })
+        .catch(() => {});
+
+      // Knowledge items
+      let offset = 0;
+      const PAGE = 8;
+
+      function renderItems(items: Array<{category:string;question?:string;answer:string}>) {
+        const list = document.getElementById('knl-list');
+        if (!list) return;
+        if (offset === 0) list.innerHTML = '';
+        items.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'knl-item';
+          div.innerHTML = `
+            <span class="knl-cat">${item.category}</span>
+            <div>
+              ${item.question ? `<div class="knl-q">${item.question}</div>` : ''}
+              <div class="knl-a">${item.answer}</div>
+            </div>`;
+          list.appendChild(div);
+        });
+      }
+
+      function loadMore() {
+        fetch(`/api/knowledge?limit=${PAGE}&offset=${offset}`)
+          .then(r => r.json())
+          .then(d => {
+            const items = d.items || [];
+            renderItems(items);
+            offset += items.length;
+            const btn = document.getElementById('load-more-btn') as HTMLButtonElement;
+            if (btn) btn.style.display = items.length < PAGE ? 'none' : 'block';
+          })
+          .catch(() => {
+            const list = document.getElementById('knl-list');
+            if (list && offset === 0) {
+              list.innerHTML = '<div style="padding:16px 0;font-size:13px;color:var(--mute)">暫時無法載入，請稍後再試</div>';
+            }
+          });
+      }
+
+      loadMore();
+    </script>
+  </body>
+</html>

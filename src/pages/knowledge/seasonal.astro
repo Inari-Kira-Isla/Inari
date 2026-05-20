@@ -1,0 +1,155 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>旬物日曆 — 稻荷知識庫</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      html, body { height: 100%; max-width: none; }
+      body { max-width: none; }
+      .page-max { max-width: 640px; margin: 0 auto; }
+      .knl-nav {
+        position: sticky; top: 0; z-index: 40;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 20px; background: var(--paper);
+        border-bottom: 1px solid var(--hairline);
+      }
+      .knl-back {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 13px; font-weight: 500; color: var(--sea); text-decoration: none;
+      }
+      .hero {
+        padding: 28px 20px;
+        background: linear-gradient(160deg, oklch(22% 0.04 240), oklch(30% 0.06 232));
+        color: var(--paper);
+      }
+      .hero-sub { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; color: var(--gold); margin-bottom: 10px; }
+      .hero-h1 { font-size: 24px; font-weight: 300; margin: 0 0 8px; }
+      .hero-h1 strong { font-weight: 700; }
+      .hero-desc { font-size: 12px; opacity: .75; margin: 0; }
+
+      .month-tabs {
+        display: flex; overflow-x: auto; gap: 6px; padding: 14px 20px;
+        border-bottom: 1px solid var(--hairline); scrollbar-width: none;
+      }
+      .month-tabs::-webkit-scrollbar { display: none; }
+      .month-tab {
+        flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 12px;
+        font-weight: 500; border: 1px solid var(--hairline); background: var(--paper);
+        cursor: pointer; transition: all .15s; font-family: var(--mono);
+      }
+      .month-tab.active { background: var(--sea); color: var(--paper); border-color: var(--sea); }
+
+      .items-grid { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+      .item-card {
+        display: flex; gap: 12px; align-items: flex-start;
+        padding: 14px; border-radius: var(--r-lg);
+        border: 1px solid var(--hairline); background: var(--paper);
+      }
+      .item-badge {
+        flex-shrink: 0; padding: 4px 10px; border-radius: 20px;
+        font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: .04em;
+        margin-top: 2px;
+      }
+      .badge-premium { background: var(--gold-soft); color: var(--gold-ink); }
+      .badge-seafood { background: var(--sea-soft); color: var(--sea-ink); }
+      .item-name-zh { font-size: 15px; font-weight: 600; }
+      .item-name-ja { font-family: var(--mono); font-size: 10px; color: var(--mute); margin-top: 1px; }
+      .item-origin { font-size: 11px; color: var(--sea); margin-top: 3px; font-weight: 500; }
+      .item-desc { font-size: 12px; color: var(--ink-2); margin-top: 6px; line-height: 1.6; }
+
+      .empty { padding: 40px 20px; text-align: center; color: var(--mute); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <div class="page-max">
+      <nav class="knl-nav">
+        <a href="/knowledge" class="knl-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="m15 18-6-6 6-6"/></svg>
+          知識庫
+        </a>
+        <span style="font-size:13px;font-weight:600">旬物日曆</span>
+        <a href="/shop/login" style="font-size:12px;color:var(--sea);font-weight:500;text-decoration:none">下單 →</a>
+      </nav>
+
+      <div class="hero">
+        <div class="hero-sub">SEASONAL CALENDAR · 旬物日曆</div>
+        <h1 class="hero-h1">最佳賞味時機，<br><strong>月月不同</strong>。</h1>
+        <p class="hero-desc">依照日本漁獲季節排列，精選每月當令推薦。</p>
+      </div>
+
+      <div class="month-tabs" id="month-tabs"></div>
+      <div class="items-grid" id="items-grid">
+        <div class="empty">載入中...</div>
+      </div>
+    </div>
+
+    <script>
+      const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+      let currentMonth = new Date().getMonth() + 1;
+      const cache: Record<number, unknown[]> = {};
+
+      function buildTabs() {
+        const container = document.getElementById('month-tabs')!;
+        MONTHS.forEach((m, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'month-tab' + (i + 1 === currentMonth ? ' active' : '');
+          btn.textContent = m;
+          btn.onclick = () => selectMonth(i + 1);
+          container.appendChild(btn);
+        });
+        // scroll active tab into view
+        const active = container.querySelector('.active') as HTMLElement;
+        if (active) active.scrollIntoView({ inline: 'center', block: 'nearest' });
+      }
+
+      function selectMonth(m: number) {
+        currentMonth = m;
+        document.querySelectorAll('.month-tab').forEach((el, i) => {
+          el.classList.toggle('active', i + 1 === m);
+        });
+        loadMonth(m);
+      }
+
+      function loadMonth(m: number) {
+        if (cache[m]) { renderItems(cache[m]); return; }
+        document.getElementById('items-grid')!.innerHTML = '<div class="empty">載入中...</div>';
+        fetch(`/api/seasonal?month=${m}`)
+          .then(r => r.json())
+          .then(d => {
+            cache[m] = d.items || [];
+            renderItems(cache[m]);
+          })
+          .catch(() => {
+            document.getElementById('items-grid')!.innerHTML = '<div class="empty">載入失敗，請稍後再試</div>';
+          });
+      }
+
+      function renderItems(items: Array<{item_name_zh:string;item_name_ja?:string;item_name_en?:string;origin?:string;category:string;description_zh?:string}>) {
+        const grid = document.getElementById('items-grid')!;
+        if (!items.length) { grid.innerHTML = '<div class="empty">本月暫無資料</div>'; return; }
+        grid.innerHTML = items.map(item => `
+          <div class="item-card">
+            <span class="item-badge ${item.category === 'premium' ? 'badge-premium' : 'badge-seafood'}">
+              ${item.category === 'premium' ? '★ 精選' : '當令'}
+            </span>
+            <div style="flex:1">
+              <div class="item-name-zh">${item.item_name_zh}</div>
+              ${item.item_name_ja ? `<div class="item-name-ja">${item.item_name_ja}${item.item_name_en ? ' · ' + item.item_name_en : ''}</div>` : ''}
+              ${item.origin ? `<div class="item-origin">📍 ${item.origin}</div>` : ''}
+              ${item.description_zh ? `<div class="item-desc">${item.description_zh}</div>` : ''}
+            </div>
+          </div>`).join('');
+      }
+
+      buildTabs();
+      loadMonth(currentMonth);
+    </script>
+  </body>
+</html>

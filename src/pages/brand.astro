@@ -1,0 +1,298 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>稻荷環球食品 — 北海道空運直送</title>
+    <meta name="description" content="澳門領先的日本海鮮直送服務。北海道海膽、挪威三文魚、青森帆立貝，每週空運，B2B批發直供。" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      html, body { height: 100%; max-width: none; }
+      body { max-width: none; background: var(--paper); }
+
+      .brand-nav {
+        position: sticky; top: 0; z-index: 40;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 20px;
+        background: var(--paper); border-bottom: 1px solid var(--hairline);
+      }
+      .brand-mark {
+        width: 38px; height: 38px;
+        background: var(--sea); color: var(--paper);
+        display: grid; place-items: center;
+        border-radius: 10px; font-weight: 700; font-size: 18px; flex-shrink: 0;
+      }
+      .brand-name { font-weight: 700; font-size: 16px; letter-spacing: -.01em; }
+      .brand-sub { font-family: var(--mono); font-size: 9px; color: var(--mute); letter-spacing: .1em; }
+
+      .hero {
+        padding: 48px 20px 40px;
+        background: linear-gradient(160deg, oklch(22% 0.04 240) 0%, oklch(30% 0.06 232) 100%);
+        color: var(--paper);
+      }
+      .hero-eyebrow {
+        font-family: var(--mono); font-size: 10px; letter-spacing: .16em;
+        color: var(--gold); margin-bottom: 16px;
+      }
+      .hero-h1 {
+        font-size: 28px; font-weight: 300; line-height: 1.3;
+        letter-spacing: -.02em; margin: 0 0 16px; text-wrap: pretty;
+      }
+      .hero-h1 strong { font-weight: 700; }
+      .hero-desc { font-size: 13px; opacity: .75; line-height: 1.7; margin: 0 0 28px; }
+      .hero-stats {
+        display: flex; gap: 24px;
+        border-top: 1px solid rgba(255,255,255,.12); padding-top: 20px;
+      }
+      .hero-stat-val { font-family: var(--mono); font-size: 22px; font-weight: 600; }
+      .hero-stat-lbl { font-size: 10px; opacity: .6; margin-top: 2px; letter-spacing: .05em; }
+
+      .section { padding: 32px 20px; }
+      .section-label {
+        font-size: 10px; font-weight: 600; letter-spacing: .14em;
+        color: var(--mute); text-transform: uppercase; margin-bottom: 16px;
+      }
+      .section-title { font-size: 20px; font-weight: 300; letter-spacing: -.01em; margin: 0 0 20px; }
+      .section-title strong { font-weight: 700; }
+
+      .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .product-card {
+        border-radius: var(--r-lg); padding: 16px 14px;
+        display: flex; flex-direction: column; gap: 8px;
+        cursor: pointer; text-decoration: none; color: inherit;
+        border: 1px solid var(--hairline); background: var(--paper);
+        transition: border-color .15s;
+      }
+      .product-card:hover { border-color: var(--sea); }
+      .product-card.featured {
+        grid-column: span 2;
+        flex-direction: row; align-items: flex-start; gap: 14px;
+        background: var(--sea-soft); border-color: transparent;
+      }
+      .product-icon {
+        width: 44px; height: 44px; border-radius: var(--r-md);
+        background: var(--sea-soft); display: grid; place-items: center;
+        font-size: 22px; flex-shrink: 0;
+      }
+      .product-card.featured .product-icon {
+        background: var(--sea); width: 52px; height: 52px; font-size: 26px;
+      }
+      .product-name-zh { font-size: 14px; font-weight: 600; }
+      .product-name-ja { font-family: var(--mono); font-size: 10px; color: var(--mute); }
+      .product-desc { font-size: 12px; color: var(--ink-2); line-height: 1.5; }
+      .product-badge {
+        display: inline-block; font-family: var(--mono); font-size: 9px;
+        font-weight: 600; letter-spacing: .06em;
+        padding: 2px 7px; border-radius: 20px; width: fit-content;
+      }
+      .badge-air { background: var(--gold-soft); color: var(--gold-ink); }
+      .badge-premium { background: var(--sea-soft); color: var(--sea-ink); }
+      .badge-frozen { background: var(--ice-soft); color: var(--ice-ink); }
+
+      .seasonal-strip {
+        margin: 0 20px 8px;
+        background: var(--ink); color: var(--paper);
+        border-radius: var(--r-lg); padding: 14px 16px;
+        display: flex; gap: 12px; align-items: flex-start;
+      }
+      .seasonal-icon {
+        width: 40px; height: 40px; border-radius: var(--r-md);
+        background: oklch(28% 0.04 245); display: grid; place-items: center; flex-shrink: 0;
+      }
+      .seasonal-title { font-size: 11px; opacity: .65; letter-spacing: .06em; }
+      .seasonal-items { font-size: 13px; font-weight: 600; margin-top: 3px; line-height: 1.5; }
+      .seasonal-month { font-family: var(--mono); font-size: 10px; color: var(--gold); }
+
+      .cta-block {
+        margin: 24px 20px;
+        background: radial-gradient(100% 100% at 50% 0%, oklch(40% 0.08 232), oklch(22% 0.04 240));
+        border-radius: var(--r-xl); padding: 28px 20px; text-align: center; color: var(--paper);
+      }
+      .cta-title { font-size: 18px; font-weight: 700; margin: 0 0 8px; }
+      .cta-desc { font-size: 13px; opacity: .75; margin: 0 0 20px; line-height: 1.6; }
+
+      .footer {
+        padding: 24px 20px 40px;
+        border-top: 1px solid var(--hairline);
+        display: flex; justify-content: space-between; align-items: flex-end;
+        font-size: 12px; color: var(--mute);
+      }
+      .footer a { color: var(--sea); font-weight: 500; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <!-- Nav -->
+    <nav class="brand-nav">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="brand-mark">稻</div>
+        <div>
+          <div class="brand-name">稻荷環球食品</div>
+          <div class="brand-sub">INARI GLOBAL FOODS</div>
+        </div>
+      </div>
+      <a href="/shop/login" class="btn sea" style="padding:8px 14px;font-size:12px">登入商城</a>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-eyebrow">毎週空運 · 北海道直送</div>
+      <h1 class="hero-h1">
+        來自<strong>築地</strong>與<strong>北海道</strong><br>的早班空運。
+      </h1>
+      <p class="hero-desc">
+        稻荷為澳門 B2B 採購員提供最優質的日本海鮮直送服務。<br>
+        每週空運，即日到貨，月結帳期，即時下單。
+      </p>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-val">649+</div>
+          <div class="hero-stat-lbl">商品種類</div>
+        </div>
+        <div>
+          <div class="hero-stat-val">179</div>
+          <div class="hero-stat-lbl">合作客戶</div>
+        </div>
+        <div>
+          <div class="hero-stat-val">25年</div>
+          <div class="hero-stat-lbl">行業經驗</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seasonal strip (JS populated) -->
+    <div style="padding:20px 0 0">
+      <div class="seasonal-strip" id="seasonal-strip">
+        <div class="seasonal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2m-3.34-7.66-1.41 1.41M6.75 17.25l-1.41 1.41M17.66 17.66l-1.41-1.41M6.75 6.75 5.34 5.34"/></svg>
+        </div>
+        <div>
+          <div class="seasonal-month" id="seasonal-month">— 旬物 —</div>
+          <div class="seasonal-title">本月當令推介</div>
+          <div class="seasonal-items" id="seasonal-items">載入中...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products section -->
+    <div class="section">
+      <div class="section-label">三大核心品類</div>
+      <div class="section-title">從<strong>原產地</strong>到您的廚房</div>
+      <div class="product-grid">
+        <a class="product-card featured" href="/sea-urchin/varieties">
+          <div class="product-icon">🦔</div>
+          <div>
+            <div class="product-name-zh">北海道海膽</div>
+            <div class="product-name-ja">バフンウニ · ムラサキウニ</div>
+            <div class="product-desc">馬糞海膽與紫海膽，每年6-8月為巔峰期。A/B/C三級分選，穩定供應。</div>
+            <div class="product-badge badge-air" style="margin-top:4px">✈ 空運</div>
+          </div>
+        </a>
+        <a class="product-card" href="/salmon/sourcing">
+          <div class="product-icon">🐟</div>
+          <div>
+            <div class="product-name-zh">挪威三文魚</div>
+            <div class="product-name-ja">ノルウェーサーモン</div>
+            <div class="product-desc">全年穩定供應，脂質均勻。</div>
+            <div class="product-badge badge-air" style="margin-top:4px">✈ 空運</div>
+          </div>
+        </a>
+        <a class="product-card" href="/knowledge">
+          <div class="product-icon">🐚</div>
+          <div>
+            <div class="product-name-zh">帆立貝柱</div>
+            <div class="product-name-ja">ホタテ</div>
+            <div class="product-desc">北海道青森，鮮凍兩用。</div>
+            <div class="product-badge badge-frozen" style="margin-top:4px">❄ 冷凍</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Why INARI -->
+    <div class="section" style="background:var(--mist);padding:28px 20px">
+      <div class="section-label">為什麼選擇稻荷</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:36px;height:36px;background:var(--gold-soft);border-radius:var(--r-md);display:grid;place-items:center;flex-shrink:0;font-size:18px">✈</div>
+          <div>
+            <div style="font-weight:600;font-size:13px">每週空運，翌日到貨</div>
+            <div style="font-size:12px;color:var(--ink-2);margin-top:2px">週一週四兩班，北海道築地直飛澳門</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:36px;height:36px;background:var(--sea-soft);border-radius:var(--r-md);display:grid;place-items:center;flex-shrink:0;font-size:18px">📊</div>
+          <div>
+            <div style="font-weight:600;font-size:13px">透明分級標準</div>
+            <div style="font-size:12px;color:var(--ink-2);margin-top:2px">A/B/C三級，清晰定價，杜絕誤差</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:36px;height:36px;background:var(--leaf-soft);border-radius:var(--r-md);display:grid;place-items:center;flex-shrink:0;font-size:18px">💬</div>
+          <div>
+            <div style="font-weight:600;font-size:13px">語音下單，即時確認</div>
+            <div style="font-size:12px;color:var(--ink-2);margin-top:2px">WhatsApp / 商城APP，30秒完成下單</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:36px;height:36px;background:var(--coral-soft);border-radius:var(--r-md);display:grid;place-items:center;flex-shrink:0;font-size:18px">🧾</div>
+          <div>
+            <div style="font-weight:600;font-size:13px">月結帳期，靈活安排</div>
+            <div style="font-size:12px;color:var(--ink-2);margin-top:2px">月結30天或現金折扣，配合餐廳現金流</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B2B CTA -->
+    <div class="cta-block">
+      <div class="cta-title">立即開始採購</div>
+      <p class="cta-desc">已有帳號？直接登入商城下單。<br>新客戶請聯繫我們申請開戶。</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="/shop/login" class="btn primary lg block">
+          登入 B2B 商城
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="/knowledge" class="btn block" style="background:rgba(255,255,255,.1);color:var(--paper);border:none">
+          瀏覽知識庫
+        </a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div>
+        <div style="font-weight:600;color:var(--ink);margin-bottom:4px">稻荷環球食品</div>
+        <div>澳門 B2B 海鮮直送</div>
+      </div>
+      <div style="text-align:right;display:flex;flex-direction:column;gap:6px">
+        <a href="/knowledge">知識庫</a>
+        <a href="/faq">常見問題</a>
+        <a href="/shop/login">商城登入</a>
+      </div>
+    </div>
+
+    <script>
+      const MONTHS_ZH = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+      const month = new Date().getMonth() + 1;
+
+      fetch(`/api/seasonal?month=${month}`)
+        .then(r => r.json())
+        .then(data => {
+          if (!data.items?.length) return;
+          const el = document.getElementById('seasonal-items');
+          const ml = document.getElementById('seasonal-month');
+          if (el) el.textContent = data.items.map((i: {item_name_zh:string}) => i.item_name_zh).join('・');
+          if (ml) ml.textContent = `${MONTHS_ZH[month-1]} 旬物`;
+        })
+        .catch(() => {
+          const el = document.getElementById('seasonal-items');
+          if (el) el.textContent = '請洽詢最新旬物推介';
+        });
+    </script>
+  </body>
+</html>

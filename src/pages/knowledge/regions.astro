@@ -1,0 +1,170 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>產地指南 — 稻荷知識庫</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      html, body { height: 100%; max-width: none; }
+      body { max-width: none; }
+      .page-max { max-width: 640px; margin: 0 auto; }
+      .knl-nav {
+        position: sticky; top: 0; z-index: 40;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 20px; background: var(--paper);
+        border-bottom: 1px solid var(--hairline);
+      }
+      .knl-back {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 13px; font-weight: 500; color: var(--sea); text-decoration: none;
+      }
+      .hero {
+        padding: 28px 20px;
+        background: linear-gradient(160deg, oklch(22% 0.04 240), oklch(30% 0.06 232));
+        color: var(--paper);
+      }
+      .hero-sub { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; color: var(--gold); margin-bottom: 10px; }
+      .hero-h1 { font-size: 24px; font-weight: 300; margin: 0 0 8px; }
+      .hero-h1 strong { font-weight: 700; }
+      .hero-desc { font-size: 12px; opacity: .75; margin: 0; }
+
+      .region-list { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+      .region-card {
+        border-radius: var(--r-lg); border: 1px solid var(--hairline);
+        background: var(--paper); overflow: hidden;
+      }
+      .region-header {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 16px; cursor: pointer;
+      }
+      .region-icon {
+        width: 42px; height: 42px; border-radius: var(--r-md);
+        background: var(--sea-soft); display: grid; place-items: center;
+        font-size: 20px; flex-shrink: 0; color: var(--sea-ink);
+      }
+      .region-name { font-size: 15px; font-weight: 600; }
+      .region-sub { font-size: 11px; color: var(--mute); margin-top: 2px; font-family: var(--mono); }
+      .region-chevron {
+        margin-left: auto; transition: transform .2s; flex-shrink: 0;
+        color: var(--mute);
+      }
+      .region-card.open .region-chevron { transform: rotate(90deg); }
+      .region-body {
+        display: none; padding: 0 16px 14px;
+        border-top: 1px solid var(--hairline);
+      }
+      .region-card.open .region-body { display: block; }
+      .region-desc { font-size: 12px; color: var(--ink-2); line-height: 1.7; padding-top: 12px; }
+      .region-items { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+      .region-item {
+        padding: 4px 10px; border-radius: 20px;
+        background: var(--sea-soft); color: var(--sea-ink);
+        font-size: 11px; font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-max">
+      <nav class="knl-nav">
+        <a href="/knowledge" class="knl-back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="m15 18-6-6 6-6"/></svg>
+          知識庫
+        </a>
+        <span style="font-size:13px;font-weight:600">產地指南</span>
+        <a href="/shop/login" style="font-size:12px;color:var(--sea);font-weight:500;text-decoration:none">下單 →</a>
+      </nav>
+
+      <div class="hero">
+        <div class="hero-sub">ORIGINS GUIDE · 產地指南</div>
+        <h1 class="hero-h1">認識每一片<br><strong>海洋的風土</strong>。</h1>
+        <p class="hero-desc">不同產地孕育不同風味。了解主要產地，讓採購更精準。</p>
+      </div>
+
+      <div class="region-list" id="region-list">
+        <div style="padding:20px;text-align:center;color:var(--mute);font-size:13px">載入中...</div>
+      </div>
+    </div>
+
+    <script>
+      // Static regions as fallback + primary content
+      const REGIONS = [
+        {
+          icon: '🏔',
+          name: '北海道',
+          sub: 'Hokkaido · 日本',
+          desc: '日本最北部的大島，擁有全球最優質的冷水漁場之一。低溫水域培育出甜度極高的海膽與帆立貝。礼文島、利尻島為馬糞海膽最高級產地，6-8月為巔峰期。陸奥灣帆立貝全年供應，品質穩定。',
+          items: ['馬糞海膽', '紫海膽', '帆立貝', '毛蟹', '鮭魚', '鱈魚']
+        },
+        {
+          icon: '🌊',
+          name: '三陸',
+          sub: 'Sanriku · 日本',
+          desc: '宮城、岩手、青森三縣沿海地帶，黑潮與親潮交匯之處，漁獲種類豐富。牡蠣、帆立貝、海膽均有大量生產。秋鰹（戻り鰹）在三陸近海脂質最豐，是餐廳秋季菜單的核心食材。',
+          items: ['牡蠣', '帆立貝', '紫海膽', '鰹魚', '鮑魚', '海鞘']
+        },
+        {
+          icon: '⛩',
+          name: '瀬戶內海',
+          sub: 'Seto Inland Sea · 日本',
+          desc: '被本州、四國、九州圍繞的半封閉海域，水流複雜多變，培育出風味濃縮的魚貝類。真鯛（愛媛）、鰈魚、牡蠣（廣島）舉世聞名。太刀魚脂質豐厚，為秋季名物。',
+          items: ['真鯛', '太刀魚', '牡蠣', '鰈魚', '鰆魚', '蝦蛄']
+        },
+        {
+          icon: '🏯',
+          name: '九州',
+          sub: 'Kyushu · 日本',
+          desc: '九州周邊海域水溫較高，富有礦物質，適合甲殼類生長。長崎縣為日本最大的水産縣之一，提供多種優質魚類。下關為河豚（虎河豚）全國最大集散地，11月解禁後全國餐廳爭相採購。',
+          items: ['河豚', '車海老', '鯖魚', '真鯛', '鰤魚', '馬刺']
+        },
+        {
+          icon: '🇳🇴',
+          name: '挪威',
+          sub: 'Norway · 北歐',
+          desc: '全球最大的養殖三文魚出口國。挪威峽灣冷水養殖，脂質分佈均勻，omega-3含量高。全年供應，品質穩定可控。稻荷精選挪威直空運鮮魚，保持最佳口感。',
+          items: ['大西洋三文魚', '鱒魚', '北極鱈', '挪威龍蝦']
+        },
+        {
+          icon: '🇨🇦',
+          name: '加拿大',
+          sub: 'Canada · 北美',
+          desc: '卑詩省（BC省）西海岸擁有豐富的野生太平洋三文魚資源。加拿大紅海膽（Red Uni）生長於BC省冷水海域，肉質肥厚、甜味持久，是北海道海膽以外的頂級選擇，性價比高。',
+          items: ['紅海膽', '太平洋三文魚', '帝王蟹', '雪場蟹', '北極蝦']
+        }
+      ];
+
+      function buildRegions() {
+        const list = document.getElementById('region-list')!;
+        list.innerHTML = REGIONS.map((r, i) => `
+          <div class="region-card" id="region-${i}">
+            <div class="region-header" onclick="toggleRegion(${i})">
+              <div class="region-icon">${r.icon}</div>
+              <div>
+                <div class="region-name">${r.name}</div>
+                <div class="region-sub">${r.sub}</div>
+              </div>
+              <svg class="region-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="m9 6 6 6-6 6"/></svg>
+            </div>
+            <div class="region-body">
+              <p class="region-desc">${r.desc}</p>
+              <div class="region-items">${r.items.map(item => `<span class="region-item">${item}</span>`).join('')}</div>
+            </div>
+          </div>`).join('');
+
+        // Open first card by default
+        toggleRegion(0);
+      }
+
+      function toggleRegion(i: number) {
+        document.getElementById(`region-${i}`)?.classList.toggle('open');
+      }
+
+      buildRegions();
+    </script>
+  </body>
+</html>
