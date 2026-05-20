@@ -368,6 +368,37 @@
           </div>`;
       }
 
+      // ── Catalog cache (sessionStorage, 5-min TTL) ──
+      const CACHE_KEY = 'inari_catalog_v1';
+      const CACHE_TTL = 5 * 60 * 1000;
+      function getCached() {
+        try {
+          const raw = sessionStorage.getItem(CACHE_KEY);
+          if (!raw) return null;
+          const { data, ts } = JSON.parse(raw);
+          return (Date.now() - ts < CACHE_TTL) ? data : null;
+        } catch { return null; }
+      }
+      function setCache(data) {
+        try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); } catch {}
+      }
+      function renderCatalogData(data, reset) {
+        const grid = document.getElementById('product-grid');
+        if (reset) grid.innerHTML = '';
+        const items = data.items || [];
+        if (reset && items.length === 0) {
+          grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--mute);font-size:13px">無符合的商品</div>';
+        } else {
+          grid.insertAdjacentHTML('beforeend', items.map(renderProductCard).join(''));
+        }
+        document.getElementById('total-count').textContent = data.total || items.length;
+        document.getElementById('load-more-btn').style.display = data.has_more ? 'block' : 'none';
+        if (reset && data.categories && data.categories.length) {
+          populateCategories(data.categories, data.total);
+        }
+        updateCartUI();
+      }
+
       // ── Load products ──
       async function loadProducts(reset = false) {
         if (isLoading) return;
@@ -375,6 +406,13 @@
 
         if (reset) {
           currentPage = 1;
+          // Render from cache immediately if available (no skeleton flash)
+          const cached = (!currentCat && !currentSearch) ? getCached() : null;
+          if (cached) {
+            renderCatalogData(cached, true);
+            isLoading = false;
+            return;
+          }
           const grid = document.getElementById('product-grid');
           grid.innerHTML = Array(4).fill(`
             <div class="product-card">
@@ -391,36 +429,25 @@
         if (currentCat) params.set('category', currentCat);
         if (currentSearch) params.set('q', currentSearch);
 
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+
         try {
-          const res = await fetch('/api/products/catalog?' + params);
+          const res = await fetch('/api/products/catalog?' + params, { signal: controller.signal });
+          clearTimeout(timeout);
           if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             throw new Error(err.error || `HTTP ${res.status}`);
           }
           const data = await res.json();
-
-          const grid = document.getElementById('product-grid');
-          if (reset) grid.innerHTML = '';
-
-          const items = data.items || [];
-          if (reset && items.length === 0) {
-            grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--mute);font-size:13px">無符合的商品</div>';
-          } else {
-            grid.insertAdjacentHTML('beforeend', items.map(renderProductCard).join(''));
-          }
-
-          document.getElementById('total-count').textContent = data.total || items.length;
-          document.getElementById('load-more-btn').style.display = data.has_more ? 'block' : 'none';
-
-          // Populate category pills (first load only)
-          if (reset && data.categories && data.categories.length) {
-            populateCategories(data.categories, data.total);
-          }
-
-          updateCartUI();
+          // Cache full first-page response
+          if (reset && !currentCat && !currentSearch) setCache(data);
+          renderCatalogData(data, reset);
         } catch (err) {
+          clearTimeout(timeout);
           const grid = document.getElementById('product-grid');
-          if (reset) grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--coral-deep);font-size:13px">載入失敗，請重試</div>';
+          const msg = (err instanceof Error && err.name === 'AbortError') ? '載入逾時，請重試' : '載入失敗，請重試';
+          if (reset) grid.innerHTML = `<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--coral-deep);font-size:13px">${msg}</div>`;
         } finally {
           isLoading = false;
         }
