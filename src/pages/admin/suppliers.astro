@@ -216,9 +216,9 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       const action = btn.dataset.action;
 
       if (action === 'quotes') {
-        const id = parseInt(btn.dataset.id);
+        const id = btn.dataset.id;
         const name = btn.dataset.name;
-        const supplier = allSuppliers.find(s => s.id === id);
+        const supplier = allSuppliers.find(s => String(s.id) === String(id));
         if (!supplier) return;
 
         document.getElementById('quotes-drawer-title').textContent = `${name} — 報價單`;
@@ -246,7 +246,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       }
 
       if (action === 'edit') {
-        document.getElementById('edit-id').value = btn.dataset.id;
+        document.getElementById('edit-id').value = String(btn.dataset.id);
         document.getElementById('edit-name-display').textContent = btn.dataset.name;
         document.getElementById('edit-contact').value = btn.dataset.contact || '';
         document.getElementById('edit-phone').value = btn.dataset.phone || '';
