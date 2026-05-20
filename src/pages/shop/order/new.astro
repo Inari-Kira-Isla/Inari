@@ -226,6 +226,9 @@
         }
       }
 
+      let historyItems = [];
+      let detectedCustomer = { code: '', name: '', lastDate: '' };
+
       // ── Parse ──
       window.parseText = async function(source) {
         const text = source === 'voice'
@@ -237,7 +240,8 @@
           return;
         }
 
-        document.getElementById('mic-caption').textContent = '解析中...';
+        const caption = document.getElementById('mic-caption');
+        if (caption) caption.textContent = '解析中...';
 
         try {
           const res = await fetch('/api/voice/parse', {
@@ -249,68 +253,138 @@
           if (!res.ok) throw new Error(data.error || '解析失敗');
 
           parsedItems = data.items || [];
+          historyItems = data.history_items || [];
+          detectedCustomer = {
+            code: data.customer_code || '',
+            name: data.customer_name || data.customer_hint || '',
+            lastDate: data.last_order_date || '',
+          };
+          if (detectedCustomer.code) window._customerCode = detectedCustomer.code;
+
           renderParsed();
-          document.getElementById('mic-caption').textContent = '辨識完成，可修改後下單';
+          if (caption) caption.textContent = '辨識完成，可修改後下單';
         } catch (err) {
-          document.getElementById('mic-caption').textContent = '解析失敗：' + err.message;
+          if (caption) caption.textContent = '解析失敗：' + err.message;
         }
       };
+
+      function parseRowHtml(r, i, prefix) {
+        const matchCls = r.match_confidence === 'keyword' ? 'kw'
+          : r.match_confidence === 'fuzzy' ? 'fz'
+          : r.match_confidence === 'history' ? 'fz'
+          : 'um';
+        const matchLabel = r.match_confidence === 'keyword' ? 'KW'
+          : r.match_confidence === 'fuzzy' ? 'FZ'
+          : r.match_confidence === 'history' ? 'H'
+          : '?';
+        const name = r.product_name || r.product_guess || '未知商品';
+        const price = r.suggested_price || r.unit_price || 0;
+        const qty = r.qty || 1;
+        const unit = r.suggested_unit || r.unit || '件';
+        const lineTotal = qty * price;
+        const idxAttr = `data-list="${prefix}" data-idx="${i}"`;
+        return `
+          <div class="parse-row ${matchCls}" id="${prefix}-row-${i}">
+            <div class="lead">${matchLabel}</div>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:600;line-height:1.3">${name}</div>
+              <div style="font-family:var(--mono);font-size:10.5px;color:var(--mute);margin-top:3px">${r.product_code || ''}</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+                <div class="stepper" style="background:var(--paper-2)">
+                  <button onclick="adjustQty('${prefix}',${i},-1)" aria-label="減">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 12h14"/></svg>
+                  </button>
+                  <span class="val">${qty}</span>
+                  <button onclick="adjustQty('${prefix}',${i},1)" aria-label="加">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>
+                  </button>
+                </div>
+                <span style="font-size:11px;color:var(--mute)">${unit}</span>
+                <span style="margin-left:auto;font-family:var(--mono);font-size:12px">
+                  <span style="color:var(--mute)">×</span> MOP ${price.toLocaleString('en-US',{maximumFractionDigits:0})}
+                </span>
+              </div>
+            </div>
+            <div style="font-family:var(--mono);font-weight:700;font-size:13px;align-self:flex-end">
+              MOP ${lineTotal.toLocaleString('en-US',{maximumFractionDigits:0})}
+            </div>
+          </div>`;
+      }
 
       function renderParsed() {
         const panel = document.getElementById('results-panel');
         const list = document.getElementById('parsed-list');
-        if (parsedItems.length === 0) { panel.style.display = 'none'; return; }
+        const allItems = [...parsedItems, ...historyItems];
+        if (allItems.length === 0) { panel.style.display = 'none'; return; }
 
         panel.style.display = 'block';
+
+        // Customer banner
+        let customerBanner = '';
+        if (detectedCustomer.name) {
+          const found = !!detectedCustomer.code;
+          customerBanner = `
+            <div style="margin:0 0 12px;padding:10px 14px;background:${found ? 'oklch(94% 0.04 250)' : 'var(--paper-2)'};border-radius:10px;display:flex;align-items:center;gap:10px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;flex-shrink:0;color:${found ? 'oklch(45% 0.12 250)' : 'var(--mute)'}"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:700;color:${found ? 'oklch(35% 0.12 250)' : 'var(--mute)'}">${detectedCustomer.name}${found ? ' ✓' : ' （未找到客戶）'}</div>
+                ${found && detectedCustomer.lastDate ? `<div style="font-size:10px;color:var(--mute);font-family:var(--mono)">上次訂單：${detectedCustomer.lastDate}</div>` : ''}
+              </div>
+            </div>`;
+        }
+
+        // History section
+        let historySection = '';
+        if (historyItems.length > 0) {
+          historySection = `
+            <div style="margin-bottom:6px">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0 8px">
+                <span style="font-size:11px;font-weight:700;color:var(--mute);letter-spacing:.06em;text-transform:uppercase">上次訂單草案 · ${detectedCustomer.lastDate}</span>
+                <button onclick="loadHistory()" style="font-size:11px;font-weight:600;color:var(--coral-deep);background:none;border:none;padding:0;cursor:pointer">全部載入</button>
+              </div>
+              ${historyItems.map((r, i) => parseRowHtml(r, i, 'hist')).join('')}
+            </div>`;
+          if (parsedItems.length > 0) {
+            historySection += `<div style="border-top:1px solid var(--hairline);margin:4px 0 10px"></div>`;
+          }
+        }
+
+        // Parsed items
         const kwCount = parsedItems.filter(r => r.match_confidence === 'keyword').length;
         const fzCount = parsedItems.filter(r => r.match_confidence === 'fuzzy').length;
 
-        document.getElementById('results-title').textContent = `辨識結果 · ${parsedItems.length} 項`;
-        document.getElementById('results-summary').textContent = `${kwCount} 確認 · ${fzCount} 模糊`;
+        let parsedSection = '';
+        if (parsedItems.length > 0) {
+          parsedSection = parsedItems.map((r, i) => parseRowHtml(r, i, 'item')).join('');
+        }
 
-        const total = parsedItems.reduce((s, r) => s + ((r.qty || 0) * (r.suggested_price || r.unit_price || 0)), 0);
+        document.getElementById('results-title').textContent =
+          parsedItems.length > 0 ? `辨識結果 · ${parsedItems.length} 項` : `上次訂單草案`;
+        document.getElementById('results-summary').textContent =
+          parsedItems.length > 0 ? `${kwCount} 確認 · ${fzCount} 模糊` : '';
+
+        const totalItems = parsedItems.length > 0 ? parsedItems : historyItems;
+        const total = totalItems.reduce((s, r) => s + ((r.qty || 0) * (r.suggested_price || r.unit_price || 0)), 0);
         document.getElementById('results-total').textContent = `MOP ${total.toLocaleString('en-US',{maximumFractionDigits:0})}`;
 
-        list.innerHTML = parsedItems.map((r, i) => {
-          const matchCls = r.match_confidence === 'keyword' ? 'kw' : r.match_confidence === 'fuzzy' ? 'fz' : 'um';
-          const matchLabel = r.match_confidence === 'keyword' ? 'KW' : r.match_confidence === 'fuzzy' ? 'FZ' : '?';
-          const name = r.product_name || r.product_guess || '未知商品';
-          const price = r.suggested_price || r.unit_price || 0;
-          const qty = r.qty || 1;
-          const unit = r.suggested_unit || r.unit || '件';
-          const lineTotal = qty * price;
-
-          return `
-            <div class="parse-row ${matchCls}" id="parse-row-${i}">
-              <div class="lead">${matchLabel}</div>
-              <div>
-                <div style="font-size:13px;font-weight:600;line-height:1.3">${name}</div>
-                <div style="font-family:var(--mono);font-size:10.5px;color:var(--mute);margin-top:3px">${r.product_code || r.sku || ''}</div>
-                <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-                  <div class="stepper" style="background:var(--paper-2)">
-                    <button onclick="updateQty(${i},-1)">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 12h14"/></svg>
-                    </button>
-                    <span class="val" id="qty-${i}">${qty}</span>
-                    <button onclick="updateQty(${i},1)">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>
-                    </button>
-                  </div>
-                  <span style="font-size:11px;color:var(--mute)">${unit}</span>
-                  <span style="margin-left:auto;font-family:var(--mono);font-size:12px">
-                    <span style="color:var(--mute)">×</span> MOP ${price.toLocaleString('en-US',{maximumFractionDigits:0})}
-                  </span>
-                </div>
-              </div>
-              <div style="font-family:var(--mono);font-weight:700;font-size:13px;align-self:flex-end">
-                MOP ${lineTotal.toLocaleString('en-US',{maximumFractionDigits:0})}
-              </div>
-            </div>`;
-        }).join('');
+        list.innerHTML = customerBanner + historySection + parsedSection;
       }
 
-      window.updateQty = function(i, delta) {
-        parsedItems[i].qty = Math.max(1, (parsedItems[i].qty || 1) + delta);
+      window.adjustQty = function(prefix, i, delta) {
+        const arr = prefix === 'hist' ? historyItems : parsedItems;
+        arr[i].qty = Math.max(1, (arr[i].qty || 1) + delta);
+        renderParsed();
+      };
+
+      window.updateQty = function(i, delta) { window.adjustQty('item', i, delta); };
+
+      window.loadHistory = function() {
+        // Merge history items into parsedItems, skipping duplicates by product_code
+        const existing = new Set(parsedItems.map(r => r.product_code).filter(Boolean));
+        for (const h of historyItems) {
+          if (!existing.has(h.product_code)) parsedItems.push({ ...h });
+        }
+        historyItems = [];
         renderParsed();
       };
 
