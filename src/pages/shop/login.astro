@@ -84,7 +84,7 @@
         submitBtn.textContent = '登入中...';
 
         try {
-          const res = await fetch('/api/shop-login', {
+          const res = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password }),
@@ -93,7 +93,15 @@
           const data = await res.json();
 
           if (res.ok) {
-            window.location.href = '/shop';
+            const params = new URLSearchParams(window.location.search);
+            const next = params.get('next');
+            if (next) {
+              window.location.href = decodeURIComponent(next);
+            } else if (data.user_type === 'wholesale') {
+              window.location.href = '/wholesale/';
+            } else {
+              window.location.href = '/shop';
+            }
           } else {
             errorMsg.textContent = data.error || '登入失敗，請再試一次';
             (document.getElementById('password') as HTMLInputElement).value = '';

@@ -61,7 +61,7 @@ export const PATCH: APIRoute = async ({ locals, request, params }) => {
     return json({ error: '訂單不存在' }, 404);
   }
 
-  if (userType === 'b2b' && locals.customerCode !== order.customer_code) {
+  if (userType === 'wholesale' && locals.customerCode !== order.customer_code) {
     return json({ error: '無權限確認此訂單' }, 403);
   }
 
