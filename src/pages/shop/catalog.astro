@@ -393,6 +393,10 @@
 
         try {
           const res = await fetch('/api/products/catalog?' + params);
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${res.status}`);
+          }
           const data = await res.json();
 
           const grid = document.getElementById('product-grid');

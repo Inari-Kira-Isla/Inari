@@ -194,11 +194,17 @@
         };
 
         recognition.onerror = (e) => {
+          if (e.error === 'no-speech') return; // ignore silence timeout, onend will restart
           document.getElementById('mic-caption').textContent = `識別錯誤：${e.error}`;
           stopRecording();
         };
 
-        recognition.onend = () => { if (isRecording) stopRecording(); };
+        // Auto-restart on silence so user can speak their full order before pressing stop
+        recognition.onend = () => {
+          if (isRecording) {
+            try { recognition.start(); } catch { stopRecording(); }
+          }
+        };
 
         recognition.start();
         isRecording = true;
@@ -207,11 +213,13 @@
       }
 
       function stopRecording() {
+        isRecording = false; // set first so onend doesn't restart
         if (recognition) { try { recognition.stop(); } catch {} recognition = null; }
-        isRecording = false;
         document.getElementById('mic-btn').classList.remove('active');
-        if (rawText) {
-          document.getElementById('mic-caption').textContent = '識別完成，正在解析…';
+        const fullText = rawText.trim();
+        if (fullText) {
+          document.getElementById('voice-transcript').textContent = `"${fullText}"`;
+          document.getElementById('mic-caption').textContent = '辨識完成，正在解析…';
           parseText('voice');
         } else {
           document.getElementById('mic-caption').textContent = '按一下開始說話';
