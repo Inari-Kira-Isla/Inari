@@ -35,15 +35,11 @@ export const GET: APIRoute = async ({ locals }) => {
 
   const [suppResp, quotesResp] = await Promise.all([
     fetch(
-      `${SUPABASE_URL}/rest/v1/inari_suppliers` +
-      `?select=id,supplier_name,contact_person,phone,email,address,payment_terms,notes,is_active` +
-      `&order=id.asc`,
+      `${SUPABASE_URL}/rest/v1/inari_suppliers?select=*&order=id.asc`,
       { headers: sbHeaders(key) }
     ),
     fetch(
-      `${SUPABASE_URL}/rest/v1/inari_supplier_quotes` +
-      `?select=id,supplier_id,product_id,product_name,unit_price,unit,spec,quote_date` +
-      `&order=supplier_id.asc,product_name.asc&limit=2000`,
+      `${SUPABASE_URL}/rest/v1/inari_supplier_quotes?select=*&order=supplier_id.asc&limit=2000`,
       { headers: sbHeaders(key) }
     ),
   ]);
