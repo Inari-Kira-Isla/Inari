@@ -147,10 +147,16 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       document.getElementById('stat-quotes').textContent = totalQuotes;
     }
 
+    function sName(s) {
+      return s.supplier_name || s.name || s.company_name || s.vendor_name || '—';
+    }
+
     function renderCards() {
       document.getElementById('loading-state').style.display = 'none';
       const grid = document.getElementById('suppliers-grid');
       grid.style.display = '';
+
+      if (allSuppliers.length) console.log('[suppliers] first row keys:', Object.keys(allSuppliers[0]));
 
       if (!allSuppliers.length) {
         grid.innerHTML = '<div class="col-12 text-center py-5 text-muted">無供應商資料</div>';
@@ -158,6 +164,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       }
 
       grid.innerHTML = allSuppliers.map(s => {
+        const name = sName(s);
         const phone = s.phone ? `<div class="text-muted small"><i class="ti ti-phone me-1"></i>${s.phone}</div>` : '';
         const email = s.email ? `<div class="text-muted small"><i class="ti ti-mail me-1"></i>${s.email}</div>` : '';
         const address = s.address ? `<div class="text-muted small"><i class="ti ti-map-pin me-1"></i>${s.address}</div>` : '';
@@ -169,7 +176,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <div class="card h-100">
             <div class="card-body">
               <div class="d-flex align-items-start justify-content-between mb-2">
-                <div class="fw-semibold">${s.supplier_name || '—'}</div>
+                <div class="fw-semibold">${name}</div>
                 <span class="badge bg-blue-lt text-blue ms-2">${s.quote_count || 0} 報價</span>
               </div>
               <div class="mb-3">
@@ -181,13 +188,13 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
               <button class="btn btn-sm btn-outline-secondary flex-fill"
                 data-action="quotes"
                 data-id="${s.id}"
-                data-name="${(s.supplier_name || '').replace(/"/g, '&quot;')}">
+                data-name="${name.replace(/"/g, '&quot;')}">
                 <i class="ti ti-file-invoice me-1"></i>查看報價
               </button>
               <button class="btn btn-sm btn-outline-primary"
                 data-action="edit"
                 data-id="${s.id}"
-                data-name="${(s.supplier_name || '').replace(/"/g, '&quot;')}"
+                data-name="${name.replace(/"/g, '&quot;')}"
                 data-contact="${(s.contact_person || '').replace(/"/g, '&quot;')}"
                 data-phone="${(s.phone || '').replace(/"/g, '&quot;')}"
                 data-email="${(s.email || '').replace(/"/g, '&quot;')}"
