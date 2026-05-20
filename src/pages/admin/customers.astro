@@ -11,7 +11,10 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <div class="card-body">
           <div class="row align-items-center">
             <div class="col-auto"><span class="bg-blue-lt avatar"><i class="ti ti-users text-blue"></i></span></div>
-            <div class="col"><div class="font-weight-medium" id="stat-total">—</div><div class="text-muted">客戶總數</div></div>
+            <div class="col">
+              <div class="fw-semibold" id="stat-total">—</div>
+              <div class="text-muted small">客戶總數</div>
+            </div>
           </div>
         </div>
       </div>
@@ -20,8 +23,24 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       <div class="card card-sm">
         <div class="card-body">
           <div class="row align-items-center">
-            <div class="col-auto"><span class="bg-green-lt avatar"><i class="ti ti-trending-up text-green"></i></span></div>
-            <div class="col"><div class="font-weight-medium" id="stat-active">—</div><div class="text-muted">有訂單客戶</div></div>
+            <div class="col-auto"><span class="bg-green-lt avatar"><i class="ti ti-check text-green"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="stat-active">—</div>
+              <div class="text-muted small">活躍客戶</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-cyan-lt avatar"><i class="ti ti-shopping-cart text-cyan"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="stat-web">—</div>
+              <div class="text-muted small">已開商城帳戶</div>
+            </div>
           </div>
         </div>
       </div>
@@ -31,30 +50,36 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <div class="card-body">
           <div class="row align-items-center">
             <div class="col-auto"><span class="bg-yellow-lt avatar"><i class="ti ti-alert-triangle text-yellow"></i></span></div>
-            <div class="col"><div class="font-weight-medium" id="stat-draft">—</div><div class="text-muted">有待確認草稿</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card card-sm">
-        <div class="card-body">
-          <div class="row align-items-center">
-            <div class="col-auto"><span class="bg-cyan-lt avatar"><i class="ti ti-currency-dollar text-cyan"></i></span></div>
-            <div class="col"><div class="font-weight-medium" id="stat-revenue">—</div><div class="text-muted">累計銷售額</div></div>
+            <div class="col">
+              <div class="fw-semibold" id="stat-draft">—</div>
+              <div class="text-muted small">待確認草稿</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Search + table card -->
+  <!-- Search + filter -->
   <div class="card">
-    <div class="card-header">
-      <div class="input-group">
+    <div class="card-header gap-2 flex-wrap">
+      <div class="input-group flex-fill" style="max-width:360px">
         <span class="input-group-text"><i class="ti ti-search"></i></span>
         <input type="text" class="form-control" id="search-input"
           placeholder="搜尋客戶代碼或名稱…" oninput="debounce(this.value)" />
+      </div>
+      <div class="ms-auto d-flex gap-2">
+        <select class="form-select" id="status-filter" onchange="load()" style="width:auto">
+          <option value="">全部狀態</option>
+          <option value="active">活躍</option>
+          <option value="inactive">停用</option>
+        </select>
+        <select class="form-select" id="payment-filter" onchange="applyClientFilter()" style="width:auto">
+          <option value="">全部結款</option>
+          <option value="月結">月結</option>
+          <option value="過數">過數</option>
+          <option value="現金">現金</option>
+        </select>
       </div>
     </div>
     <div class="table-responsive">
@@ -63,117 +88,188 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <tr>
             <th>客戶代碼</th>
             <th>客戶名稱</th>
-            <th class="text-end">訂單數</th>
-            <th class="text-end">累計金額</th>
-            <th class="text-end d-none d-md-table-cell">草稿</th>
-            <th class="d-none d-md-table-cell">最後下單</th>
+            <th class="d-none d-md-table-cell">結款方式</th>
+            <th class="d-none d-md-table-cell">信用額度</th>
+            <th class="d-none d-lg-table-cell">業務</th>
+            <th class="d-none d-lg-table-cell text-center">網上訂單</th>
+            <th class="text-center">狀態</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="customers-tbody">
-          <tr><td colspan="7" class="text-center py-4 text-muted">載入中…</td></tr>
+          <tr><td colspan="8" class="text-center py-4 text-muted">載入中…</td></tr>
         </tbody>
       </table>
     </div>
+    <div class="card-footer text-muted small" id="count-label">—</div>
   </div>
 
-  <!-- Customer orders drawer (offcanvas) -->
-  <div class="offcanvas offcanvas-end" tabindex="-1" id="customerDrawer">
+  <!-- Customer detail offcanvas -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="customerDrawer" style="width:420px">
     <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="drawer-title">客戶訂單</h5>
+      <h5 class="offcanvas-title" id="drawer-title">客戶詳情</h5>
       <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body" id="drawer-body">
-      <div class="text-muted text-center py-4">選擇客戶查看訂單</div>
+      <div class="text-muted text-center py-4">選擇客戶查看詳情</div>
     </div>
   </div>
 
   <script>
-    let timer = null;
-    let allCustomers = [];
+    let allCustomers = [], filtered = [];
+    let timer = null, currentSearch = '';
 
-    async function load(q = '') {
-      const url = `/api/admin/customers${q ? '?q=' + encodeURIComponent(q) : ''}`;
-      const resp = await fetch(url);
-      if (!resp.ok) return;
-      const { customers } = await resp.json();
-      allCustomers = customers;
-      render(customers);
-      updateStats(customers);
+    async function load() {
+      const q = currentSearch;
+      const status = document.getElementById('status-filter').value;
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (status) params.set('status', status);
+
+      const tbody = document.getElementById('customers-tbody');
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">載入中…</td></tr>';
+
+      try {
+        const resp = await fetch('/api/admin/customers?' + params.toString());
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({}));
+          tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">載入失敗：${err.error || resp.status}</td></tr>`;
+          return;
+        }
+        const { customers } = await resp.json();
+        allCustomers = customers || [];
+        updateStats(allCustomers);
+        applyClientFilter();
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">網路錯誤：${e.message}</td></tr>`;
+      }
     }
 
     function updateStats(customers) {
       document.getElementById('stat-total').textContent = customers.length;
-      document.getElementById('stat-active').textContent = customers.filter(c => c.order_count > 0).length;
-      document.getElementById('stat-draft').textContent = customers.filter(c => c.draft_count > 0).length;
-      const total = customers.reduce((s, c) => s + (c.total_amount || 0), 0);
-      document.getElementById('stat-revenue').textContent = 'MOP ' + total.toLocaleString('zh-TW', { maximumFractionDigits: 0 });
+      document.getElementById('stat-active').textContent = customers.filter(c => c.is_active).length;
+      document.getElementById('stat-web').textContent = customers.filter(c => c.web_order_count > 0).length;
+      document.getElementById('stat-draft').textContent = customers.filter(c => c.web_draft_count > 0).length;
     }
 
-    function render(customers) {
+    function applyClientFilter() {
+      const payType = document.getElementById('payment-filter').value;
+      filtered = allCustomers.filter(c =>
+        !payType || (c.payment_type || '').includes(payType)
+      );
+      render();
+    }
+
+    function render() {
       const tbody = document.getElementById('customers-tbody');
-      if (!customers.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">無客戶資料</td></tr>';
+      document.getElementById('count-label').textContent = `顯示 ${filtered.length} / ${allCustomers.length} 位客戶`;
+
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">無客戶資料</td></tr>';
         return;
       }
-      tbody.innerHTML = customers.map(c => {
-        const amt = c.total_amount ? `MOP ${Number(c.total_amount).toLocaleString('zh-TW', { maximumFractionDigits: 0 })}` : '—';
-        const last = c.last_order ? new Date(c.last_order).toLocaleDateString('zh-TW') : '—';
-        const draftBadge = c.draft_count > 0
-          ? `<span class="badge bg-warning-lt text-warning">${c.draft_count}</span>` : '0';
+
+      tbody.innerHTML = filtered.map(c => {
+        const payInfo = [c.payment_type, c.payment_terms_days ? `${c.payment_terms_days}天` : null]
+          .filter(Boolean).join(' ');
+        const credit = c.credit_limit ? `MOP ${Number(c.credit_limit).toLocaleString('zh-TW', { maximumFractionDigits: 0 })}` : '—';
+        const statusBadge = c.is_active
+          ? `<span class="badge bg-success-lt text-success">活躍</span>`
+          : `<span class="badge bg-secondary-lt text-muted">停用</span>`;
+        const webOrders = c.web_order_count > 0
+          ? `<span class="badge bg-cyan-lt text-cyan">${c.web_order_count}</span>`
+          : `<span class="text-muted">—</span>`;
+        const draftBadge = c.web_draft_count > 0
+          ? ` <span class="badge bg-warning-lt text-warning">${c.web_draft_count} 草稿</span>` : '';
         return `<tr>
           <td class="font-mono text-muted small">${c.customer_code}</td>
-          <td class="fw-medium">${c.customer_name}</td>
-          <td class="text-end">${c.order_count}</td>
-          <td class="text-end font-mono fw-semibold">${amt}</td>
-          <td class="text-end d-none d-md-table-cell">${draftBadge}</td>
-          <td class="text-muted d-none d-md-table-cell small">${last}</td>
-          <td class="text-end">
-            <button class="btn btn-sm btn-outline-secondary" onclick="showOrders('${c.customer_code}','${c.customer_name.replace(/'/g,"\\'")}')">
-              <i class="ti ti-eye me-1"></i>訂單
+          <td class="fw-medium">
+            ${c.customer_name}
+            ${c.group_name ? `<div class="text-muted" style="font-size:11px">${c.group_name}</div>` : ''}
+          </td>
+          <td class="text-muted small d-none d-md-table-cell">${payInfo || '—'}</td>
+          <td class="font-mono small d-none d-md-table-cell">${credit}</td>
+          <td class="text-muted small d-none d-lg-table-cell">${c.salesperson || '—'}</td>
+          <td class="text-center d-none d-lg-table-cell">${webOrders}${draftBadge}</td>
+          <td class="text-center">${statusBadge}</td>
+          <td>
+            <button class="btn btn-sm btn-ghost-secondary" onclick="showDetail(${JSON.stringify(c).replace(/'/g, '&#39;')})">
+              <i class="ti ti-eye"></i>
             </button>
           </td>
         </tr>`;
       }).join('');
     }
 
-    window.showOrders = async function(code, name) {
-      document.getElementById('drawer-title').textContent = `${name} 的訂單`;
-      document.getElementById('drawer-body').innerHTML = '<div class="text-muted text-center py-4">載入中…</div>';
+    window.showDetail = async function(c) {
+      document.getElementById('drawer-title').textContent = `${c.customer_name}`;
+      const drawerBody = document.getElementById('drawer-body');
+      drawerBody.innerHTML = '<div class="text-muted text-center py-3">載入中…</div>';
       new bootstrap.Offcanvas(document.getElementById('customerDrawer')).show();
 
-      const resp = await fetch(`/api/orders?limit=50`);
-      const { orders } = await resp.json();
-      const filtered = (orders || []).filter(o => o.customer_code === code);
+      const credit = c.credit_limit ? `MOP ${Number(c.credit_limit).toLocaleString('zh-TW', { maximumFractionDigits: 0 })}` : '—';
+      const payInfo = [c.payment_type, c.payment_terms_days ? `${c.payment_terms_days}天` : null, c.due_date].filter(Boolean).join(' / ');
 
-      if (!filtered.length) {
-        document.getElementById('drawer-body').innerHTML = '<div class="text-muted text-center py-4">無訂單記錄</div>';
-        return;
+      let ordersHtml = '<div class="text-muted small py-2">暫無網上訂單記錄</div>';
+      if (c.web_order_count > 0) {
+        try {
+          const resp = await fetch(`/api/orders?limit=20`);
+          const { orders } = await resp.json();
+          const myOrders = (orders || []).filter(o => o.customer_code === c.customer_code);
+          if (myOrders.length) {
+            const statusColor = { draft:'warning', confirmed:'success', invoiced:'primary', cancelled:'secondary' };
+            const statusMap = { draft:'草稿', confirmed:'已確認', invoiced:'已開單', cancelled:'已取消' };
+            ordersHtml = myOrders.map(o => {
+              const dt = new Date(o.created_at).toLocaleDateString('zh-TW');
+              return `<div class="d-flex align-items-center gap-2 py-2 border-bottom">
+                <span class="badge bg-${statusColor[o.status]||'secondary'}-lt text-${statusColor[o.status]||'secondary'}">${statusMap[o.status]||o.status}</span>
+                <div class="flex-fill">
+                  <div class="font-mono small fw-semibold">${o.order_no||'—'}</div>
+                  <div class="text-muted" style="font-size:11px">${dt}</div>
+                </div>
+                <a href="/admin/orders/${o.id}" class="btn btn-sm btn-ghost-secondary px-1"><i class="ti ti-arrow-right"></i></a>
+              </div>`;
+            }).join('');
+          }
+        } catch { /* silent */ }
       }
 
-      const statusColor = { draft:'warning', confirmed:'success', invoiced:'primary', cancelled:'secondary' };
-      const statusMap = { draft:'草稿', confirmed:'已確認', invoiced:'已開單', cancelled:'已取消' };
-
-      document.getElementById('drawer-body').innerHTML = filtered.map(o => {
-        const amt = o.total_amount ? `MOP ${Number(o.total_amount).toLocaleString()}` : '—';
-        const dt = new Date(o.created_at).toLocaleDateString('zh-TW');
-        return `<div class="d-flex align-items-center gap-2 py-2 border-bottom">
-          <span class="badge bg-${statusColor[o.status] || 'secondary'}-lt text-${statusColor[o.status] || 'secondary'}">${statusMap[o.status] || o.status}</span>
-          <div class="flex-fill">
-            <div class="font-mono small fw-semibold">${o.order_no || '—'}</div>
-            <div class="text-muted" style="font-size:11px">${dt}</div>
+      drawerBody.innerHTML = `
+        <div class="mb-3">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="font-mono text-muted">${c.customer_code}</span>
+            ${c.is_active ? '<span class="badge bg-success-lt text-success">活躍</span>' : '<span class="badge bg-secondary-lt text-muted">停用</span>'}
           </div>
-          <div class="font-mono small fw-semibold">${amt}</div>
-          <a href="/admin/orders/${o.id}" class="btn btn-sm btn-ghost-secondary px-1">
-            <i class="ti ti-arrow-right"></i>
-          </a>
-        </div>`;
-      }).join('');
+        </div>
+        <div class="datagrid mb-3">
+          <div class="datagrid-item">
+            <div class="datagrid-title">結款方式</div>
+            <div class="datagrid-content">${payInfo || '—'}</div>
+          </div>
+          <div class="datagrid-item">
+            <div class="datagrid-title">信用額度</div>
+            <div class="datagrid-content font-mono">${credit}</div>
+          </div>
+          <div class="datagrid-item">
+            <div class="datagrid-title">業務</div>
+            <div class="datagrid-content">${c.salesperson || '—'}</div>
+          </div>
+          <div class="datagrid-item">
+            <div class="datagrid-title">收款方式</div>
+            <div class="datagrid-content">${c.collection_method || '—'}</div>
+          </div>
+          ${c.business_type ? `<div class="datagrid-item"><div class="datagrid-title">業態</div><div class="datagrid-content">${c.business_type}</div></div>` : ''}
+          ${c.group_name ? `<div class="datagrid-item"><div class="datagrid-title">集團</div><div class="datagrid-content">${c.group_name}</div></div>` : ''}
+        </div>
+        <div class="fw-semibold mb-2">網上訂單記錄</div>
+        ${ordersHtml}
+      `;
     };
 
     window.debounce = function(val) {
       clearTimeout(timer);
-      timer = setTimeout(() => load(val), 350);
+      currentSearch = val;
+      timer = setTimeout(() => load(), 350);
     };
 
     load();
