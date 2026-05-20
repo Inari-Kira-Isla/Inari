@@ -114,7 +114,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     const thisMonth = new Date().toISOString().slice(0, 7);
 
     async function loadOrders() {
-      const resp = await fetch('/api/orders?limit=50');
+      const resp = await fetch('/api/admin/orders?limit=50');
       if (!resp.ok) return;
       const { orders } = await resp.json();
       const todayAmt = orders.filter(o => o.order_date === today && o.status !== 'cancelled').reduce((s, o) => s + (o.total_amount || 0), 0);

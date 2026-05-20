@@ -10,11 +10,11 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <div class="col">
           <div class="input-group">
             <span class="input-group-text"><i class="ti ti-search"></i></span>
-            <input type="text" class="form-control" id="search-input" placeholder="搜尋訂單號 / 客戶…" oninput="debounceSearch(this.value)" />
+            <input type="text" class="form-control" id="search-input" placeholder="搜尋訂單號 / 客戶…" />
           </div>
         </div>
         <div class="col-auto">
-          <select class="form-select" id="status-filter" onchange="applyFilter()">
+          <select class="form-select" id="status-filter">
             <option value="">全部狀態</option>
             <option value="draft">草稿</option>
             <option value="confirmed">已確認</option>
@@ -25,8 +25,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       </div>
     </div>
     <div class="col-12 col-md-4 d-flex gap-2 justify-content-md-end">
-      <button class="btn btn-outline-secondary btn-sm" onclick="exportCSV()"><i class="ti ti-download me-1"></i>匯出 CSV</button>
-      <button class="btn btn-primary btn-sm" onclick="loadOrders(true)"><i class="ti ti-refresh me-1"></i>重新整理</button>
+      <button class="btn btn-outline-secondary btn-sm" id="export-btn"><i class="ti ti-download me-1"></i>匯出 CSV</button>
+      <button class="btn btn-primary btn-sm" id="refresh-btn"><i class="ti ti-refresh me-1"></i>重新整理</button>
     </div>
   </div>
 
@@ -58,10 +58,11 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     </div>
     <div class="card-footer d-flex align-items-center justify-content-between">
       <span id="count-label" class="text-muted small">—</span>
-      <button id="load-more-btn" class="btn btn-sm btn-outline-secondary" style="display:none" onclick="loadMore()">載入更多</button>
+      <button id="load-more-btn" class="btn btn-sm btn-outline-secondary" style="display:none">載入更多</button>
     </div>
   </div>
 
+  <!-- Confirm action modal -->
   <div class="modal modal-blur fade" id="actionModal" tabindex="-1">
     <div class="modal-dialog modal-sm modal-dialog-centered">
       <div class="modal-content">
@@ -70,7 +71,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <p id="modal-msg" class="text-muted"></p>
         </div>
         <div class="modal-footer">
-          <button class="btn w-100" id="modal-confirm-btn" onclick="doAction()"></button>
+          <button class="btn w-100" id="modal-confirm-btn"></button>
           <button class="btn btn-link w-100" data-bs-dismiss="modal">取消</button>
         </div>
       </div>
@@ -78,91 +79,149 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
   </div>
 
   <script>
-    const statusMap = { draft:'草稿', confirmed:'已確認', invoiced:'已開單', cancelled:'已取消' };
-    const statusColor = { draft:'warning', confirmed:'success', invoiced:'primary', cancelled:'secondary' };
-    let allOrders = [], filtered = [], currentSearch = '', currentStatus = '', page = 1;
+    const statusMap: Record<string,string> = { draft:'草稿', confirmed:'已確認', invoiced:'已開單', cancelled:'已取消' };
+    const statusColor: Record<string,string> = { draft:'warning', confirmed:'success', invoiced:'primary', cancelled:'secondary' };
+    let allOrders: any[] = [], filtered: any[] = [], currentSearch = '', currentStatus = '', page = 1;
     const PAGE_SIZE = 30;
-    let pendingAction = null, searchTimer = null;
+    let pendingAction: { id: number; action: string } | null = null;
+    let searchTimer: any = null;
 
     async function loadOrders(reset = false) {
       if (reset) page = 1;
-      const resp = await fetch('/api/orders?limit=200');
-      if (!resp.ok) return;
+      const tbody = document.getElementById('orders-tbody')!;
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">載入中…</td></tr>';
+
+      const resp = await fetch('/api/admin/orders?limit=200');
+      if (!resp.ok) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-danger">載入失敗</td></tr>';
+        return;
+      }
       const { orders } = await resp.json();
-      allOrders = orders;
-      ['draft','confirmed','invoiced','cancelled'].forEach(s => {
-        document.getElementById(`cnt-${s}`).textContent = orders.filter(o => o.status === s).length;
+      allOrders = orders || [];
+
+      (['draft','confirmed','invoiced','cancelled'] as const).forEach(s => {
+        document.getElementById(`cnt-${s}`)!.textContent =
+          String(allOrders.filter((o: any) => o.status === s).length);
       });
+
       applyFilter();
     }
 
     function applyFilter() {
-      currentStatus = document.getElementById('status-filter').value;
-      filtered = allOrders.filter(o => {
+      currentStatus = (document.getElementById('status-filter') as HTMLSelectElement).value;
+      filtered = allOrders.filter((o: any) => {
         const q = currentSearch.toLowerCase();
         return (!currentStatus || o.status === currentStatus) &&
-          (!q || (o.order_no||'').toLowerCase().includes(q) || (o.customer_name||'').toLowerCase().includes(q) || (o.customer_code||'').toLowerCase().includes(q));
+          (!q || (o.order_no||'').toLowerCase().includes(q) ||
+                 (o.customer_name||'').toLowerCase().includes(q) ||
+                 (o.customer_code||'').toLowerCase().includes(q));
       });
-      page = 1; render();
+      page = 1;
+      render();
     }
 
     function render() {
       const slice = filtered.slice(0, page * PAGE_SIZE);
-      document.getElementById('count-label').textContent = `顯示 ${slice.length} / ${filtered.length} 筆`;
-      document.getElementById('load-more-btn').style.display = filtered.length > slice.length ? '' : 'none';
-      const tbody = document.getElementById('orders-tbody');
-      if (!slice.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">無符合條件的訂單</td></tr>'; return; }
-      tbody.innerHTML = slice.map(o => {
+      document.getElementById('count-label')!.textContent = `顯示 ${slice.length} / ${filtered.length} 筆`;
+      document.getElementById('load-more-btn')!.style.display = filtered.length > slice.length ? '' : 'none';
+
+      const tbody = document.getElementById('orders-tbody')!;
+      if (!slice.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">無符合條件的訂單</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = (slice as any[]).map(o => {
         const color = statusColor[o.status] || 'secondary';
-        const amt = o.total_amount ? `MOP ${Number(o.total_amount).toLocaleString()}` : '—';
+        const amt = o.total_amount > 0
+          ? `MOP ${Number(o.total_amount).toLocaleString('zh-TW', { maximumFractionDigits: 0 })}`
+          : '—';
         const dt = o.order_date || new Date(o.created_at).toLocaleDateString('zh-TW');
-        const actions = [];
+        const itemCount = (o.inari_customer_order_items||[]).length;
+        const itemBadge = itemCount > 0
+          ? `<span class="text-muted ms-1" style="font-size:11px">(${itemCount}項)</span>` : '';
+
+        const actionBtns = [];
         if (o.status === 'draft') {
-          actions.push(`<button class="btn btn-sm btn-success" onclick="askAction('${o.id}','${o.order_no}','confirmed')">確認</button>`);
-          actions.push(`<button class="btn btn-sm btn-ghost-danger ms-1" onclick="askAction('${o.id}','${o.order_no}','cancelled')">取消</button>`);
+          actionBtns.push(`<button class="btn btn-sm btn-success" data-id="${o.id}" data-no="${o.order_no}" data-action="confirmed">確認</button>`);
+          actionBtns.push(`<button class="btn btn-sm btn-ghost-danger ms-1" data-id="${o.id}" data-no="${o.order_no}" data-action="cancelled">取消</button>`);
         } else if (o.status === 'confirmed') {
-          actions.push(`<button class="btn btn-sm btn-primary" onclick="askAction('${o.id}','${o.order_no}','invoiced')">開單</button>`);
+          actionBtns.push(`<button class="btn btn-sm btn-primary" data-id="${o.id}" data-no="${o.order_no}" data-action="invoiced">開單</button>`);
         }
-        actions.push(`<a href="/admin/orders/${o.id}" class="btn btn-sm btn-ghost-secondary ms-1"><i class="ti ti-eye"></i></a>`);
+        actionBtns.push(`<a href="/admin/orders/${o.id}" class="btn btn-sm btn-ghost-secondary ms-1"><i class="ti ti-eye"></i></a>`);
+
         return `<tr>
           <td><span class="badge bg-${color}-lt text-${color}">${statusMap[o.status]||o.status}</span></td>
           <td class="font-mono small fw-semibold">${o.order_no||'—'}</td>
           <td class="small">${o.customer_name||o.customer_code||'—'}</td>
-          <td class="text-end font-mono small fw-semibold">${amt}</td>
+          <td class="text-end font-mono small fw-semibold">${amt}${itemBadge}</td>
           <td class="text-muted small d-none d-md-table-cell">${o.source||'—'}</td>
           <td class="text-muted small d-none d-md-table-cell">${dt}</td>
-          <td class="text-end">${actions.join('')}</td>
+          <td class="text-end">${actionBtns.join('')}</td>
         </tr>`;
       }).join('');
     }
 
-    window.askAction = function(id, orderNo, action) {
+    // ── event delegation for action buttons ─────────────────────────────
+    document.getElementById('orders-tbody')!.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('button[data-action]') as HTMLButtonElement | null;
+      if (!btn) return;
+      const id = parseInt(btn.dataset.id!);
+      const orderNo = btn.dataset.no!;
+      const action = btn.dataset.action!;
+      showActionModal(id, orderNo, action);
+    });
+
+    function showActionModal(id: number, orderNo: string, action: string) {
       pendingAction = { id, action };
-      const titles = { confirmed:'確認訂單', invoiced:'標記開單', cancelled:'取消訂單' };
-      const colors = { confirmed:'success', invoiced:'primary', cancelled:'danger' };
-      document.getElementById('modal-title').textContent = titles[action];
-      document.getElementById('modal-msg').textContent = `訂單 ${orderNo}`;
-      const btn = document.getElementById('modal-confirm-btn');
-      btn.className = `btn w-100 btn-${colors[action]}`; btn.textContent = titles[action];
-      new bootstrap.Modal(document.getElementById('actionModal')).show();
-    };
-    window.doAction = async function() {
-      bootstrap.Modal.getInstance(document.getElementById('actionModal'))?.hide();
+      const titles: Record<string,string> = { confirmed:'確認訂單', invoiced:'標記開單', cancelled:'取消訂單' };
+      const colors: Record<string,string> = { confirmed:'success', invoiced:'primary', cancelled:'danger' };
+      document.getElementById('modal-title')!.textContent = titles[action] || action;
+      document.getElementById('modal-msg')!.textContent = `訂單 ${orderNo}`;
+      const confirmBtn = document.getElementById('modal-confirm-btn')!;
+      confirmBtn.className = `btn w-100 btn-${colors[action] || 'primary'}`;
+      confirmBtn.textContent = titles[action] || action;
+      new (window as any).bootstrap.Modal(document.getElementById('actionModal')!).show();
+    }
+
+    document.getElementById('modal-confirm-btn')!.addEventListener('click', async () => {
+      (window as any).bootstrap.Modal.getInstance(document.getElementById('actionModal')!)?.hide();
       if (!pendingAction) return;
-      const resp = await fetch(`/api/admin/orders/${pendingAction.id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status:pendingAction.action}) });
+      const resp = await fetch(`/api/admin/orders/${pendingAction.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: pendingAction.action }),
+      });
       const data = await resp.json();
-      if (data.ok) loadOrders(false); else alert('操作失敗：' + (data.error||'未知錯誤'));
+      if (data.ok) loadOrders(false);
+      else alert('操作失敗：' + (data.error || '未知錯誤'));
       pendingAction = null;
-    };
-    window.loadMore = function() { page++; render(); };
-    window.debounceSearch = function(val) { clearTimeout(searchTimer); searchTimer = setTimeout(() => { currentSearch = val; applyFilter(); }, 300); };
-    window.exportCSV = function() {
+    });
+
+    // ── static element event listeners ─────────────────────────────────
+    document.getElementById('search-input')!.addEventListener('input', (e) => {
+      clearTimeout(searchTimer);
+      const val = (e.target as HTMLInputElement).value;
+      searchTimer = setTimeout(() => { currentSearch = val; applyFilter(); }, 300);
+    });
+
+    document.getElementById('status-filter')!.addEventListener('change', applyFilter);
+    document.getElementById('refresh-btn')!.addEventListener('click', () => loadOrders(true));
+    document.getElementById('load-more-btn')!.addEventListener('click', () => { page++; render(); });
+
+    document.getElementById('export-btn')!.addEventListener('click', () => {
       const headers = ['訂單號','客戶代碼','客戶名稱','狀態','金額','來源','日期'];
-      const rows = filtered.map(o => [o.order_no,o.customer_code,o.customer_name,o.status,o.total_amount,o.source,o.order_date].map(v=>`"${(v??'').toString().replace(/"/g,'""')}"`).join(','));
-      const csv = [headers.join(','),...rows].join('\n');
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
-      a.download = `orders-${new Date().toISOString().slice(0,10)}.csv`; a.click();
-    };
+      const rows = filtered.map((o: any) => [
+        o.order_no, o.customer_code, o.customer_name, o.status,
+        o.total_amount, o.source, o.order_date
+      ].map(v => `"${(v ?? '').toString().replace(/"/g, '""')}"`).join(','));
+      const csv = [headers.join(','), ...rows].join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+      a.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+    });
+
     loadOrders(true);
   </script>
 </AdminLayout>
