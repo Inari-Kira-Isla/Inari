@@ -32,9 +32,20 @@ const PUBLIC_PREFIXES = [
 
 const PUBLIC_EXACT = new Set(['/', '/login']);
 
-// Route → minimum user_type(s) required
+// Route → minimum user_type(s) required.
+// More specific (longer) prefixes MUST come BEFORE shorter ones since the
+// loop uses startsWith and breaks on first match.
 const ROUTE_GUARDS: Array<[string, string[]]> = [
-  ['/admin',     ['manager']],
+  // Sensitive admin pages — manager only (matches API auth)
+  ['/admin/users',     ['manager']],
+  ['/admin/analytics', ['manager']],
+  ['/admin/sales',     ['manager']],
+  ['/admin/customers', ['manager']],
+  ['/admin/suppliers', ['manager']],
+  // General admin pages — staff + manager (matches API auth for products,
+  // orders, inventory, knowledge)
+  ['/admin',           ['staff', 'manager']],
+  // Other route groups
   ['/wholesale', ['wholesale', 'manager']],
   ['/account',   ['wholesale', 'manager']],
   ['/shop/admin',['staff', 'manager']],
