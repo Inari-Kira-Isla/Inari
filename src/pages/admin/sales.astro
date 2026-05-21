@@ -1,0 +1,244 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="銷售分析" active="sales" pageTitle="銷售分析" pageSubtitle="10 年銷售歷史（614K 筆 qb_sales）">
+
+  <!-- Filter / year picker -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="text-muted small">資料來源：<span class="font-mono">mv_monthly_summary / mv_yearly_summary / top_products_by_year</span></div>
+    <div class="d-flex align-items-center gap-2">
+      <label for="year-picker" class="text-muted small mb-0">Top SKU 年度：</label>
+      <select id="year-picker" class="form-select form-select-sm" style="width:auto"></select>
+    </div>
+  </div>
+
+  <!-- KPI row (4 cards) -->
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-blue-lt avatar"><i class="ti ti-currency-dollar text-blue"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="kpi-month-rev">—</div>
+              <div class="text-muted small">本月營收</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-cyan-lt avatar"><i class="ti ti-calendar text-cyan"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="kpi-ytd-rev">—</div>
+              <div class="text-muted small">YTD 營收</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-green-lt avatar"><i class="ti ti-trending-up text-green"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="kpi-yoy">—</div>
+              <div class="text-muted small">YoY 同期成長</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card card-sm">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-auto"><span class="bg-yellow-lt avatar"><i class="ti ti-users text-yellow"></i></span></div>
+            <div class="col">
+              <div class="fw-semibold" id="kpi-customers">—</div>
+              <div class="text-muted small">本月活躍客戶</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Monthly revenue chart (24 months) -->
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h3 class="card-title mb-0">月度收入趨勢（近 24 個月）</h3>
+          <span class="text-muted small">單位：MOP</span>
+        </div>
+        <div class="card-body">
+          <div id="monthly-chart" style="min-height:300px"></div>
+        </div>
+      </div>
+
+      <!-- Yearly summary table -->
+      <div class="card mt-3">
+        <div class="card-header"><h3 class="card-title mb-0">年度總覽</h3></div>
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table table-sm">
+            <thead>
+              <tr>
+                <th>年度</th>
+                <th class="text-end">營收</th>
+                <th class="text-end d-none d-md-table-cell">訂單</th>
+                <th class="text-end d-none d-md-table-cell">客戶</th>
+                <th class="text-end d-none d-md-table-cell">SKU</th>
+                <th class="text-end">平均單價</th>
+              </tr>
+            </thead>
+            <tbody id="yearly-tbody">
+              <tr><td colspan="6" class="text-center py-3 text-muted">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top 20 SKU -->
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title mb-0">Top 20 商品 <span id="top-year-label" class="text-muted small ms-1"></span></h3>
+        </div>
+        <div class="table-responsive" style="max-height:760px;overflow-y:auto">
+          <table class="table table-vcenter card-table table-sm">
+            <thead style="position:sticky;top:0;background:white">
+              <tr>
+                <th class="w-4">#</th>
+                <th>商品</th>
+                <th class="text-end">營收</th>
+                <th class="text-end d-none d-md-table-cell">%</th>
+              </tr>
+            </thead>
+            <tbody id="top-tbody">
+              <tr><td colspan="4" class="text-center py-3 text-muted">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .sales-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .sales-bar-label { width: 70px; font-size: 11px; color: var(--tblr-text-muted); text-align: right; flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; }
+    .sales-bar-track { flex: 1; background: var(--tblr-gray-100); border-radius: 3px; height: 18px; overflow: hidden; position: relative; }
+    .sales-bar-fill { height: 100%; background: var(--tblr-primary); border-radius: 3px; transition: width .4s ease; }
+    .sales-bar-value { width: 110px; font-size: 11px; font-family: 'IBM Plex Mono', monospace; color: var(--tblr-text-muted); text-align: right; flex-shrink: 0; }
+  </style>
+
+  <script>
+    const fmtMOP = n => 'MOP ' + Number(n || 0).toLocaleString('zh-TW', { maximumFractionDigits: 0 });
+
+    let monthlyData = [];
+    let yearlyData = [];
+
+    async function loadAll() {
+      const [m, y] = await Promise.all([
+        fetch('/api/admin/sales/monthly?months=24').then(r => r.json()).catch(() => ({ items: [] })),
+        fetch('/api/admin/sales/yearly').then(r => r.json()).catch(() => ({ items: [] })),
+      ]);
+      monthlyData = m.items || [];
+      yearlyData = y.items || [];
+
+      renderKPI();
+      renderMonthlyChart();
+      renderYearly();
+      buildYearPicker();
+      loadTop(new Date().getFullYear());
+    }
+
+    function renderKPI() {
+      if (!monthlyData.length || !yearlyData.length) return;
+      const latest = monthlyData[monthlyData.length - 1];
+      document.getElementById('kpi-month-rev').textContent = fmtMOP(latest.revenue);
+      document.getElementById('kpi-customers').textContent = (latest.customers || 0).toLocaleString();
+
+      const thisYear = yearlyData.find(y => y.year === latest.year);
+      const prevYear = yearlyData.find(y => y.year === latest.year - 1);
+      document.getElementById('kpi-ytd-rev').textContent = fmtMOP(thisYear?.revenue);
+
+      if (prevYear && prevYear.revenue > 0 && thisYear) {
+        // Compare YTD vs same period last year (approximate using ratio)
+        const monthsThisYr = monthlyData.filter(m => m.year === latest.year).length;
+        const monthsLastYr = 12;
+        const prevPro = (prevYear.revenue / monthsLastYr) * monthsThisYr;
+        const yoy = ((thisYear.revenue - prevPro) / prevPro) * 100;
+        const el = document.getElementById('kpi-yoy');
+        el.textContent = (yoy >= 0 ? '+' : '') + yoy.toFixed(1) + '%';
+        el.className = 'fw-semibold ' + (yoy >= 0 ? 'text-success' : 'text-danger');
+      } else {
+        document.getElementById('kpi-yoy').textContent = '—';
+      }
+    }
+
+    function renderMonthlyChart() {
+      const max = Math.max(...monthlyData.map(m => m.revenue), 1);
+      const container = document.getElementById('monthly-chart');
+      container.innerHTML = monthlyData.map(m => {
+        const pct = Math.round((m.revenue / max) * 100);
+        return `<div class="sales-bar-row">
+          <div class="sales-bar-label">${m.month}</div>
+          <div class="sales-bar-track"><div class="sales-bar-fill" style="width:${Math.max(pct, 1)}%"></div></div>
+          <div class="sales-bar-value">${fmtMOP(m.revenue)}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderYearly() {
+      const tbody = document.getElementById('yearly-tbody');
+      if (!yearlyData.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">無資料</td></tr>';
+        return;
+      }
+      tbody.innerHTML = yearlyData.map(y => `<tr>
+        <td class="fw-semibold">${y.year}</td>
+        <td class="text-end font-mono">${fmtMOP(y.revenue)}</td>
+        <td class="text-end text-muted small d-none d-md-table-cell">${(y.orders || 0).toLocaleString()}</td>
+        <td class="text-end text-muted small d-none d-md-table-cell">${y.customers || 0}</td>
+        <td class="text-end text-muted small d-none d-md-table-cell">${y.skus || 0}</td>
+        <td class="text-end font-mono small text-muted">${fmtMOP(y.avg_order_value)}</td>
+      </tr>`).join('');
+    }
+
+    function buildYearPicker() {
+      const picker = document.getElementById('year-picker');
+      const thisYear = new Date().getFullYear();
+      picker.innerHTML = yearlyData.map(y =>
+        `<option value="${y.year}" ${y.year === thisYear ? 'selected' : ''}>${y.year}</option>`
+      ).join('');
+      picker.addEventListener('change', e => loadTop(parseInt(e.target.value)));
+    }
+
+    async function loadTop(year) {
+      document.getElementById('top-year-label').textContent = `(${year})`;
+      const tbody = document.getElementById('top-tbody');
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">載入中…</td></tr>';
+      const data = await fetch(`/api/admin/sales/top-products?year=${year}&limit=20`).then(r => r.json()).catch(() => ({ items: [] }));
+      const items = data.items || [];
+      if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">無資料</td></tr>';
+        return;
+      }
+      tbody.innerHTML = items.map((p, i) => `<tr>
+        <td class="text-muted">${i + 1}</td>
+        <td class="small"><div class="fw-medium">${p.name || '—'}</div><div class="text-muted font-mono" style="font-size:10px">${p.code || ''}</div></td>
+        <td class="text-end font-mono small fw-semibold">${fmtMOP(p.revenue)}</td>
+        <td class="text-end text-muted small d-none d-md-table-cell">${Number(p.pct_of_year).toFixed(1)}%</td>
+      </tr>`).join('');
+    }
+
+    loadAll();
+  </script>
+</AdminLayout>

@@ -1,7 +1,7 @@
 ---
 interface Props {
   title: string;
-  active: 'dashboard' | 'orders' | 'customers' | 'products' | 'knowledge' | 'users' | 'analytics' | 'suppliers';
+  active: 'dashboard' | 'orders' | 'customers' | 'products' | 'knowledge' | 'users' | 'analytics' | 'suppliers' | 'sales';
   pageTitle: string;
   pageSubtitle?: string;
 }
@@ -126,6 +126,15 @@ const username = Astro.locals.username || '管理員';
                   <i class="ti ti-user-cog"></i>
                 </span>
                 <span class="nav-link-title">用戶管理</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class:list={["nav-link", { active: active === 'sales' }]} href="/admin/sales">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-trending-up"></i>
+                </span>
+                <span class="nav-link-title">銷售分析</span>
               </a>
             </li>
 
