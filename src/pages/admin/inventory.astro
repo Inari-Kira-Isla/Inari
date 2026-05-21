@@ -1,0 +1,564 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="庫存管理" active="inventory" pageTitle="庫存管理" pageSubtitle="lots × FEFO × audit trail">
+
+  <!-- Tab nav -->
+  <ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-summary" role="tab">總覽</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-lots" role="tab">批次列表</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-expiring" role="tab">即將過期</a></li>
+  </ul>
+
+  <!-- Action buttons -->
+  <div class="d-flex gap-2 mb-3">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#receiveModal">
+      <i class="ti ti-plus me-1"></i>進貨 Receive
+    </button>
+    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#pickModal">
+      <i class="ti ti-truck-delivery me-1"></i>出貨 Pick (FEFO)
+    </button>
+    <button class="btn btn-outline-secondary ms-auto" id="refresh-btn">
+      <i class="ti ti-refresh me-1"></i>重新整理
+    </button>
+  </div>
+
+  <div class="tab-content">
+    <!-- ── Summary tab ──────────────────────────────────────────────── -->
+    <div class="tab-pane fade show active" id="tab-summary" role="tabpanel">
+      <div class="row g-3 mb-3">
+        <div class="col-md-3">
+          <div class="card card-sm"><div class="card-body">
+            <div class="fw-semibold fs-3" id="sm-skus">—</div>
+            <div class="text-muted small">活躍 SKU 數</div>
+          </div></div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-sm"><div class="card-body">
+            <div class="fw-semibold fs-3" id="sm-lots">—</div>
+            <div class="text-muted small">活躍批次數</div>
+          </div></div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-sm"><div class="card-body">
+            <div class="fw-semibold fs-3" id="sm-value">—</div>
+            <div class="text-muted small">庫存總值（成本）</div>
+          </div></div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-sm"><div class="card-body">
+            <div class="fw-semibold fs-3 text-danger" id="sm-expiring">—</div>
+            <div class="text-muted small">7 天內過期 SKU</div>
+          </div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h3 class="card-title mb-0">SKU 庫存總覽</h3>
+          <input type="text" class="form-control form-control-sm" id="summary-search"
+                 placeholder="搜尋 SKU / 商品名稱…" style="width:240px">
+        </div>
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table table-sm">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>商品</th>
+                <th class="d-none d-md-table-cell">類別</th>
+                <th class="text-end">在手</th>
+                <th class="text-end">可用</th>
+                <th class="text-end d-none d-md-table-cell">批數</th>
+                <th class="text-end">最早到期</th>
+                <th class="text-end d-none d-lg-table-cell">總值 (MOP)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="summary-tbody">
+              <tr><td colspan="9" class="text-center py-4 text-muted">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Lots tab ─────────────────────────────────────────────────── -->
+    <div class="tab-pane fade" id="tab-lots" role="tabpanel">
+      <div class="card">
+        <div class="card-header d-flex gap-2 align-items-center">
+          <div class="text-muted small me-auto" id="lots-count">—</div>
+          <select class="form-select form-select-sm" id="lots-status" style="width:auto">
+            <option value="active" selected>active</option>
+            <option value="consumed">consumed</option>
+            <option value="expired">expired</option>
+            <option value="damaged">damaged</option>
+            <option value="all">全部</option>
+          </select>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table table-sm">
+            <thead>
+              <tr>
+                <th>批號</th>
+                <th>SKU</th>
+                <th class="text-end">在手</th>
+                <th class="d-none d-md-table-cell">進貨日</th>
+                <th>到期日</th>
+                <th class="text-end d-none d-md-table-cell">單位成本</th>
+                <th class="d-none d-lg-table-cell">倉位</th>
+                <th>狀態</th>
+              </tr>
+            </thead>
+            <tbody id="lots-tbody">
+              <tr><td colspan="8" class="text-center py-4 text-muted">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Expiring tab ─────────────────────────────────────────────── -->
+    <div class="tab-pane fade" id="tab-expiring" role="tabpanel">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title mb-0">7 天內到期批次</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table table-sm">
+            <thead>
+              <tr>
+                <th>批號</th>
+                <th>SKU</th>
+                <th class="text-end">在手</th>
+                <th>到期日</th>
+                <th class="text-end">剩餘天數</th>
+                <th class="text-end d-none d-md-table-cell">損失風險 (MOP)</th>
+              </tr>
+            </thead>
+            <tbody id="expiring-tbody">
+              <tr><td colspan="6" class="text-center py-4 text-muted">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Receive Modal ─────────────────────────────────────────────── -->
+  <div class="modal modal-blur fade" id="receiveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">進貨 Receive</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">SKU <span class="text-danger">*</span></label>
+            <input type="text" class="form-control font-mono" id="r-sku" placeholder="例：A3A0210">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">批號 Lot No <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input type="text" class="form-control font-mono" id="r-lot-no" placeholder="例：A3A0210-260521-01">
+              <button class="btn btn-outline-secondary" type="button" id="r-suggest-lot">建議格式</button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label">數量 <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" id="r-qty" min="0.001" step="0.001">
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">單位成本 MOP <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" id="r-unit-cost" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-6 mb-3">
+              <label class="form-label">進貨日</label>
+              <input type="date" class="form-control" id="r-received-date">
+            </div>
+            <div class="col-6 mb-3">
+              <label class="form-label">到期日</label>
+              <input type="date" class="form-control" id="r-expiry-date">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-7 mb-3">
+              <label class="form-label">倉位</label>
+              <input type="text" class="form-control" id="r-location" placeholder="例：冰鮮櫃 A">
+            </div>
+            <div class="col-5 mb-3">
+              <label class="form-label">等級</label>
+              <input type="text" class="form-control" id="r-grade" placeholder="例：優">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">備註</label>
+            <textarea class="form-control" id="r-notes" rows="2"></textarea>
+          </div>
+          <div class="alert alert-danger" id="r-error" style="display:none"></div>
+          <div class="alert alert-success" id="r-success" style="display:none"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" id="r-submit">
+            <span class="spinner-border spinner-border-sm me-1" id="r-spinner" style="display:none"></span>
+            進貨入庫
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Pick Modal ────────────────────────────────────────────────── -->
+  <div class="modal modal-blur fade" id="pickModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">出貨 Pick (FEFO 自動排序)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">SKU <span class="text-danger">*</span></label>
+            <input type="text" class="form-control font-mono" id="p-sku">
+            <div class="form-text" id="p-stock-hint">輸入 SKU 後將顯示可用庫存與 FEFO 預覽</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">出貨數量 <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="p-qty" min="0.001" step="0.001">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">參考單號（訂單號 / 客戶代碼等）</label>
+            <input type="text" class="form-control" id="p-ref-no" placeholder="例：ORD-20260521-XXXX">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">備註</label>
+            <textarea class="form-control" id="p-notes" rows="2"></textarea>
+          </div>
+
+          <div id="p-fefo-preview" class="alert alert-info" style="display:none">
+            <strong>FEFO 預覽：</strong>
+            <ul class="mb-0 small" id="p-fefo-list"></ul>
+          </div>
+
+          <div class="alert alert-danger" id="p-error" style="display:none"></div>
+          <div class="alert alert-success" id="p-success" style="display:none"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" id="p-submit">
+            <span class="spinner-border spinner-border-sm me-1" id="p-spinner" style="display:none"></span>
+            出貨扣減
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fmtMOP = n => 'MOP ' + Math.round(Number(n) || 0).toLocaleString('zh-TW');
+    const fmtQty = n => Number(n || 0).toLocaleString('zh-TW', { maximumFractionDigits: 3 });
+    const today = () => new Date().toISOString().slice(0, 10);
+
+    let summaryData = [];
+    let lotsData = [];
+
+    async function loadSummary() {
+      const q = (document.getElementById('summary-search') as HTMLInputElement)?.value || '';
+      const resp = await fetch(`/api/admin/inventory/summary?q=${encodeURIComponent(q)}`);
+      const data = await resp.json();
+      summaryData = data.items || [];
+      renderSummary();
+    }
+
+    function renderSummary() {
+      const tbody = document.getElementById('summary-tbody')!;
+      const totalSkus = summaryData.length;
+      const totalLots = summaryData.reduce((s, r) => s + Number(r.lot_count || 0), 0);
+      const totalValue = summaryData.reduce((s, r) => s + Number(r.stock_value_mop || 0), 0);
+      const expiringSkus = summaryData.filter(r =>
+        r.days_until_earliest_expiry != null && Number(r.days_until_earliest_expiry) <= 7).length;
+      document.getElementById('sm-skus')!.textContent = totalSkus.toString();
+      document.getElementById('sm-lots')!.textContent = totalLots.toString();
+      document.getElementById('sm-value')!.textContent = fmtMOP(totalValue);
+      document.getElementById('sm-expiring')!.textContent = expiringSkus.toString();
+
+      if (!summaryData.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">無庫存資料 — 點上方「進貨」開始</td></tr>';
+        return;
+      }
+      tbody.innerHTML = summaryData.map(r => {
+        const daysExpiry = r.days_until_earliest_expiry;
+        const expiryBadge = daysExpiry == null ? '<span class="text-muted">—</span>'
+          : daysExpiry <= 0 ? `<span class="badge bg-red-lt text-red">已過期</span>`
+          : daysExpiry <= 7 ? `<span class="badge bg-red-lt text-red">${r.earliest_expiry} (${daysExpiry}d)</span>`
+          : daysExpiry <= 14 ? `<span class="badge bg-yellow-lt text-yellow">${r.earliest_expiry} (${daysExpiry}d)</span>`
+          : `<span class="text-muted">${r.earliest_expiry}</span>`;
+        return `<tr>
+          <td class="font-mono small">${r.sku}</td>
+          <td class="small fw-medium">${r.product_name || '—'}</td>
+          <td class="text-muted small d-none d-md-table-cell">${r.category || '—'}</td>
+          <td class="text-end font-mono">${fmtQty(r.total_on_hand)}</td>
+          <td class="text-end font-mono">${fmtQty(r.available_qty)}</td>
+          <td class="text-end text-muted small d-none d-md-table-cell">${r.lot_count}</td>
+          <td class="text-end small">${expiryBadge}</td>
+          <td class="text-end font-mono small d-none d-lg-table-cell">${fmtMOP(r.stock_value_mop)}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-ghost-primary p-1 px-2"
+              data-action="quick-pick" data-sku="${r.sku}">
+              <i class="ti ti-truck-delivery"></i>
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function loadLots() {
+      const status = (document.getElementById('lots-status') as HTMLSelectElement).value;
+      const resp = await fetch(`/api/admin/inventory/lots?status=${status}&limit=200`);
+      const data = await resp.json();
+      lotsData = data.items || [];
+      document.getElementById('lots-count')!.textContent =
+        `共 ${data.total} 批（顯示 ${lotsData.length}）`;
+      renderLots();
+    }
+
+    function renderLots() {
+      const tbody = document.getElementById('lots-tbody')!;
+      if (!lotsData.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">無批次</td></tr>';
+        return;
+      }
+      const todayStr = today();
+      tbody.innerHTML = lotsData.map(l => {
+        const expDays = l.expiry_date ? daysBetween(todayStr, l.expiry_date) : null;
+        const expCls = expDays == null ? '' : expDays <= 0 ? 'text-danger' : expDays <= 7 ? 'text-warning' : '';
+        const statusBadge = l.status === 'active' ? 'success' : l.status === 'consumed' ? 'secondary' : 'danger';
+        return `<tr>
+          <td class="font-mono small">${l.lot_no}</td>
+          <td class="font-mono text-muted small">${l.sku}</td>
+          <td class="text-end font-mono">${fmtQty(l.qty_on_hand)}</td>
+          <td class="text-muted small d-none d-md-table-cell">${l.received_date || '—'}</td>
+          <td class="small ${expCls}">${l.expiry_date || '—'}${expDays != null && expDays <= 7 ? ` (${expDays}d)` : ''}</td>
+          <td class="text-end font-mono small d-none d-md-table-cell">${fmtMOP(l.unit_cost_mop)}</td>
+          <td class="text-muted small d-none d-lg-table-cell">${l.storage_location || '—'}</td>
+          <td><span class="badge bg-${statusBadge}-lt text-${statusBadge}">${l.status}</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function daysBetween(d1: string, d2: string): number {
+      const t1 = new Date(d1).getTime();
+      const t2 = new Date(d2).getTime();
+      return Math.round((t2 - t1) / 86400000);
+    }
+
+    function renderExpiring() {
+      const tbody = document.getElementById('expiring-tbody')!;
+      const todayStr = today();
+      const exp = lotsData.filter(l => {
+        if (!l.expiry_date || l.status !== 'active' || Number(l.qty_on_hand) <= 0) return false;
+        return daysBetween(todayStr, l.expiry_date) <= 7;
+      });
+      if (!exp.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">7 天內無到期批次 ✓</td></tr>';
+        return;
+      }
+      tbody.innerHTML = exp.map(l => {
+        const days = daysBetween(todayStr, l.expiry_date);
+        const cls = days <= 0 ? 'text-danger' : 'text-warning';
+        const risk = Number(l.qty_on_hand) * Number(l.unit_cost_mop || 0);
+        return `<tr class="${days <= 0 ? 'table-danger' : 'table-warning'}">
+          <td class="font-mono small">${l.lot_no}</td>
+          <td class="font-mono text-muted small">${l.sku}</td>
+          <td class="text-end font-mono">${fmtQty(l.qty_on_hand)}</td>
+          <td class="small fw-semibold">${l.expiry_date}</td>
+          <td class="text-end fw-bold ${cls}">${days}d</td>
+          <td class="text-end font-mono small d-none d-md-table-cell">${fmtMOP(risk)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ── Receive modal logic ────────────────────────────────────────────
+    document.getElementById('r-suggest-lot')!.addEventListener('click', () => {
+      const sku = (document.getElementById('r-sku') as HTMLInputElement).value.trim();
+      if (!sku) { alert('請先填 SKU'); return; }
+      const seq = Math.floor(Math.random() * 90 + 10);
+      const d = today().replace(/-/g, '').slice(2);
+      (document.getElementById('r-lot-no') as HTMLInputElement).value = `${sku}-${d}-${seq}`;
+    });
+
+    (document.getElementById('r-received-date') as HTMLInputElement).value = today();
+
+    document.getElementById('r-submit')!.addEventListener('click', async () => {
+      const body = {
+        sku: (document.getElementById('r-sku') as HTMLInputElement).value.trim(),
+        lot_no: (document.getElementById('r-lot-no') as HTMLInputElement).value.trim(),
+        qty: parseFloat((document.getElementById('r-qty') as HTMLInputElement).value),
+        unit_cost_mop: parseFloat((document.getElementById('r-unit-cost') as HTMLInputElement).value),
+        received_date: (document.getElementById('r-received-date') as HTMLInputElement).value || null,
+        expiry_date: (document.getElementById('r-expiry-date') as HTMLInputElement).value || null,
+        storage_location: (document.getElementById('r-location') as HTMLInputElement).value || null,
+        quality_grade: (document.getElementById('r-grade') as HTMLInputElement).value || null,
+        notes: (document.getElementById('r-notes') as HTMLTextAreaElement).value || null,
+        idempotency_key: `ui-receive-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      };
+      const errEl = document.getElementById('r-error')!;
+      const okEl = document.getElementById('r-success')!;
+      errEl.style.display = 'none';
+      okEl.style.display = 'none';
+      document.getElementById('r-spinner')!.style.display = '';
+      (document.getElementById('r-submit') as HTMLButtonElement).disabled = true;
+      try {
+        const resp = await fetch('/api/admin/inventory/receive', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          errEl.textContent = data.error || `失敗 (${resp.status})`;
+          errEl.style.display = '';
+        } else {
+          okEl.innerHTML = `✓ 進貨成功 — lot #${data.lot_id} (${body.lot_no})，數量 ${body.qty}`;
+          okEl.style.display = '';
+          setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('receiveModal'))?.hide();
+            ['r-sku', 'r-lot-no', 'r-qty', 'r-unit-cost', 'r-expiry-date', 'r-location', 'r-grade', 'r-notes']
+              .forEach(id => { (document.getElementById(id) as HTMLInputElement).value = ''; });
+            loadSummary(); loadLots();
+          }, 1500);
+        }
+      } catch (e) {
+        errEl.textContent = '網路錯誤：' + (e as Error).message;
+        errEl.style.display = '';
+      } finally {
+        document.getElementById('r-spinner')!.style.display = 'none';
+        (document.getElementById('r-submit') as HTMLButtonElement).disabled = false;
+      }
+    });
+
+    // ── Pick modal logic ───────────────────────────────────────────────
+    async function refreshPickPreview() {
+      const sku = (document.getElementById('p-sku') as HTMLInputElement).value.trim();
+      const qty = parseFloat((document.getElementById('p-qty') as HTMLInputElement).value);
+      const hint = document.getElementById('p-stock-hint')!;
+      const previewEl = document.getElementById('p-fefo-preview')!;
+      previewEl.style.display = 'none';
+      if (!sku) { hint.textContent = '輸入 SKU 後將顯示可用庫存與 FEFO 預覽'; return; }
+      const row = summaryData.find(r => r.sku === sku);
+      if (!row) { hint.textContent = `SKU "${sku}" 無庫存記錄`; return; }
+      hint.innerHTML = `在手 <b>${fmtQty(row.total_on_hand)}</b> ／ 可用 <b>${fmtQty(row.available_qty)}</b> ／ 最早過期 ${row.earliest_expiry || '—'}`;
+      if (!qty || qty <= 0) return;
+      const respL = await fetch(`/api/admin/inventory/lots?sku=${encodeURIComponent(sku)}&status=active`);
+      const dataL = await respL.json();
+      const lots = (dataL.items || [])
+        .filter(l => Number(l.qty_on_hand) > 0)
+        .sort((a, b) => {
+          const ea = a.expiry_date || '9999-12-31';
+          const eb = b.expiry_date || '9999-12-31';
+          if (ea !== eb) return ea < eb ? -1 : 1;
+          return (a.received_date || '') < (b.received_date || '') ? -1 : 1;
+        });
+      let remaining = qty;
+      const plan = [];
+      for (const l of lots) {
+        if (remaining <= 0) break;
+        const take = Math.min(Number(l.qty_on_hand), remaining);
+        plan.push(`<li><span class="font-mono">${l.lot_no}</span> ${l.expiry_date || '無到期'} → 扣 <b>${fmtQty(take)}</b></li>`);
+        remaining -= take;
+      }
+      if (remaining > 0) {
+        plan.push(`<li class="text-danger">⚠ 缺 ${fmtQty(remaining)}</li>`);
+      }
+      document.getElementById('p-fefo-list')!.innerHTML = plan.join('');
+      previewEl.style.display = '';
+    }
+    document.getElementById('p-sku')!.addEventListener('input', refreshPickPreview);
+    document.getElementById('p-qty')!.addEventListener('input', refreshPickPreview);
+
+    document.getElementById('p-submit')!.addEventListener('click', async () => {
+      const body = {
+        sku: (document.getElementById('p-sku') as HTMLInputElement).value.trim(),
+        qty: parseFloat((document.getElementById('p-qty') as HTMLInputElement).value),
+        reference_no: (document.getElementById('p-ref-no') as HTMLInputElement).value || null,
+        reference_type: 'manual',
+        notes: (document.getElementById('p-notes') as HTMLTextAreaElement).value || null,
+        idempotency_key: `ui-pick-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      };
+      const errEl = document.getElementById('p-error')!;
+      const okEl = document.getElementById('p-success')!;
+      errEl.style.display = 'none';
+      okEl.style.display = 'none';
+      document.getElementById('p-spinner')!.style.display = '';
+      (document.getElementById('p-submit') as HTMLButtonElement).disabled = true;
+      try {
+        const resp = await fetch('/api/admin/inventory/pick', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          errEl.textContent = data.error || `失敗 (${resp.status})`;
+          errEl.style.display = '';
+        } else {
+          const lines = (data.allocations || []).map(a =>
+            `${a.lot_no} → 扣 ${a.qty}`).join('、');
+          okEl.innerHTML = `✓ 出貨成功 — ${lines}`;
+          okEl.style.display = '';
+          setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('pickModal'))?.hide();
+            ['p-sku', 'p-qty', 'p-ref-no', 'p-notes'].forEach(id =>
+              { (document.getElementById(id) as HTMLInputElement).value = ''; });
+            document.getElementById('p-fefo-preview')!.style.display = 'none';
+            loadSummary(); loadLots();
+          }, 1500);
+        }
+      } catch (e) {
+        errEl.textContent = '網路錯誤：' + (e as Error).message;
+        errEl.style.display = '';
+      } finally {
+        document.getElementById('p-spinner')!.style.display = 'none';
+        (document.getElementById('p-submit') as HTMLButtonElement).disabled = false;
+      }
+    });
+
+    // Event delegation: quick-pick from summary row
+    document.getElementById('summary-tbody')!.addEventListener('click', e => {
+      const btn = (e.target as HTMLElement).closest('button[data-action="quick-pick"]');
+      if (!btn) return;
+      (document.getElementById('p-sku') as HTMLInputElement).value = btn.getAttribute('data-sku') || '';
+      refreshPickPreview();
+      new bootstrap.Modal(document.getElementById('pickModal')).show();
+    });
+
+    // Tab change handler — load expiring data on tab activate
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+      tab.addEventListener('shown.bs.tab', (e: any) => {
+        const href = e.target.getAttribute('href');
+        if (href === '#tab-expiring' && !lotsData.length) loadLots().then(renderExpiring);
+        else if (href === '#tab-expiring') renderExpiring();
+        else if (href === '#tab-lots' && !lotsData.length) loadLots();
+      });
+    });
+
+    // Search debounce
+    let searchTimer: any = null;
+    document.getElementById('summary-search')!.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(loadSummary, 300);
+    });
+
+    document.getElementById('lots-status')!.addEventListener('change', loadLots);
+    document.getElementById('refresh-btn')!.addEventListener('click', () => {
+      loadSummary(); if (lotsData.length) loadLots();
+    });
+
+    loadSummary();
+  </script>
+</AdminLayout>
