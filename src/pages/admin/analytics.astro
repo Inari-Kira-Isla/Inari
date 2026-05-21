@@ -2,7 +2,7 @@
 export const prerender = false;
 import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
-<AdminLayout title="報表分析" active="analytics" pageTitle="報表分析" pageSubtitle="過去 6 個月">
+<AdminLayout title="報表分析" active="analytics" pageTitle="報表分析" pageSubtitle="10 年銷售歷史（資料來源：qb_sales / mv_*）">
 
   <!-- KPI row -->
   <div class="row g-3 mb-4">
@@ -13,7 +13,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
             <div class="col-auto"><span class="bg-blue-lt avatar"><i class="ti ti-currency-dollar text-blue"></i></span></div>
             <div class="col">
               <div class="fw-semibold fs-3" id="kpi-revenue">—</div>
-              <div class="text-muted">6個月總收入</div>
+              <div class="text-muted">近 6 個月總收入</div>
             </div>
           </div>
         </div>
@@ -26,7 +26,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
             <div class="col-auto"><span class="bg-green-lt avatar"><i class="ti ti-check text-green"></i></span></div>
             <div class="col">
               <div class="fw-semibold fs-3" id="kpi-orders">—</div>
-              <div class="text-muted">已確認/開單訂單</div>
+              <div class="text-muted">近 6 個月訂單數</div>
             </div>
           </div>
         </div>
@@ -44,6 +44,28 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Yearly summary row (NEW — 10-year history from mv_yearly_summary) -->
+  <div class="card mb-4">
+    <div class="card-header"><h3 class="card-title mb-0">年度總覽</h3></div>
+    <div class="table-responsive">
+      <table class="table table-vcenter card-table table-sm">
+        <thead>
+          <tr>
+            <th>年度</th>
+            <th class="text-end">營收</th>
+            <th class="text-end d-none d-md-table-cell">訂單數</th>
+            <th class="text-end d-none d-md-table-cell">客戶數</th>
+            <th class="text-end d-none d-md-table-cell">SKU</th>
+            <th class="text-end">平均單價</th>
+          </tr>
+        </thead>
+        <tbody id="yearly-tbody">
+          <tr><td colspan="6" class="text-center py-3 text-muted">載入中…</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -102,6 +124,29 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
       renderBarChart(data.monthly || []);
       renderTopProducts(data.top_products || []);
+      renderYearly(data.yearly || []);
+    }
+
+    function renderYearly(yearly) {
+      const tbody = document.getElementById('yearly-tbody');
+      if (!yearly.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">無資料</td></tr>';
+        return;
+      }
+      tbody.innerHTML = yearly.map(y => {
+        const rev = y.revenue > 0
+          ? 'MOP ' + Number(y.revenue).toLocaleString('zh-TW', { maximumFractionDigits: 0 }) : '—';
+        const avg = y.orders > 0
+          ? 'MOP ' + Math.round(y.revenue / y.orders).toLocaleString('zh-TW') : '—';
+        return `<tr>
+          <td class="fw-semibold">${y.year}</td>
+          <td class="text-end font-mono">${rev}</td>
+          <td class="text-end text-muted small d-none d-md-table-cell">${Number(y.orders || 0).toLocaleString()}</td>
+          <td class="text-end text-muted small d-none d-md-table-cell">${y.customers || 0}</td>
+          <td class="text-end text-muted small d-none d-md-table-cell">${y.skus || 0}</td>
+          <td class="text-end font-mono small text-muted">${avg}</td>
+        </tr>`;
+      }).join('');
     }
 
     function renderBarChart(monthly) {
