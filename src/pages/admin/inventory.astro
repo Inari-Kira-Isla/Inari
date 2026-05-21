@@ -127,8 +127,9 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
           <h3 class="card-title mb-0">未建批次的商品</h3>
           <div class="d-flex gap-2">
+            <span class="text-muted small align-self-center" id="bulk-count-hint">—</span>
             <button class="btn btn-sm btn-outline-secondary" id="bulk-init-btn">
-              <i class="ti ti-stack me-1"></i>一鍵全部建初始批次
+              <i class="ti ti-stack me-1"></i>一鍵建批次（跳過勾選的）
             </button>
           </div>
         </div>
@@ -136,6 +137,9 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <table class="table table-vcenter card-table table-sm">
             <thead>
               <tr>
+                <th style="width:32px">
+                  <span title="勾選 = 排除此項，不會被一鍵 init">排除</span>
+                </th>
                 <th>SKU</th>
                 <th>商品</th>
                 <th class="d-none d-md-table-cell">類別</th>
@@ -146,7 +150,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
               </tr>
             </thead>
             <tbody id="legacy-tbody">
-              <tr><td colspan="7" class="text-center py-4 text-muted">載入中…</td></tr>
+              <tr><td colspan="8" class="text-center py-4 text-muted">載入中…</td></tr>
             </tbody>
           </table>
         </div>
@@ -377,6 +381,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     let lotsData = [];
     let legacyData = [];
     let allProducts = []; // {sku, name, on_hand, avg_cost, unit, category}
+    const excludedSkus = new Set<string>(['B2B02052']); // 預設排除待 review 的
 
     async function loadProductCatalog() {
       try {
@@ -718,19 +723,25 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         const badge = document.getElementById('legacy-count-badge')!;
         badge.textContent = String(d.total || 0);
         renderLegacy();
+        updateBulkHint();
       } catch {}
     }
 
     function renderLegacy() {
       const tbody = document.getElementById('legacy-tbody')!;
       if (!legacyData.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">✓ 所有有庫存商品都已建批次</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">✓ 所有有庫存商品都已建批次</td></tr>';
         return;
       }
       tbody.innerHTML = legacyData.map(p => {
         const value = Number(p.on_hand) * Number(p.avg_cost || 0);
         const safeName = (p.name || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-        return `<tr>
+        const excluded = excludedSkus.has(p.sku);
+        return `<tr class="${excluded ? 'table-active text-muted' : ''}">
+          <td>
+            <input type="checkbox" class="form-check-input legacy-exclude"
+              data-sku="${p.sku}" ${excluded ? 'checked' : ''}>
+          </td>
           <td class="font-mono small">${p.sku}</td>
           <td class="small fw-medium">${p.name || '—'}</td>
           <td class="text-muted small d-none d-md-table-cell">${p.category || '—'}</td>
@@ -859,21 +870,47 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       }
     });
 
+    function updateBulkHint() {
+      const targets = legacyData.filter(p => !excludedSkus.has(p.sku));
+      const totalValue = targets.reduce((s, p) => s + Number(p.on_hand) * Number(p.avg_cost || 0), 0);
+      const hint = document.getElementById('bulk-count-hint');
+      if (hint) {
+        hint.textContent = `將處理 ${targets.length} 件（跳過 ${excludedSkus.size}）  · MOP ${Math.round(totalValue).toLocaleString('zh-TW')}`;
+      }
+    }
+
     document.getElementById('bulk-init-btn')!.addEventListener('click', async () => {
-      if (!legacyData.length) return;
-      if (!confirm(`確定要為 ${legacyData.length} 個 SKU 全部建初始批次嗎？`)) return;
+      const targets = legacyData.filter(p => !excludedSkus.has(p.sku));
+      if (!targets.length) { alert('沒有可處理的 SKU'); return; }
+      const skipMsg = excludedSkus.size > 0
+        ? `\n\n跳過 ${excludedSkus.size} 個排除的 SKU：${[...excludedSkus].join(', ')}`
+        : '';
+      if (!confirm(`確定要為 ${targets.length} 個 SKU 建初始批次嗎？${skipMsg}`)) return;
       const btn = document.getElementById('bulk-init-btn') as HTMLButtonElement;
       btn.disabled = true;
       let ok = 0, fail = 0;
-      for (const p of legacyData) {
-        btn.textContent = `處理中 ${ok + fail + 1}/${legacyData.length}…`;
+      for (const p of targets) {
+        btn.textContent = `處理中 ${ok + fail + 1}/${targets.length}…`;
         if (await initFromProduct(p.sku, { silent: true })) ok++;
         else fail++;
       }
       btn.disabled = false;
-      btn.innerHTML = '<i class="ti ti-stack me-1"></i>一鍵全部建初始批次';
+      btn.innerHTML = '<i class="ti ti-stack me-1"></i>一鍵建批次（跳過勾選的）';
       alert(`完成 — 成功 ${ok}，失敗 ${fail}`);
       loadSummary(); loadLegacy();
+    });
+
+    // Exclude checkbox handler
+    document.getElementById('legacy-tbody')!.addEventListener('change', (e) => {
+      const cb = e.target as HTMLInputElement;
+      if (!cb.classList.contains('legacy-exclude')) return;
+      const sku = cb.getAttribute('data-sku')!;
+      if (cb.checked) excludedSkus.add(sku);
+      else excludedSkus.delete(sku);
+      const tr = cb.closest('tr');
+      if (tr) tr.classList.toggle('table-active', cb.checked);
+      if (tr) tr.classList.toggle('text-muted', cb.checked);
+      updateBulkHint();
     });
 
     // Bind SKU hint to both Receive and Pick modals
