@@ -30,21 +30,44 @@ export const GET: APIRoute = async ({ url }) => {
   const key = import.meta.env.SUPABASE_SERVICE_KEY || import.meta.env.SUPABASE_ANON_KEY;
   if (!key) return json({ error: 'Database not configured' }, 500);
 
-  const sourceParam = url.searchParams.get('source') || 'all';
-  const q = (url.searchParams.get('q') || '').toLowerCase();
-  const categoryFilter = url.searchParams.get('category') || '';
-
   const headers = {
     apikey: key,
     Authorization: `Bearer ${key}`,
     'Content-Type': 'application/json',
   };
-
   const fetchSB = async (path: string) => {
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers });
-    if (!resp.ok) throw new Error(`${path}: HTTP ${resp.status} ${await resp.text()}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${await resp.text()}`);
     return resp.json();
   };
+
+  // ── Single item detail mode ───────────────────────────────────────────
+  const idParam = url.searchParams.get('id') || '';
+  if (idParam) {
+    const [src, rawId] = idParam.split('_', 2);
+    if (!rawId) return json({ error: 'invalid id' }, 400);
+    try {
+      if (src === 'pk') {
+        const [row] = await fetchSB(`product_knowledge?select=*&id=eq.${rawId}&limit=1`);
+        return json({ item: row || null });
+      }
+      if (src === 'zukan') {
+        const [row] = await fetchSB(`inari_zukan_species?select=*&id=eq.${rawId}&limit=1`);
+        return json({ item: row || null });
+      }
+      if (src === 'food') {
+        const [row] = await fetchSB(`inari_food_knowledge?select=*&id=eq.${rawId}&limit=1`);
+        return json({ item: row || null });
+      }
+    } catch (e) {
+      return json({ error: (e as Error).message }, 500);
+    }
+    return json({ error: 'unknown source' }, 400);
+  }
+
+  const sourceParam = url.searchParams.get('source') || 'all';
+  const q = (url.searchParams.get('q') || '').toLowerCase();
+  const categoryFilter = url.searchParams.get('category') || '';
 
   // Determine which sources to fetch
   const wantPK = sourceParam === 'all' || sourceParam === 'product_knowledge';

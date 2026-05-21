@@ -110,6 +110,20 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     </div>
   </div>
 
+  <!-- ── Detail offcanvas (shared) ── -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="detailDrawer" style="width:min(540px,100vw)">
+    <div class="offcanvas-header border-bottom">
+      <div>
+        <div id="detail-source-badge"></div>
+        <h5 class="offcanvas-title mt-1" id="detail-title">—</h5>
+      </div>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body" id="detail-body" style="overflow-y:auto">
+      <div class="text-muted text-center py-4">選擇一筆記錄查看詳情</div>
+    </div>
+  </div>
+
   <!-- Add modal -->
   <div class="modal modal-blur fade" id="addModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -289,7 +303,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         const scoreStars = '★'.repeat(score) + '☆'.repeat(5 - score);
         const insight = (item.key_insight || '').slice(0, 80);
         const action = (item.action_for_inari || '').slice(0, 100);
-        return `<tr>
+        return `<tr style="cursor:pointer" data-item-id="${item.id}">
           <td>${domainBadge(item.domain)}</td>
           <td>
             <div class="fw-medium">${item.title || '—'}</div>
@@ -300,7 +314,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           </td>
           <td class="text-center d-none d-lg-table-cell" style="color:#f6a623;font-size:11px">${scoreStars}</td>
           <td>
-            <button class="btn btn-sm btn-ghost-secondary" onclick='openEdit(${JSON.stringify(item)})'>
+            <button class="btn btn-sm btn-ghost-secondary" onclick='event.stopPropagation();openEdit(${JSON.stringify(item)})'>
               <i class="ti ti-pencil"></i>
             </button>
           </td>
@@ -495,7 +509,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       tbody.innerHTML = filteredProd.map(item => {
         const excerpt = (item.content || '').slice(0, 120);
         const hasMore = (item.content || '').length > 120;
-        return `<tr>
+        return `<tr style="cursor:pointer" data-item-id="${item.id}">
           <td>${sourceBadge(item.source)}</td>
           <td>${item.category ? `<span class="badge bg-secondary-lt text-secondary">${item.category}</span>` : '—'}</td>
           <td>
@@ -506,6 +520,110 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         </tr>`;
       }).join('');
     }
+
+    // ── Detail drawer ────────────────────────────────────────────────────
+    const detailDrawer = new bootstrap.Offcanvas(document.getElementById('detailDrawer'));
+
+    function tags(arr) {
+      if (!arr || !arr.length) return '<span class="text-muted">—</span>';
+      return arr.map(v => `<span class="badge bg-secondary-lt text-secondary me-1">${v}</span>`).join('');
+    }
+    function field(label, val) {
+      if (!val) return '';
+      return `<div class="mb-3"><div class="text-muted small mb-1">${label}</div><div>${val}</div></div>`;
+    }
+
+    async function openProductDetail(itemId) {
+      document.getElementById('detail-body').innerHTML = '<div class="text-center py-4 text-muted">載入中…</div>';
+      detailDrawer.show();
+      try {
+        const resp = await fetch(`/api/product-knowledge?id=${itemId}`);
+        const data = await resp.json();
+        const r = data.item;
+        if (!r) { document.getElementById('detail-body').innerHTML = '<div class="alert alert-danger">找不到資料</div>'; return; }
+        renderDetail(itemId, r);
+      } catch(e) {
+        document.getElementById('detail-body').innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+      }
+    }
+
+    function renderDetail(itemId, r) {
+      const src = itemId.split('_')[0];
+      const srcInfo = SOURCE_LABELS[src === 'pk' ? 'product_knowledge' : src === 'food' ? 'food_md' : 'zukan'] || { label: src, color: 'secondary' };
+      document.getElementById('detail-source-badge').innerHTML = `<span class="badge bg-${srcInfo.color}-lt text-${srcInfo.color}">${srcInfo.label}</span>`;
+
+      let html = '';
+      if (src === 'pk') {
+        document.getElementById('detail-title').textContent = r.item_name || r.item_code || '—';
+        const seasons = Array.isArray(r.peak_seasons) ? r.peak_seasons : [];
+        const origins = Array.isArray(r.origin_regions) ? r.origin_regions : [];
+        const suppliers = Array.isArray(r.key_suppliers) ? r.key_suppliers : [];
+        const restTypes = Array.isArray(r.restaurant_types) ? r.restaurant_types : [];
+        html = `
+          ${field('品類 / 子品類', [r.category, r.subcategory].filter(Boolean).join(' › '))}
+          ${field('價格定位', r.price_tier === 'premium' ? '🏆 高端' : r.price_tier === 'mid' ? '中端' : r.price_tier === 'economy' ? '經濟' : r.price_tier)}
+          ${field('信心度', r.confidence)}
+          ${r.notes ? `<div class="mb-3"><div class="text-muted small mb-1">知識備注</div><div class="p-2 bg-light rounded small">${r.notes}</div></div>` : ''}
+          ${seasons.length ? `<div class="mb-3"><div class="text-muted small mb-1">旺季</div>${tags(seasons)}</div>` : ''}
+          ${origins.length ? `<div class="mb-3"><div class="text-muted small mb-1">產地</div>${tags(origins)}</div>` : ''}
+          ${suppliers.length ? `<div class="mb-3"><div class="text-muted small mb-1">主要供應商</div>${tags(suppliers)}</div>` : ''}
+          ${restTypes.length ? `<div class="mb-3"><div class="text-muted small mb-1">適合餐廳類型</div>${tags(restTypes)}</div>` : ''}
+          ${r.grade_system ? `<div class="mb-3"><div class="text-muted small mb-1">等級體系</div><pre class="small bg-light p-2 rounded">${JSON.stringify(r.grade_system, null, 2)}</pre></div>` : ''}`;
+      } else if (src === 'zukan') {
+        document.getElementById('detail-title').textContent = r.name_ja || '—';
+        html = `
+          ${field('學名', `<em>${r.scientific_name || '—'}</em>`)}
+          ${field('英文 / 外文名', r.foreign_names)}
+          ${field('分類', r.category)}
+          ${r.taste ? `<div class="mb-3"><div class="text-muted small mb-1">味道 / 食味</div><div class="small">${r.taste}</div></div>` : ''}
+          ${r.season ? `<div class="mb-3"><div class="text-muted small mb-1">季節 / 旺季</div><div class="small">${r.season}</div></div>` : ''}
+          ${r.market_note ? `<div class="mb-3"><div class="text-muted small mb-1">市場備注</div><div class="small">${r.market_note}</div></div>` : ''}
+          ${r.selection ? `<div class="mb-3"><div class="text-muted small mb-1">挑選方法</div><div class="small">${r.selection}</div></div>` : ''}
+          ${r.cooking_methods ? `<div class="mb-3"><div class="text-muted small mb-1">料理方法</div><div class="small">${r.cooking_methods}</div></div>` : ''}
+          ${r.nutrition ? `<div class="mb-3"><div class="text-muted small mb-1">營養成分</div><div class="small">${r.nutrition}</div></div>` : ''}
+          ${r.origin_natural ? `<div class="mb-3"><div class="text-muted small mb-1">天然產地</div><div class="small">${r.origin_natural}</div></div>` : ''}
+          ${r.origin_farmed ? `<div class="mb-3"><div class="text-muted small mb-1">養殖產地</div><div class="small">${r.origin_farmed}</div></div>` : ''}
+          ${field('重要度', r.importance)} ${field('知識等級', r.knowledge_level)}
+          ${r.url ? `<div class="mt-3"><a href="${r.url}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="ti ti-external-link me-1"></i>查看圖鑑原頁</a></div>` : ''}`;
+      } else {
+        document.getElementById('detail-title').textContent = r.title || r.filename || '—';
+        const content = r.content || '';
+        html = `
+          ${field('品類', r.category)}
+          ${field('來源資料夾', r.source_dir)}
+          ${field('檔案名稱', r.filename)}
+          <div class="mb-3"><div class="text-muted small mb-1">全文內容</div>
+            <div class="small p-3 bg-light rounded" style="white-space:pre-wrap;max-height:60vh;overflow-y:auto;font-family:monospace;font-size:11px">${content.replace(/</g,'&lt;')}</div>
+          </div>`;
+      }
+      document.getElementById('detail-body').innerHTML = html || '<div class="text-muted">無詳細資料</div>';
+    }
+
+    // Click delegation on product table
+    document.getElementById('prod-tbody').addEventListener('click', (e) => {
+      const row = e.target.closest('tr[data-item-id]');
+      if (row) openProductDetail(row.dataset.itemId);
+    });
+
+    // Click delegation on business knowledge table — show full content
+    document.getElementById('knowledge-tbody').addEventListener('click', (e) => {
+      const row = e.target.closest('tr[data-item-id]');
+      if (!row) return;
+      const item = allItems.find(i => String(i.id) === row.dataset.itemId);
+      if (!item) return;
+      const srcInfo = { label: item.domain || '業務知識', color: 'purple' };
+      document.getElementById('detail-source-badge').innerHTML = `<span class="badge bg-${srcInfo.color}-lt text-${srcInfo.color}">${srcInfo.label}</span>`;
+      document.getElementById('detail-title').textContent = item.title || '—';
+      const scoreStars = '★'.repeat(item.relevance_score||3) + '☆'.repeat(5-(item.relevance_score||3));
+      const tagsArr = Array.isArray(item.tags) ? item.tags : [];
+      document.getElementById('detail-body').innerHTML = `
+        ${item.key_insight ? `<div class="mb-3"><div class="text-muted small mb-1">關鍵洞察</div><div class="small p-2 bg-light rounded">${item.key_insight}</div></div>` : ''}
+        ${item.action_for_inari ? `<div class="mb-3"><div class="text-muted small mb-1">對稻荷的行動建議</div><div class="small p-2 bg-primary-lt rounded">${item.action_for_inari}</div></div>` : ''}
+        ${field('來源類型', item.source_type)}
+        <div class="mb-3"><div class="text-muted small mb-1">重要度</div><span style="color:#f6a623">${scoreStars}</span></div>
+        ${tagsArr.length ? `<div class="mb-3"><div class="text-muted small mb-1">標籤</div>${tags(tagsArr)}</div>` : ''}`;
+      detailDrawer.show();
+    });
 
     document.getElementById('prod-search').addEventListener('input', (e) => {
       clearTimeout(prodTimer);
