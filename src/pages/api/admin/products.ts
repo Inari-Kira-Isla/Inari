@@ -31,9 +31,10 @@ export const GET: APIRoute = async ({ locals, url }) => {
   // status: 'active' (default) | 'inactive' | 'all'
   const status = url.searchParams.get('status') || 'active';
   const limit = Math.min(700, parseInt(url.searchParams.get('limit') || '700'));
+  const offset = Math.max(0, parseInt(url.searchParams.get('offset') || '0'));
 
   const baseFilter =
-    `${SUPABASE_URL}/rest/v1/inari_products?order=is_active.desc,category.asc,name.asc&limit=${limit}` +
+    `${SUPABASE_URL}/rest/v1/inari_products?order=is_active.desc,category.asc,name.asc&limit=${limit}&offset=${offset}` +
     (status === 'active' ? '&is_active=eq.true' : status === 'inactive' ? '&is_active=eq.false' : '') +
     (category ? `&category=eq.${encodeURIComponent(category)}` : '') +
     (q ? `&or=(name.ilike.%25${encodeURIComponent(q)}%25,sku.ilike.%25${encodeURIComponent(q)}%25)` : '');

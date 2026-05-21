@@ -26,6 +26,14 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <label class="btn btn-outline-secondary" for="s-all">全部</label>
       </div>
     </div>
+    <div class="col-auto">
+      <div class="form-check form-switch mt-2">
+        <input class="form-check-input" type="checkbox" id="low-stock-filter" />
+        <label class="form-check-label small text-danger" for="low-stock-filter">
+          <i class="ti ti-alert-triangle"></i> 只看低庫存
+        </label>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -109,14 +117,32 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       applyFilter();
     }
 
+    // ── helpers for stock alert ──────────────────────────────────────────
+    function isLowStock(p: any) {
+      const qty = Number(p.stock_qty);
+      const min = Number(p.stock_min_qty);
+      if (!isFinite(qty)) return false;
+      if (!isFinite(min) || min <= 0) {
+        // Default threshold when no explicit min: qty<=2 counts as low
+        return qty > 0 && qty <= 2;
+      }
+      return qty > 0 && qty <= min;
+    }
+    function isOutOfStock(p: any) {
+      return p.stock_qty === 0;
+    }
+
     // ── filter + render ──────────────────────────────────────────────────
     function applyFilter() {
       currentCat = (document.getElementById('cat-filter') as HTMLSelectElement).value;
+      const lowOnly = (document.getElementById('low-stock-filter') as HTMLInputElement)?.checked;
       filtered = allProducts.filter((p: any) => {
         const q = currentSearch.toLowerCase();
-        return (!currentCat || p.category === currentCat) &&
-          (!q || (p.sku || '').toLowerCase().includes(q) ||
-                 (p.name || '').toLowerCase().includes(q));
+        if (currentCat && p.category !== currentCat) return false;
+        if (q && !((p.sku || '').toLowerCase().includes(q) ||
+                   (p.name || '').toLowerCase().includes(q))) return false;
+        if (lowOnly && !(isLowStock(p) || isOutOfStock(p))) return false;
+        return true;
       });
       page = 1;
       render();
@@ -180,10 +206,13 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         if (p.stock_qty == null) {
           stockDisplay = '<span class="text-muted">—</span>';
         } else if (p.stock_qty === 0) {
-          stockDisplay = '<span class="text-muted small">無庫存</span>';
+          stockDisplay = '<span class="badge bg-red-lt text-red">無庫存</span>';
+        } else if (isLowStock(p)) {
+          stockDisplay = `<span class="badge bg-yellow-lt text-yellow">低庫存 ${p.stock_qty}${p.stock_unit ? ' ' + p.stock_unit : ''}</span>`;
         } else {
           stockDisplay = `<span class="fw-semibold">${p.stock_qty}</span>${p.stock_unit ? ` <span class="text-muted small">${p.stock_unit}</span>` : ''}`;
         }
+        const rowAlert = isOutOfStock(p) ? 'table-danger' : (isLowStock(p) ? 'table-warning' : '');
 
         const stockEditBtn = `<button class="btn btn-sm btn-ghost-secondary ms-1 p-0 px-1"
           data-action="stock"
@@ -196,7 +225,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <i class="ti ti-pencil" style="font-size:12px"></i>
         </button>`;
 
-        return `<tr class="${!isActive ? 'opacity-50' : ''}" id="row-${p.id}">
+        return `<tr class="${rowAlert} ${!isActive ? 'opacity-50' : ''}" id="row-${p.id}">
           <td class="font-mono text-muted small">${p.sku || '—'}</td>
           <td class="fw-medium">${p.name || '—'}</td>
           <td class="text-muted small">${p.category || '—'}</td>
@@ -242,6 +271,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     });
 
     document.getElementById('cat-filter')!.addEventListener('change', applyFilter);
+    document.getElementById('low-stock-filter')!.addEventListener('change', applyFilter);
     document.getElementById('refresh-btn')!.addEventListener('click', () => loadProducts(true));
     document.getElementById('load-more-btn')!.addEventListener('click', () => { page++; render(); });
 

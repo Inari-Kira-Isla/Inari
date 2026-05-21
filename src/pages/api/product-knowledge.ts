@@ -68,21 +68,29 @@ export const GET: APIRoute = async ({ url }) => {
   const sourceParam = url.searchParams.get('source') || 'all';
   const q = (url.searchParams.get('q') || '').toLowerCase();
   const categoryFilter = url.searchParams.get('category') || '';
+  // Per-source server-side pagination
+  const limit = Math.min(parseInt(url.searchParams.get('limit') || '500'), 500);
 
   // Determine which sources to fetch
   const wantPK = sourceParam === 'all' || sourceParam === 'product_knowledge';
   const wantZukan = sourceParam === 'all' || sourceParam === 'zukan';
   const wantFood = sourceParam === 'all' || sourceParam === 'food_md';
 
+  // Push category filter to server when only one source is requested
+  // (cross-source: pk uses `category`, zukan uses `category`, food uses `category` — all same column name)
+  const catFilterSql = categoryFilter
+    ? `&category=eq.${encodeURIComponent(categoryFilter)}`
+    : '';
+
   const promises: Promise<any[]>[] = [
     wantPK
-      ? fetchSB('product_knowledge?select=id,item_code,item_name,category,subcategory,notes,peak_seasons,grade_system&order=id.asc&limit=500')
+      ? fetchSB(`product_knowledge?select=id,item_code,item_name,category,subcategory,notes,peak_seasons,grade_system&order=id.asc&limit=${limit}${catFilterSql}`)
       : Promise.resolve([]),
     wantZukan
-      ? fetchSB('inari_zukan_species?select=id,name_ja,scientific_name,category,taste,season,market_note,importance,knowledge_level&order=id.asc&limit=500')
+      ? fetchSB(`inari_zukan_species?select=id,name_ja,scientific_name,category,taste,season,market_note,importance,knowledge_level&order=id.asc&limit=${limit}${catFilterSql}`)
       : Promise.resolve([]),
     wantFood
-      ? fetchSB('inari_food_knowledge?select=id,filename,title,content,category,source_dir&order=id.asc&limit=500')
+      ? fetchSB(`inari_food_knowledge?select=id,filename,title,content,category,source_dir&order=id.asc&limit=${limit}${catFilterSql}`)
       : Promise.resolve([]),
   ];
 
@@ -125,10 +133,8 @@ export const GET: APIRoute = async ({ url }) => {
 
   let items: KnowledgeItem[] = [...pkItems, ...zukanItems, ...foodItems];
 
-  // ── Apply filters ───────────────────────────────────────────────────────
-  if (categoryFilter) {
-    items = items.filter(i => i.category === categoryFilter);
-  }
+  // categoryFilter is now applied server-side per source above; no need to
+  // re-filter client-side. Search remains client-side because it spans 4 cols.
   if (q) {
     items = items.filter(
       i =>
