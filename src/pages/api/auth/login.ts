@@ -106,7 +106,7 @@ export const POST: APIRoute = async ({ request }) => {
         headers: {
           ...CORS,
           'Content-Type': 'application/json',
-          'Set-Cookie': `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`,
+          'Set-Cookie': `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`,
         },
       }
     );

@@ -99,6 +99,8 @@
               window.location.href = decodeURIComponent(next);
             } else if (data.user_type === 'wholesale') {
               window.location.href = '/wholesale/';
+            } else if (data.user_type === 'staff' || data.user_type === 'manager') {
+              window.location.href = '/admin/';
             } else {
               window.location.href = '/shop';
             }
