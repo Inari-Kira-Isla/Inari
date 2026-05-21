@@ -115,12 +115,22 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         </div>
       </div>
 
+      <div class="alert alert-warning d-flex align-items-center gap-2 mb-3" role="alert">
+        <i class="ti ti-alert-triangle fs-3"></i>
+        <div>
+          <div class="fw-semibold">⚠ 注意：on_hand 資料可能過時</div>
+          <div class="small">QBpro 舊資料可能不準確（例：商品已下架但 on_hand 顯示有貨）。建議先逐件確認 → 對的點「建初始批次」、錯的點「設 0 + 下架」、需修數字的點「✎ 編輯」。</div>
+        </div>
+      </div>
+
       <div class="card">
-        <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
           <h3 class="card-title mb-0">未建批次的商品</h3>
-          <button class="btn btn-sm btn-outline-warning" id="bulk-init-btn">
-            <i class="ti ti-stack me-1"></i>一鍵全部建初始批次
-          </button>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" id="bulk-init-btn">
+              <i class="ti ti-stack me-1"></i>一鍵全部建初始批次
+            </button>
+          </div>
         </div>
         <div class="table-responsive">
           <table class="table table-vcenter card-table table-sm">
@@ -132,13 +142,50 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
                 <th class="text-end">on_hand</th>
                 <th class="text-end d-none d-md-table-cell">avg_cost</th>
                 <th class="text-end d-none d-lg-table-cell">總值</th>
-                <th class="text-end">動作</th>
+                <th class="text-end" style="min-width:280px">動作</th>
               </tr>
             </thead>
             <tbody id="legacy-tbody">
               <tr><td colspan="7" class="text-center py-4 text-muted">載入中…</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Stock-fix modal ──────────────────────────────────────────── -->
+    <div class="modal modal-blur fade" id="fixStockModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">修正 on_hand</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-2 small text-muted">
+              <div><span class="font-mono" id="fs-sku">—</span></div>
+              <div id="fs-name">—</div>
+              <div>目前 on_hand: <b id="fs-current">—</b></div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">新 on_hand 數量</label>
+              <input type="number" class="form-control" id="fs-new-qty" min="0" step="0.001">
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="fs-deactivate">
+              <label class="form-check-label small" for="fs-deactivate">
+                同時下架商品（is_active = false）
+              </label>
+            </div>
+            <div class="alert alert-danger mt-2" id="fs-error" style="display:none"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary btn-sm" id="fs-submit">
+              <span class="spinner-border spinner-border-sm me-1" id="fs-spinner" style="display:none"></span>
+              儲存
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -682,6 +729,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       }
       tbody.innerHTML = legacyData.map(p => {
         const value = Number(p.on_hand) * Number(p.avg_cost || 0);
+        const safeName = (p.name || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
         return `<tr>
           <td class="font-mono small">${p.sku}</td>
           <td class="small fw-medium">${p.name || '—'}</td>
@@ -690,13 +738,76 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <td class="text-end font-mono small text-muted d-none d-md-table-cell">${p.avg_cost ? fmtMOP(p.avg_cost) : '—'}</td>
           <td class="text-end font-mono small fw-semibold d-none d-lg-table-cell">${fmtMOP(value)}</td>
           <td class="text-end">
-            <button class="btn btn-sm btn-outline-warning" data-action="init-lot" data-sku="${p.sku}">
-              <i class="ti ti-stack-push me-1"></i>建初始批次
-            </button>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-success" data-action="init-lot" data-sku="${p.sku}" title="on_hand 正確 → 建批次">
+                <i class="ti ti-stack-push me-1"></i>對的，建批次
+              </button>
+              <button class="btn btn-outline-secondary" data-action="fix-stock"
+                data-id="${p.id}" data-sku="${p.sku}" data-name="${safeName}"
+                data-current="${p.on_hand}" title="數量不對，編輯">
+                <i class="ti ti-edit"></i>
+              </button>
+              <button class="btn btn-outline-danger" data-action="zero-deactivate"
+                data-id="${p.id}" data-sku="${p.sku}" data-name="${safeName}" title="實際無庫存 → 設 0 + 下架">
+                <i class="ti ti-trash"></i>
+              </button>
+            </div>
           </td>
         </tr>`;
       }).join('');
     }
+
+    async function patchProduct(id: number, body: any) {
+      const r = await fetch('/api/admin/products', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...body }),
+      });
+      return r.ok;
+    }
+
+    // ── Stock-fix modal logic ──────────────────────────────────────────
+    let fixContext: { id: number; sku: string; name: string; current: number } | null = null;
+    function openFixModal(ctx: typeof fixContext) {
+      fixContext = ctx!;
+      (document.getElementById('fs-sku') as HTMLElement).textContent = ctx!.sku;
+      (document.getElementById('fs-name') as HTMLElement).textContent = ctx!.name;
+      (document.getElementById('fs-current') as HTMLElement).textContent = String(ctx!.current);
+      (document.getElementById('fs-new-qty') as HTMLInputElement).value = '';
+      (document.getElementById('fs-deactivate') as HTMLInputElement).checked = false;
+      (document.getElementById('fs-error') as HTMLElement).style.display = 'none';
+      new (window as any).bootstrap.Modal(document.getElementById('fixStockModal')).show();
+    }
+
+    document.getElementById('fs-submit')!.addEventListener('click', async () => {
+      if (!fixContext) return;
+      const raw = (document.getElementById('fs-new-qty') as HTMLInputElement).value;
+      const newQty = parseFloat(raw);
+      if (!isFinite(newQty) || newQty < 0) {
+        const e = document.getElementById('fs-error')!;
+        e.textContent = '請輸入有效數字 (>= 0)';
+        e.style.display = '';
+        return;
+      }
+      const deactivate = (document.getElementById('fs-deactivate') as HTMLInputElement).checked;
+      const btn = document.getElementById('fs-submit') as HTMLButtonElement;
+      btn.disabled = true;
+      document.getElementById('fs-spinner')!.style.display = '';
+      const body: any = { on_hand: newQty };
+      if (deactivate) body.is_active = false;
+      const ok = await patchProduct(fixContext.id, body);
+      btn.disabled = false;
+      document.getElementById('fs-spinner')!.style.display = 'none';
+      if (!ok) {
+        const e = document.getElementById('fs-error')!;
+        e.textContent = '儲存失敗（可能權限不足或網路問題）';
+        e.style.display = '';
+        return;
+      }
+      (window as any).bootstrap.Modal.getInstance(document.getElementById('fixStockModal'))?.hide();
+      fixContext = null;
+      loadLegacy();
+    });
 
     async function initFromProduct(sku: string, opts: { silent?: boolean } = {}) {
       const r = await fetch('/api/admin/inventory/init-from-product', {
@@ -714,14 +825,38 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     }
 
     document.getElementById('legacy-tbody')!.addEventListener('click', async (e) => {
-      const btn = (e.target as HTMLElement).closest('button[data-action="init-lot"]') as HTMLButtonElement;
+      const btn = (e.target as HTMLElement).closest('button[data-action]') as HTMLButtonElement | null;
       if (!btn) return;
+      const action = btn.getAttribute('data-action')!;
       const sku = btn.getAttribute('data-sku')!;
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-      const ok = await initFromProduct(sku);
-      if (ok) { loadSummary(); loadLegacy(); }
-      else { btn.disabled = false; btn.innerHTML = '<i class="ti ti-stack-push me-1"></i>建初始批次'; }
+
+      if (action === 'init-lot') {
+        btn.disabled = true;
+        const original = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        const ok = await initFromProduct(sku);
+        if (ok) { loadSummary(); loadLegacy(); }
+        else { btn.disabled = false; btn.innerHTML = original; }
+      }
+      else if (action === 'fix-stock') {
+        openFixModal({
+          id: parseInt(btn.getAttribute('data-id')!),
+          sku,
+          name: btn.getAttribute('data-name') || '',
+          current: parseFloat(btn.getAttribute('data-current') || '0'),
+        });
+      }
+      else if (action === 'zero-deactivate') {
+        const name = btn.getAttribute('data-name') || sku;
+        if (!confirm(`確定要把 ${sku}（${name}）設為 on_hand=0 並下架嗎？\n\n此操作不可逆，但只動 inari_products，不建立任何 lot。`)) return;
+        btn.disabled = true;
+        const original = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        const id = parseInt(btn.getAttribute('data-id')!);
+        const ok = await patchProduct(id, { on_hand: 0, is_active: false });
+        if (ok) loadLegacy();
+        else { btn.disabled = false; btn.innerHTML = original; alert('失敗（可能權限不足）'); }
+      }
     });
 
     document.getElementById('bulk-init-btn')!.addEventListener('click', async () => {
