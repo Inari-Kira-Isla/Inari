@@ -147,16 +147,10 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       document.getElementById('stat-quotes').textContent = totalQuotes;
     }
 
-    function sName(s) {
-      return s.supplier_name || s.name || s.company_name || s.vendor_name || '—';
-    }
-
     function renderCards() {
       document.getElementById('loading-state').style.display = 'none';
       const grid = document.getElementById('suppliers-grid');
       grid.style.display = '';
-
-      if (allSuppliers.length) console.log('[suppliers] first row keys:', Object.keys(allSuppliers[0]));
 
       if (!allSuppliers.length) {
         grid.innerHTML = '<div class="col-12 text-center py-5 text-muted">無供應商資料</div>';
@@ -164,7 +158,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       }
 
       grid.innerHTML = allSuppliers.map(s => {
-        const name = sName(s);
+        const name = s.name || '—';
         const phone = s.phone ? `<div class="text-muted small"><i class="ti ti-phone me-1"></i>${s.phone}</div>` : '';
         const email = s.email ? `<div class="text-muted small"><i class="ti ti-mail me-1"></i>${s.email}</div>` : '';
         const address = s.address ? `<div class="text-muted small"><i class="ti ti-map-pin me-1"></i>${s.address}</div>` : '';
