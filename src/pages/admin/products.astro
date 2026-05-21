@@ -4,6 +4,13 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 ---
 <AdminLayout title="商品目錄" active="products" pageTitle="商品目錄">
 
+  <style>
+    .product-thumb { width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #e5e7eb; cursor:zoom-in; transition:transform .15s }
+    .product-thumb:hover { transform:scale(1.5); box-shadow:0 4px 12px rgba(0,0,0,.15); z-index:10; position:relative }
+    .product-thumb-placeholder { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; background:#f5f5f7; border-radius:6px; font-size:18px; color:#bbb }
+    #imgPreviewModal img { max-width:90vw; max-height:80vh; border-radius:8px }
+  </style>
+
   <div class="row g-3 mb-3">
     <div class="col">
       <div class="input-group">
@@ -47,6 +54,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       <table class="table table-vcenter table-hover card-table">
         <thead>
           <tr>
+            <th style="width:52px"></th>
             <th>SKU</th>
             <th>商品名稱</th>
             <th>類別</th>
@@ -60,7 +68,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           </tr>
         </thead>
         <tbody id="products-tbody">
-          <tr><td colspan="10" class="text-center py-5 text-muted">載入中…</td></tr>
+          <tr><td colspan="11" class="text-center py-5 text-muted">載入中…</td></tr>
         </tbody>
       </table>
     </div>
@@ -89,14 +97,14 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         while (catSel.options.length > 1) catSel.remove(1);
         currentCat = '';
         document.getElementById('products-tbody')!.innerHTML =
-          '<tr><td colspan="10" class="text-center py-5 text-muted">載入中…</td></tr>';
+          '<tr><td colspan="11" class="text-center py-5 text-muted">載入中…</td></tr>';
       }
 
       const status = getStatus();
       const resp = await fetch(`/api/admin/products?status=${status}`);
       if (!resp.ok) {
         document.getElementById('products-tbody')!.innerHTML =
-          '<tr><td colspan="10" class="text-center py-5 text-danger">載入失敗</td></tr>';
+          '<tr><td colspan="11" class="text-center py-5 text-danger">載入失敗</td></tr>';
         return;
       }
       const data = await resp.json();
@@ -171,7 +179,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       const tbody = document.getElementById('products-tbody')!;
       if (!slice.length) {
         const msg = status === 'inactive' ? '目前沒有未上架商品' : '無符合商品';
-        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted">${msg}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5 text-muted">${msg}</td></tr>`;
         return;
       }
 
@@ -225,7 +233,11 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <i class="ti ti-pencil" style="font-size:12px"></i>
         </button>`;
 
+        const imgCell = p.image_url
+          ? `<td class="p-1"><img src="${p.image_url}" alt="${(p.name||'').replace(/"/g,'&quot;')}" class="product-thumb" data-full="${p.image_url}" loading="lazy" /></td>`
+          : `<td class="p-1 text-center"><span class="product-thumb-placeholder">📦</span></td>`;
         return `<tr class="${rowAlert} ${!isActive ? 'opacity-50' : ''}" id="row-${p.id}">
+          ${imgCell}
           <td class="font-mono text-muted small">${p.sku || '—'}</td>
           <td class="fw-medium">${p.name || '—'}</td>
           <td class="text-muted small">${p.category || '—'}</td>
@@ -281,6 +293,18 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
     // event delegation for toggle and stock buttons (rendered dynamically)
     document.getElementById('products-tbody')!.addEventListener('click', (e) => {
+      // 點縮圖開大圖預覽
+      const img = (e.target as HTMLElement).closest('img.product-thumb') as HTMLImageElement | null;
+      if (img) {
+        const full = img.getAttribute('data-full') || img.src;
+        const modal = document.getElementById('imgPreviewModal');
+        const modalImg = document.getElementById('imgPreviewImg') as HTMLImageElement;
+        if (modal && modalImg) {
+          modalImg.src = full;
+          new (window as any).bootstrap.Modal(modal).show();
+        }
+        return;
+      }
       const btn = (e.target as HTMLElement).closest('button[data-id]') as HTMLButtonElement | null;
       if (!btn) return;
 
@@ -340,6 +364,18 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
     loadProducts(true);
   </script>
+
+  <!-- Image Preview Modal -->
+  <div class="modal modal-blur fade" id="imgPreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body text-center p-2">
+          <button type="button" class="btn-close position-absolute top-0 end-0 m-2" data-bs-dismiss="modal" style="z-index:10"></button>
+          <img id="imgPreviewImg" src="" alt="商品圖" />
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Stock Edit Modal -->
   <div class="modal modal-blur fade" id="stockModal" tabindex="-1" role="dialog" aria-hidden="true">

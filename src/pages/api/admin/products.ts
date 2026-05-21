@@ -41,12 +41,12 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   // inari_products real stock columns: on_hand + safety_stock + reorder_level (no stock_qty)
   let resp = await fetch(
-    baseFilter + `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight,origin,is_active,on_hand,safety_stock,reorder_level,avg_cost`,
+    baseFilter + `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight,origin,is_active,on_hand,safety_stock,reorder_level,avg_cost,image_url,image_urls`,
     { headers: sbHeaders }
   );
   if (!resp.ok) {
     resp = await fetch(
-      baseFilter + `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight,origin,is_active`,
+      baseFilter + `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight,origin,is_active,image_url`,
       { headers: sbHeaders }
     );
   }
