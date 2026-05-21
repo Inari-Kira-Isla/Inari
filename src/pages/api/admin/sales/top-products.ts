@@ -1,9 +1,12 @@
 // GET /api/admin/sales/top-products?year=2026&limit=20
 // Source: RPC top_products_by_year(p_year, limit_n) over qb_sales. Manager-only.
+// 6h analytics_cache wrapped.
 
 import type { APIRoute } from 'astro';
+import { cachedQuery } from '../../../../lib/cache';
 
 const SUPABASE_URL = 'https://cqartwwsbxnjjatmndtt.supabase.co';
+const CACHE_TTL_SEC = 6 * 3600;
 
 function sbHeaders(key: string) {
   return { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
@@ -29,34 +32,45 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   const year = parseInt(url.searchParams.get('year') || String(new Date().getFullYear()));
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
+  const force = url.searchParams.get('force') === '1';
 
   try {
-    const resp = await withTimeout(
-      fetch(`${SUPABASE_URL}/rest/v1/rpc/top_products_by_year`, {
-        method: 'POST',
-        headers: sbHeaders(key),
-        body: JSON.stringify({ p_year: year, limit_n: limit }),
-      }),
-      5000,
+    const result = await cachedQuery(
+      `sales:top-products:${year}:${limit}`,
+      'sales',
+      CACHE_TTL_SEC,
+      async () => {
+        const resp = await withTimeout(
+          fetch(`${SUPABASE_URL}/rest/v1/rpc/top_products_by_year`, {
+            method: 'POST',
+            headers: sbHeaders(key),
+            body: JSON.stringify({ p_year: year, limit_n: limit }),
+          }),
+          5000,
+        );
+        if (!resp.ok) throw new Error(`DB error: ${await resp.text()}`);
+        const rows: any[] = await resp.json();
+        return rows.map(r => ({
+          code: r.item_code,
+          name: r.item_name,
+          revenue: Number(r.revenue) || 0,
+          orders: Number(r.orders) || 0,
+          customers: Number(r.customers) || 0,
+          pct_of_year: Number(r.pct_of_year) || 0,
+        }));
+      },
+      { force },
     );
-    if (!resp.ok) {
-      return new Response(JSON.stringify({ error: 'DB error', detail: await resp.text() }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-    const rows: any[] = await resp.json();
-    const items = rows.map(r => ({
-      code: r.item_code,
-      name: r.item_name,
-      revenue: Number(r.revenue) || 0,
-      orders: Number(r.orders) || 0,
-      customers: Number(r.customers) || 0,
-      pct_of_year: Number(r.pct_of_year) || 0,
-    }));
-    return new Response(JSON.stringify({ items, year, source: 'qb_sales via top_products_by_year RPC' }), {
-      headers: { 'Content-Type': 'application/json' },
-    });
+
+    return new Response(
+      JSON.stringify({
+        items: result.data,
+        year,
+        source: 'qb_sales via top_products_by_year RPC',
+        cache: { hit: result.cached, age_sec: result.cacheAge, status: result.source },
+      }),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
   } catch (e) {
     return new Response(
       JSON.stringify({ error: '查詢逾時', detail: (e as Error).message }),
