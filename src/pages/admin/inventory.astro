@@ -6,7 +6,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
   <!-- Tab nav -->
   <ul class="nav nav-tabs mb-3" role="tablist">
-    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-summary" role="tab">總覽</a></li>
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-summary" role="tab">總覽（批次）</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-legacy" role="tab">未建批次 <span class="badge bg-yellow-lt text-yellow ms-1" id="legacy-count-badge">—</span></a></li>
     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-lots" role="tab">批次列表</a></li>
     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-expiring" role="tab">即將過期</a></li>
   </ul>
@@ -77,6 +78,65 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
             </thead>
             <tbody id="summary-tbody">
               <tr><td colspan="9" class="text-center py-4 text-muted">載入中…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Legacy stock tab ─────────────────────────────────────────── -->
+    <div class="tab-pane fade" id="tab-legacy" role="tabpanel">
+      <div class="alert alert-info d-flex align-items-center gap-2 mb-3">
+        <i class="ti ti-info-circle fs-3"></i>
+        <div>
+          <div class="fw-semibold">這些商品有舊系統的 on_hand 數量，但還沒建批次</div>
+          <div class="small">點「建初始批次」把 on_hand 轉成單一 opening lot；之後就能參與 FEFO 出貨。轉換後 on_hand 仍保留（雙來源並存）— 等所有 SKU 都轉完再考慮棄用 on_hand。</div>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <div class="card card-sm"><div class="card-body">
+            <div class="fw-semibold fs-3" id="legacy-count">—</div>
+            <div class="text-muted small">未建批次商品數</div>
+          </div></div>
+        </div>
+        <div class="col-md-4">
+          <div class="card card-sm"><div class="card-body">
+            <div class="fw-semibold fs-3" id="legacy-value">—</div>
+            <div class="text-muted small">未建批次總值（成本）</div>
+          </div></div>
+        </div>
+        <div class="col-md-4">
+          <div class="card card-sm"><div class="card-body">
+            <div class="fw-semibold fs-3 text-success" id="legacy-converted">—</div>
+            <div class="text-muted small">已建批次 SKU 數</div>
+          </div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h3 class="card-title mb-0">未建批次的商品</h3>
+          <button class="btn btn-sm btn-outline-warning" id="bulk-init-btn">
+            <i class="ti ti-stack me-1"></i>一鍵全部建初始批次
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table table-sm">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>商品</th>
+                <th class="d-none d-md-table-cell">類別</th>
+                <th class="text-end">on_hand</th>
+                <th class="text-end d-none d-md-table-cell">avg_cost</th>
+                <th class="text-end d-none d-lg-table-cell">總值</th>
+                <th class="text-end">動作</th>
+              </tr>
+            </thead>
+            <tbody id="legacy-tbody">
+              <tr><td colspan="7" class="text-center py-4 text-muted">載入中…</td></tr>
             </tbody>
           </table>
         </div>
@@ -156,7 +216,9 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">SKU <span class="text-danger">*</span></label>
-            <input type="text" class="form-control font-mono" id="r-sku" placeholder="例：A3A0210">
+            <input type="text" class="form-control font-mono" id="r-sku" list="sku-list" placeholder="輸入或選 SKU…" autocomplete="off">
+            <datalist id="sku-list"></datalist>
+            <div class="form-text" id="r-sku-hint"></div>
           </div>
           <div class="mb-3">
             <label class="form-label">批號 Lot No <span class="text-danger">*</span></label>
@@ -224,7 +286,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">SKU <span class="text-danger">*</span></label>
-            <input type="text" class="form-control font-mono" id="p-sku">
+            <input type="text" class="form-control font-mono" id="p-sku" list="sku-list" placeholder="輸入或選 SKU…" autocomplete="off">
             <div class="form-text" id="p-stock-hint">輸入 SKU 後將顯示可用庫存與 FEFO 預覽</div>
           </div>
           <div class="mb-3">
@@ -266,6 +328,45 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
     let summaryData = [];
     let lotsData = [];
+    let legacyData = [];
+    let allProducts = []; // {sku, name, on_hand, avg_cost, unit, category}
+
+    async function loadProductCatalog() {
+      try {
+        const r = await fetch('/api/admin/products?status=active&limit=700');
+        if (!r.ok) return;
+        const d = await r.json();
+        allProducts = d.products || [];
+        // Populate datalist for SKU autocomplete shared by Receive + Pick
+        const dl = document.getElementById('sku-list')!;
+        dl.innerHTML = allProducts.map(p =>
+          `<option value="${p.sku}">${p.name || ''}</option>`).join('');
+      } catch {}
+    }
+
+    function bindSkuHint(inputId: string, hintId: string) {
+      const input = document.getElementById(inputId) as HTMLInputElement;
+      const hint = document.getElementById(hintId);
+      if (!input || !hint) return;
+      input.addEventListener('input', () => {
+        const sku = input.value.trim();
+        const p = allProducts.find(x => x.sku === sku);
+        if (p) {
+          const cost = p.avg_cost ? ` · 平均成本 MOP ${p.avg_cost}` : '';
+          const stock = p.on_hand != null ? ` · 舊 on_hand ${p.on_hand}` : '';
+          hint.innerHTML = `<span class="text-primary">${p.name}</span>${stock}${cost}`;
+          // Auto-fill unit cost in Receive modal if empty
+          if (inputId === 'r-sku' && p.avg_cost) {
+            const costInput = document.getElementById('r-unit-cost') as HTMLInputElement;
+            if (!costInput.value) costInput.value = String(p.avg_cost);
+          }
+        } else if (sku) {
+          hint.innerHTML = `<span class="text-warning">SKU 不在商品表中</span>`;
+        } else {
+          hint.textContent = '';
+        }
+      });
+    }
 
     async function loadSummary() {
       const q = (document.getElementById('summary-search') as HTMLInputElement)?.value || '';
@@ -559,6 +660,94 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       loadSummary(); if (lotsData.length) loadLots();
     });
 
-    loadSummary();
+    async function loadLegacy() {
+      try {
+        const r = await fetch('/api/admin/inventory/legacy-stock');
+        const d = await r.json();
+        legacyData = d.items || [];
+        document.getElementById('legacy-count')!.textContent = String(d.total || 0);
+        document.getElementById('legacy-value')!.textContent = fmtMOP(d.total_value_mop);
+        document.getElementById('legacy-converted')!.textContent = String(d.with_lots_count || 0);
+        const badge = document.getElementById('legacy-count-badge')!;
+        badge.textContent = String(d.total || 0);
+        renderLegacy();
+      } catch {}
+    }
+
+    function renderLegacy() {
+      const tbody = document.getElementById('legacy-tbody')!;
+      if (!legacyData.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">✓ 所有有庫存商品都已建批次</td></tr>';
+        return;
+      }
+      tbody.innerHTML = legacyData.map(p => {
+        const value = Number(p.on_hand) * Number(p.avg_cost || 0);
+        return `<tr>
+          <td class="font-mono small">${p.sku}</td>
+          <td class="small fw-medium">${p.name || '—'}</td>
+          <td class="text-muted small d-none d-md-table-cell">${p.category || '—'}</td>
+          <td class="text-end font-mono">${fmtQty(p.on_hand)}${p.unit ? ` <span class="text-muted small">${p.unit}</span>` : ''}</td>
+          <td class="text-end font-mono small text-muted d-none d-md-table-cell">${p.avg_cost ? fmtMOP(p.avg_cost) : '—'}</td>
+          <td class="text-end font-mono small fw-semibold d-none d-lg-table-cell">${fmtMOP(value)}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-warning" data-action="init-lot" data-sku="${p.sku}">
+              <i class="ti ti-stack-push me-1"></i>建初始批次
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function initFromProduct(sku: string, opts: { silent?: boolean } = {}) {
+      const r = await fetch('/api/admin/inventory/init-from-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sku }),
+      });
+      const d = await r.json();
+      if (!opts.silent) {
+        if (!r.ok) alert(`${sku} 失敗：${d.error || r.status}`);
+        else if (d.idempotent) alert(`${sku} 已有 opening lot`);
+        else alert(`${sku} ✓ 建立 lot ${d.lot_no}（${d.qty} 件）`);
+      }
+      return r.ok && !d.idempotent;
+    }
+
+    document.getElementById('legacy-tbody')!.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest('button[data-action="init-lot"]') as HTMLButtonElement;
+      if (!btn) return;
+      const sku = btn.getAttribute('data-sku')!;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+      const ok = await initFromProduct(sku);
+      if (ok) { loadSummary(); loadLegacy(); }
+      else { btn.disabled = false; btn.innerHTML = '<i class="ti ti-stack-push me-1"></i>建初始批次'; }
+    });
+
+    document.getElementById('bulk-init-btn')!.addEventListener('click', async () => {
+      if (!legacyData.length) return;
+      if (!confirm(`確定要為 ${legacyData.length} 個 SKU 全部建初始批次嗎？`)) return;
+      const btn = document.getElementById('bulk-init-btn') as HTMLButtonElement;
+      btn.disabled = true;
+      let ok = 0, fail = 0;
+      for (const p of legacyData) {
+        btn.textContent = `處理中 ${ok + fail + 1}/${legacyData.length}…`;
+        if (await initFromProduct(p.sku, { silent: true })) ok++;
+        else fail++;
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-stack me-1"></i>一鍵全部建初始批次';
+      alert(`完成 — 成功 ${ok}，失敗 ${fail}`);
+      loadSummary(); loadLegacy();
+    });
+
+    // Bind SKU hint to both Receive and Pick modals
+    bindSkuHint('r-sku', 'r-sku-hint');
+    bindSkuHint('p-sku', 'p-stock-hint');
+
+    loadProductCatalog().then(() => {
+      loadSummary();
+      loadLegacy();
+    });
   </script>
 </AdminLayout>

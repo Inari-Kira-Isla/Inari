@@ -119,8 +119,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
     // ── helpers for stock alert ──────────────────────────────────────────
     function isLowStock(p: any) {
-      const qty = Number(p.stock_qty);
-      const min = Number(p.stock_min_qty);
+      const qty = Number(p.on_hand);
+      const min = Number(p.safety_stock);
       if (!isFinite(qty)) return false;
       if (!isFinite(min) || min <= 0) {
         // Default threshold when no explicit min: qty<=2 counts as low
@@ -129,7 +129,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       return qty > 0 && qty <= min;
     }
     function isOutOfStock(p: any) {
-      return p.stock_qty === 0;
+      return p.on_hand === 0;
     }
 
     // ── filter + render ──────────────────────────────────────────────────
@@ -203,14 +203,14 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
              </button>`;
 
         let stockDisplay;
-        if (p.stock_qty == null) {
+        if (p.on_hand == null) {
           stockDisplay = '<span class="text-muted">—</span>';
-        } else if (p.stock_qty === 0) {
+        } else if (p.on_hand === 0) {
           stockDisplay = '<span class="badge bg-red-lt text-red">無庫存</span>';
         } else if (isLowStock(p)) {
-          stockDisplay = `<span class="badge bg-yellow-lt text-yellow">低庫存 ${p.stock_qty}${p.stock_unit ? ' ' + p.stock_unit : ''}</span>`;
+          stockDisplay = `<span class="badge bg-yellow-lt text-yellow">低庫存 ${p.on_hand}${p.unit ? ' ' + p.unit : ''}</span>`;
         } else {
-          stockDisplay = `<span class="fw-semibold">${p.stock_qty}</span>${p.stock_unit ? ` <span class="text-muted small">${p.stock_unit}</span>` : ''}`;
+          stockDisplay = `<span class="fw-semibold">${p.on_hand}</span>${p.unit ? ` <span class="text-muted small">${p.unit}</span>` : ''}`;
         }
         const rowAlert = isOutOfStock(p) ? 'table-danger' : (isLowStock(p) ? 'table-warning' : '');
 
@@ -219,8 +219,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           data-id="${p.id}"
           data-sku="${(p.sku || '').replace(/"/g, '&quot;')}"
           data-name="${(p.name || '').replace(/"/g, '&quot;')}"
-          data-stock="${p.stock_qty ?? ''}"
-          data-unit="${(p.stock_unit || '').replace(/"/g, '&quot;')}"
+          data-stock="${p.on_hand ?? ''}"
+          data-unit="${(p.unit || '').replace(/"/g, '&quot;')}"
           title="編輯庫存">
           <i class="ti ti-pencil" style="font-size:12px"></i>
         </button>`;
@@ -309,15 +309,15 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       spinner.style.display = '';
       saveBtn.disabled = true;
 
-      const stock_qty = parseFloat((document.getElementById('stock-qty-input') as HTMLInputElement).value) || 0;
-      const stock_unit = (document.getElementById('stock-unit-input') as HTMLInputElement).value.trim();
-      const stock_notes = (document.getElementById('stock-notes-input') as HTMLTextAreaElement).value.trim();
+      const on_hand = parseFloat((document.getElementById('stock-qty-input') as HTMLInputElement).value) || 0;
+      const safety_stock_raw = (document.getElementById('stock-min-input') as HTMLInputElement | null)?.value;
+      const safety_stock = safety_stock_raw ? parseFloat(safety_stock_raw) : undefined;
 
       try {
         const resp = await fetch('/api/admin/products', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, stock_qty, stock_unit: stock_unit || null, stock_notes: stock_notes || null }),
+          body: JSON.stringify({ id, on_hand, ...(safety_stock !== undefined && { safety_stock }) }),
         });
         if (!resp.ok) {
           alert('儲存失敗');
@@ -325,8 +325,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           (window as any).bootstrap.Modal.getInstance(document.getElementById('stockModal'))?.hide();
           const p = allProducts.find((x: any) => x.id === id);
           if (p) {
-            (p as any).stock_qty = stock_qty;
-            (p as any).stock_unit = stock_unit || null;
+            (p as any).on_hand = on_hand;
+            if (safety_stock !== undefined) (p as any).safety_stock = safety_stock;
           }
           applyFilter();
         }

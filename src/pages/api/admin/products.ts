@@ -39,9 +39,9 @@ export const GET: APIRoute = async ({ locals, url }) => {
     (category ? `&category=eq.${encodeURIComponent(category)}` : '') +
     (q ? `&or=(name.ilike.%25${encodeURIComponent(q)}%25,sku.ilike.%25${encodeURIComponent(q)}%25)` : '');
 
-  // Try with stock columns first; fall back to base columns if stock migration not yet applied
+  // inari_products real stock columns: on_hand + safety_stock + reorder_level (no stock_qty)
   let resp = await fetch(
-    baseFilter + `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight,origin,is_active,stock_qty,stock_unit,stock_min_qty`,
+    baseFilter + `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight,origin,is_active,on_hand,safety_stock,reorder_level,avg_cost`,
     { headers: sbHeaders }
   );
   if (!resp.ok) {
@@ -67,7 +67,7 @@ export const GET: APIRoute = async ({ locals, url }) => {
   });
 };
 
-// PATCH /api/admin/products — toggle is_active (manager) or update stock_qty (staff+manager)
+// PATCH /api/admin/products — toggle is_active (manager) or update on_hand (staff+manager)
 export const PATCH: APIRoute = async ({ locals, request }) => {
   if (locals.userType !== 'manager' && locals.userType !== 'staff') {
     return new Response(JSON.stringify({ error: '權限不足' }), {
@@ -78,7 +78,12 @@ export const PATCH: APIRoute = async ({ locals, request }) => {
 
   const key = import.meta.env.SUPABASE_SERVICE_KEY || import.meta.env.SUPABASE_ANON_KEY;
   const body = await request.json();
-  const { id, is_active, stock_qty, stock_unit, stock_notes } = body;
+  // Accept both old field names (stock_qty/stock_min_qty) and new (on_hand/safety_stock)
+  // for backward compat with any cached client.
+  const { id, is_active } = body;
+  const on_hand = body.on_hand ?? body.stock_qty;
+  const safety_stock = body.safety_stock ?? body.stock_min_qty;
+  const reorder_level = body.reorder_level;
 
   if (!id) {
     return new Response(JSON.stringify({ error: 'id 為必填' }), {
@@ -87,7 +92,6 @@ export const PATCH: APIRoute = async ({ locals, request }) => {
     });
   }
 
-  // is_active toggle requires manager
   if (typeof is_active === 'boolean' && locals.userType !== 'manager') {
     return new Response(JSON.stringify({ error: '權限不足' }), {
       status: 403,
@@ -97,9 +101,9 @@ export const PATCH: APIRoute = async ({ locals, request }) => {
 
   const patch: Record<string, any> = {};
   if (typeof is_active === 'boolean') patch.is_active = is_active;
-  if (stock_qty !== undefined) patch.stock_qty = stock_qty;
-  if (stock_unit !== undefined) patch.stock_unit = stock_unit;
-  if (stock_notes !== undefined) patch.stock_notes = stock_notes;
+  if (on_hand !== undefined) patch.on_hand = on_hand;
+  if (safety_stock !== undefined) patch.safety_stock = safety_stock;
+  if (reorder_level !== undefined) patch.reorder_level = reorder_level;
 
   if (!Object.keys(patch).length) {
     return new Response(JSON.stringify({ error: '無可更新欄位' }), {
