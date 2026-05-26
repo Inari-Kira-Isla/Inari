@@ -79,6 +79,19 @@ export const POST: APIRoute = async ({ locals, request }) => {
   }
 
   void invalidateCache(`inventory:summary:`);
+  // Sync legacy on_hand mirror (best-effort, non-fatal on failure).
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/rpc/recalc_on_hand`, {
+      method: 'POST',
+      headers: sbHeaders(key),
+      body: JSON.stringify({
+        p_tenant_id: TENANT_ID,
+        p_sku: body.sku,
+      }),
+    });
+  } catch (e) {
+    console.warn('[recalc_on_hand] failed (non-fatal):', e);
+  }
   return new Response(text, {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
