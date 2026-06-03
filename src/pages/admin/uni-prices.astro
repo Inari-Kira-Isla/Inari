@@ -1,0 +1,120 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="海膽報價比對" active="uni-prices" pageTitle="海膽報價歷史比對">
+
+  <style>
+    .pc-up { color:#b3402f; font-weight:600 }
+    .pc-down { color:#138a36; font-weight:600 }
+    .pc-flat { color:#888 }
+    .spark { vertical-align:middle }
+    .pc-stat { font-size:13px }
+    .pc-stat .b { font-size:22px; font-weight:700 }
+    table td, table th { vertical-align:middle }
+    .brandcell { font-weight:600 }
+    .datemut { color:#9aa0a6; font-size:11px }
+  </style>
+
+  <div class="row g-3 mb-3 align-items-center">
+    <div class="col-auto">
+      <div class="card"><div class="card-body py-2 px-3 pc-stat">
+        <span class="text-muted">可比品項</span> <span class="b" id="st-total">—</span>
+        　<span class="pc-up">漲 <span id="st-up">—</span></span>
+        　<span class="pc-down">跌 <span id="st-down">—</span></span>
+      </div></div>
+    </div>
+    <div class="col"></div>
+    <div class="col-auto">
+      <select class="form-select" id="pc-species">
+        <option value="">全部品種</option>
+        <option value="赤">赤・馬糞</option>
+        <option value="白">白・紫海膽</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-outline-secondary" id="pc-refresh"><i class="ti ti-refresh me-1"></i>重新整理</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="text-muted small">最新報價 vs 上一版本（依漲幅排序）</span></div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead><tr>
+          <th>品牌</th><th>規格</th><th class="text-end">上一版</th><th class="text-end">最新</th>
+          <th class="text-end">漲跌</th><th>價格走勢</th>
+        </tr></thead>
+        <tbody id="pc-body"><tr><td colspan="6" class="text-center text-muted py-4">載入中…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let ALL = [];
+
+    function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    function yen(n){ return '¥' + Number(n).toLocaleString(); }
+
+    function spark(tl){
+      if (!tl || tl.length < 2) return '';
+      const w=92, h=24, pad=2;
+      const ps = tl.map(t=>t.price);
+      const min=Math.min(...ps), max=Math.max(...ps), span=(max-min)||1;
+      const pts = tl.map((t,i)=>{
+        const x = pad + (w-2*pad)*(tl.length===1?0:i/(tl.length-1));
+        const y = h-pad - (h-2*pad)*((t.price-min)/span);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      const last = tl[tl.length-1], lx = w-pad, ly = h-pad-(h-2*pad)*((last.price-min)/span);
+      const rising = tl[tl.length-1].price >= tl[0].price;
+      const col = rising ? '#b3402f' : '#138a36';
+      return `<svg class="spark" width="${w}" height="${h}"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.5"/><circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="2.4" fill="${col}"/></svg>`;
+    }
+
+    function row(r){
+      const spec = [r.color||'', r.weight?r.weight+'g':'', r.grade||''].filter(Boolean).join('・');
+      const cls = r.pct>0?'pc-up':(r.pct<0?'pc-down':'pc-flat');
+      const arrow = r.pct>0?'▲':(r.pct<0?'▼':'－');
+      const dates = r.timeline.length;
+      return `<tr>
+        <td class="brandcell">${esc(r.brand)}</td>
+        <td>${esc(spec)}</td>
+        <td class="text-end">${yen(r.prev_price)}<br><span class="datemut">${esc(r.prev_date)}</span></td>
+        <td class="text-end">${yen(r.cur_price)}<br><span class="datemut">${esc(r.cur_date)}</span></td>
+        <td class="text-end ${cls}">${arrow} ${r.pct>0?'+':''}${r.pct}%</td>
+        <td>${spark(r.timeline)} <span class="datemut">${dates} 版</span></td>
+      </tr>`;
+    }
+
+    async function load(){
+      const species = document.getElementById('pc-species').value;
+      document.getElementById('pc-body').innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">載入中…</td></tr>';
+      try {
+        const resp = await fetch('/api/admin/uni-prices');
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error||'error');
+        ALL = data.rows||[];
+        document.getElementById('st-total').textContent = data.summary?.total ?? ALL.length;
+        document.getElementById('st-up').textContent = data.summary?.up ?? '—';
+        document.getElementById('st-down').textContent = data.summary?.down ?? '—';
+        render(species);
+      } catch(e){
+        document.getElementById('pc-body').innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">載入失敗：${esc(e.message)}</td></tr>`;
+      }
+    }
+
+    function render(species){
+      let rows = ALL;
+      if (species) rows = rows.filter(r => r.color === species);
+      document.getElementById('pc-body').innerHTML = rows.length
+        ? rows.map(row).join('')
+        : '<tr><td colspan="6" class="text-center text-muted py-4">沒有可比資料</td></tr>';
+    }
+
+    document.getElementById('pc-species').addEventListener('change', e => render(e.target.value));
+    document.getElementById('pc-refresh').addEventListener('click', load);
+    load();
+  </script>
+
+</AdminLayout>
