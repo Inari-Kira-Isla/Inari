@@ -1,0 +1,132 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+<AdminLayout title="海膽圖鑑" active="uni" pageTitle="海膽商品圖片庫">
+
+  <style>
+    .uni-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px }
+    .uni-card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; transition:box-shadow .15s, transform .15s }
+    .uni-card:hover { box-shadow:0 8px 20px rgba(0,0,0,.10); transform:translateY(-3px) }
+    .uni-ph { aspect-ratio:4/3; background:#0a0805; display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:zoom-in }
+    .uni-ph img { max-width:100%; max-height:100%; object-fit:contain }
+    .uni-body { padding:10px 12px 12px }
+    .uni-no { font-size:11px; color:#b3402f; letter-spacing:.08em }
+    .uni-brand { font-size:17px; font-weight:600; margin:2px 0 0 }
+    .uni-meta { color:#6b7280; font-size:12px; margin-top:5px }
+    .uni-price { font-size:13px; font-weight:600; color:#111; margin-top:6px }
+    .sp-aka { background:#fde8e4; color:#b3402f }
+    .sp-shiro { background:#fff3d6; color:#9a7b1a }
+    .sp-na { background:#eef0f2; color:#666 }
+    .uni-badge { display:inline-block; padding:1px 7px; border-radius:20px; font-size:11px }
+    #uniZoom img { max-width:92vw; max-height:84vh; border-radius:8px }
+  </style>
+
+  <div class="row g-3 mb-3">
+    <div class="col">
+      <div class="input-group">
+        <span class="input-group-text"><i class="ti ti-search"></i></span>
+        <input type="text" class="form-control" id="uni-q" placeholder="搜尋品牌 / 日文名 / 編號…" />
+      </div>
+    </div>
+    <div class="col-auto">
+      <select class="form-select" id="uni-species">
+        <option value="">全部品種</option>
+        <option value="bafun">赤・バフンウニ(馬糞)</option>
+        <option value="murasaki">白・ムラサキウニ(紫)</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <select class="form-select" id="uni-grade">
+        <option value="">全部等級</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-outline-secondary" id="uni-refresh"><i class="ti ti-refresh me-1"></i>重新整理</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span id="uni-count" class="text-muted small">載入中…</span></div>
+    <div class="card-body">
+      <div class="uni-grid" id="uni-grid"></div>
+      <div id="uni-empty" class="text-center text-muted py-5 d-none">沒有符合的海膽商品</div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="uniZoom" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content"><div class="modal-body text-center p-2"><img id="uniZoomImg" src="" alt="" /></div></div>
+    </div>
+  </div>
+
+  <script>
+    const SP = { bafun: ['赤・馬糞', 'sp-aka'], murasaki: ['白・紫海膽', 'sp-shiro'] };
+    const FORM = { narabi: '板裝直排', bara: '亂排', no_alum: '無明礬', ensui: '鹽水', live: '原隻' };
+    let ALL = [];
+
+    function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+    function card(r){
+      const [spLabel, spCls] = SP[r.species] || ['嚴選', 'sp-na'];
+      const meta = [r.spec_grams ? r.spec_grams+'g' : '', r.grade || '', FORM[r.form] || ''].filter(Boolean).join(' · ');
+      const price = r.price_jpy ? `¥${Number(r.price_jpy).toLocaleString()}` : '—';
+      return `<div class="uni-card">
+        <div class="uni-ph" data-zoom="${esc(r.public_url)}"><img loading="lazy" src="${esc(r.public_url)}" alt="${esc(r.brand)}"></div>
+        <div class="uni-body">
+          <div class="uni-no">No.${esc(r.quote_no||'')} <span class="uni-badge ${spCls}">${spLabel}</span></div>
+          <div class="uni-brand">${esc(r.brand||'嚴選')}</div>
+          <div class="uni-meta">${esc(meta)}</div>
+          <div class="uni-price">報價 ${price} <span class="text-muted fw-normal" style="font-size:11px">/ ${esc(r.species_ja||'')}</span></div>
+        </div>
+      </div>`;
+    }
+
+    async function load(){
+      const q = document.getElementById('uni-q').value.trim();
+      const species = document.getElementById('uni-species').value;
+      const grade = document.getElementById('uni-grade').value;
+      document.getElementById('uni-count').textContent = '載入中…';
+      const params = new URLSearchParams({ q, species, grade });
+      try {
+        const resp = await fetch('/api/admin/uni?' + params);
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'error');
+        ALL = data.rows || [];
+        render(data.total);
+        fillGrades();
+      } catch(e){
+        document.getElementById('uni-count').textContent = '載入失敗：' + e.message;
+      }
+    }
+
+    function render(total){
+      const grid = document.getElementById('uni-grid');
+      const empty = document.getElementById('uni-empty');
+      grid.innerHTML = ALL.map(card).join('');
+      empty.classList.toggle('d-none', ALL.length > 0);
+      document.getElementById('uni-count').textContent = `共 ${ALL.length} 筆${total && total != ALL.length ? ' / '+total : ''}`;
+      grid.querySelectorAll('.uni-ph').forEach(el => el.addEventListener('click', () => {
+        document.getElementById('uniZoomImg').src = el.dataset.zoom;
+        new (window).bootstrap.Modal(document.getElementById('uniZoom')).show();
+      }));
+    }
+
+    let gradesFilled = false;
+    function fillGrades(){
+      if (gradesFilled) return;
+      const sel = document.getElementById('uni-grade');
+      const grades = [...new Set(ALL.map(r => r.grade).filter(Boolean))].sort();
+      grades.forEach(g => { const o = document.createElement('option'); o.value = g; o.textContent = g; sel.appendChild(o); });
+      gradesFilled = true;
+    }
+
+    let t;
+    document.getElementById('uni-q').addEventListener('input', () => { clearTimeout(t); t = setTimeout(load, 300); });
+    document.getElementById('uni-species').addEventListener('change', load);
+    document.getElementById('uni-grade').addEventListener('change', load);
+    document.getElementById('uni-refresh').addEventListener('click', load);
+    load();
+  </script>
+
+</AdminLayout>
