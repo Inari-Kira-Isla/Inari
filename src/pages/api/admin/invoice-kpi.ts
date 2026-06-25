@@ -19,21 +19,6 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
-async function countQuery(url: string, headers: Record<string, string>): Promise<number> {
-  const r = await fetch(url, { headers: { ...headers, Prefer: 'count=exact' } });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  await r.text();
-  const cr = r.headers.get('content-range') || '0/0';
-  return parseInt(cr.split('/').pop() || '0');
-}
-
-async function sumQuery(url: string, headers: Record<string, string>, field: string): Promise<number> {
-  const r = await fetch(url, { headers });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  const rows: any[] = await r.json();
-  return rows.reduce((s, x) => s + (Number(x[field]) || 0), 0);
-}
-
 export const GET: APIRoute = async ({ locals, url }) => {
   if (locals.userType !== 'manager') {
     return new Response(JSON.stringify({ error: '權限不足' }), {
@@ -50,41 +35,31 @@ export const GET: APIRoute = async ({ locals, url }) => {
 
   try {
     const result = await cachedQuery(
-      'inari:invoice-kpi:v1',
+      // v2：改讀 v_kpi_summary 單行 view（口徑#2 未收+partial、真逾期按真實收款排期、Asia/Macau）。
+      // 修正舊版 3 個錯：①sumQuery client-side 加總撞 PostgREST 1000 行封頂致本月開單少報
+      //                  ②逾期靠 days_overdue（全表=0）永遠 0  ③未收漏 partial。
+      'inari:invoice-kpi:v2',
       'inari_analytics',
       CACHE_TTL_SEC,
       async () => {
-        const today = new Date().toISOString().slice(0, 10);
-        const monthStart = today.slice(0, 8) + '01';
-
-        // 4 parallel mini-queries — each scoped to a date range, very fast with idx_invoices_outstanding & date
-        const [todayAmt, mtdAmt, unpaidCount, overdueCount] = await withTimeout(
-          Promise.all([
-            sumQuery(
-              `${SUPABASE_URL}/rest/v1/inari_daily_invoices?invoice_date=eq.${today}&select=amount`,
-              headers, 'amount',
-            ),
-            sumQuery(
-              `${SUPABASE_URL}/rest/v1/inari_daily_invoices?invoice_date=gte.${monthStart}&select=amount`,
-              headers, 'amount',
-            ),
-            countQuery(
-              `${SUPABASE_URL}/rest/v1/inari_daily_invoices?status=eq.未收&select=id&limit=1`,
-              headers,
-            ),
-            countQuery(
-              `${SUPABASE_URL}/rest/v1/inari_daily_invoices?status=eq.未收&days_overdue=gt.0&select=id&limit=1`,
-              headers,
-            ),
-          ]),
+        const rows = await withTimeout(
+          fetch(`${SUPABASE_URL}/rest/v1/v_kpi_summary`, { headers }).then((r) => {
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            return r.json();
+          }),
           4000,
         );
-
+        const k = (rows && rows[0]) || {};
+        const n = (v: any) => Number(v) || 0;
         return {
-          today_amount: todayAmt,
-          mtd_amount: mtdAmt,
-          unpaid_count: unpaidCount,
-          overdue_count: overdueCount,
+          today_amount: n(k.today_billed),
+          mtd_amount: n(k.mtd_billed),
+          unpaid_count: n(k.unpaid_count),
+          unpaid_amount: n(k.outstanding_total),
+          overdue_count: n(k.overdue_count),
+          overdue_amount: n(k.overdue_amount),
+          due_this_month: n(k.due_this_month),
+          latest_invoice_date: k.latest_invoice_date || null,
           as_of: new Date().toISOString(),
         };
       },
