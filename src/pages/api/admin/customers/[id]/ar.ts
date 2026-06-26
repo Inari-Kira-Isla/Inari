@@ -1,4 +1,4 @@
-// GET /api/admin/customers/:id/ar — 單客逐月應收 + 商業圖像(F1) + E4 流失預警（manager only）
+// GET /api/admin/customers/:id/ar — 單客逐月應收 + 商業圖像(F1) + E4 流失預警（manager + staff）
 // id = customer_code（URL-encoded）。讀 v_collection_schedule(canon) / v_monthly_ar / v_customer_business_profile / v_ar_aging / health。
 
 import type { APIRoute } from 'astro';
@@ -14,7 +14,7 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 const num = (v: any) => (typeof v === 'number' ? v : parseFloat(v || '0')) || 0;
 
 export const GET: APIRoute = async ({ locals, params }) => {
-  if (locals.userType !== 'manager') {
+  if (locals.userType !== 'manager' && locals.userType !== 'staff') {
     return new Response(JSON.stringify({ error: '權限不足' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
   }
   const key = import.meta.env.SUPABASE_SERVICE_KEY || import.meta.env.SUPABASE_ANON_KEY;

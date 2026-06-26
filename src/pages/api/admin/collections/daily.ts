@@ -89,7 +89,7 @@ export const GET: APIRoute = async ({ locals }) => {
     const [followup, cheques, freshness] = await Promise.all([
       // v_daily_followup：所有未收（含上次追收記錄）
       get('v_daily_followup?select=canon_code,customer_name,salesperson,slot,inv_ym,expect_ym,outstanding,n_inv,bucket,last_action_date,last_action_method,last_action_notes,promised_date,last_action_by'),
-      // 支票：未兌現 + 30天內到期
+      // 支票：未兌現 + 30天內到期 + tenant filter（service key bypass RLS，必須顯式過濾）
       get(`inari_collections?select=id,customer_code,customer_name,amount,cheque_no,cheque_bank,cheque_due_date,cheque_status,invoice_no&cheque_status=eq.待兌現&cheque_due_date=lte.${chequeDeadline}&order=cheque_due_date.asc`),
       // 數據新鮮度
       get('inari_daily_invoices?select=invoice_date&order=invoice_date.desc&limit=1'),
@@ -105,7 +105,8 @@ export const GET: APIRoute = async ({ locals }) => {
       .filter((r: any) => r.slot !== '現金即收' && r.bucket === '本月到期')
       .sort((a: any, b: any) => {
         const slotOrder = ['15號', '25號', '次結', '延後2月', '岫收', '未設'];
-        return slotOrder.indexOf(a.slot) - slotOrder.indexOf(b.slot) || num(b.outstanding) - num(a.outstanding);
+        const ia = slotOrder.indexOf(a.slot); const ib = slotOrder.indexOf(b.slot);
+        return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || num(b.outstanding) - num(a.outstanding);
       });
 
     // Tab 3：逾期追收（所有逾期，按金額排）

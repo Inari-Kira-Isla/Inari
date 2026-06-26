@@ -126,55 +126,56 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 </div>
 
 <script>
-const fmt = (n) => 'MOP ' + Number(n).toLocaleString('zh-HK', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-const fmtDate = (d) => d ? d.slice(0, 10) : '—';
+const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+const fmt = (n) => 'MOP ' + num(n).toLocaleString('zh-HK', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const fmtDate = (d) => d ? String(d).slice(0, 10) : '—';
 const methodIcon = { '電話': '📞', 'WhatsApp': '💬', 'Telegram': '✈️', '當面': '🤝' };
+const escapeHTML = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 let _daily = null;
 let _modalData = {};
 let _activeTab = 'cash';
+// 快取 /api/admin/collections — loadSlots 和 loadTrend 共用，避免雙重 fetch
+let _feedPromise = null;
+function getFeed() {
+  if (!_feedPromise) _feedPromise = fetch('/api/admin/collections').then(r => { if (!r.ok) throw new Error(r.statusText); return r.json(); });
+  return _feedPromise;
+}
 
 // ── ZONE A: Slot cards (from /api/admin/collections) ──
 async function loadSlots() {
   try {
-    const res = await fetch('/api/admin/collections');
-    if (!res.ok) throw new Error(await res.text());
-    const data = await res.json();
-
+    const data = await getFeed();
     const slots = data.slots || [];
+
+    // Alert: 逾期用 e1.top.length / e1.overdue_total
     const alertItems = [];
-    if (data.overdue?.count > 0) alertItems.push(`逾期 ${data.overdue.count} 客 ${fmt(data.overdue.total)}`);
-    if (data.cheque_pending?.count > 0) alertItems.push(`支票即將到期 ${data.cheque_pending.count} 張`);
+    if (data.e1?.top?.length > 0) alertItems.push(`逾期 ${data.e1.top.length} 客 MOP ${num(data.e1.overdue_total).toLocaleString()}`);
 
     if (alertItems.length) {
-      const banner = document.getElementById('alert-banner');
       document.getElementById('alert-text').textContent = alertItems.join('　|　');
-      banner.classList.add('show');
+      document.getElementById('alert-banner').classList.add('show');
     }
 
     const slotColors = { '15號': 'blue', '25號': 'cyan', '次結': 'green', '延後2月': 'yellow', '岫收': 'orange', '現金即收': 'pink', '未設': 'secondary' };
     const cards = document.getElementById('slot-cards');
+    // slots 只有 collectible（未收可收），無 total/collected，移除進度條
     cards.innerHTML = slots.map(s => {
-      const pct = s.total > 0 ? Math.round((s.collected || 0) / s.total * 100) : 0;
       const color = slotColors[s.slot] || 'secondary';
       return `
         <div class="col-6 col-md-2">
           <div class="card card-sm slot-card">
             <div class="card-body py-2 px-3">
-              <div class="slot-label mb-1">${s.slot}</div>
+              <div class="slot-label mb-1">${escapeHTML(s.slot)}</div>
               <div class="slot-amount text-${color}">${fmt(s.collectible || 0)}</div>
               <div class="text-muted" style="font-size:.7rem">${s.count} 客</div>
-              <div class="progress progress-thin mt-2 bg-${color}-lt">
-                <div class="progress-bar bg-${color}" style="width:${pct}%"></div>
-              </div>
-              <div class="text-muted mt-1" style="font-size:.68rem">已收 ${pct}%</div>
             </div>
           </div>
         </div>`;
     }).join('');
     document.getElementById('slots-loading')?.remove();
   } catch (e) {
-    document.getElementById('slots-loading').innerHTML = `<span class="text-danger small">⚠ 槽位載入失敗：${e.message}</span>`;
+    document.getElementById('slots-loading').innerHTML = `<span class="text-danger small">⚠ 槽位載入失敗：${escapeHTML(e.message)}</span>`;
   }
 }
 
@@ -192,6 +193,14 @@ async function loadDaily() {
 
     if (_daily.meta?.latest_invoice) {
       document.getElementById('data-freshness').textContent = `最新發票：${fmtDate(_daily.meta.latest_invoice)}`;
+    }
+    // 支票到期警示（cheque data 從 daily 取）
+    if (_daily.cheques?.count > 0) {
+      const banner = document.getElementById('alert-banner');
+      const existing = document.getElementById('alert-text').textContent;
+      const chequeMsg = `支票即將到期 ${_daily.cheques.count} 張`;
+      document.getElementById('alert-text').textContent = existing ? `${existing}　|　${chequeMsg}` : chequeMsg;
+      banner.classList.add('show');
     }
     renderTab(_activeTab);
   } catch (e) {
@@ -234,17 +243,17 @@ function renderFollowupTable(rows, tab) {
         ${rows.map(r => `
           <tr class="action-row">
             <td>
-              <a href="/admin/customers/${encodeURIComponent(r.canon_code)}" class="fw-semibold text-decoration-none small">${r.customer_name || r.canon_code}</a>
+              <a href="/admin/customers/${encodeURIComponent(r.canon_code)}" class="fw-semibold text-decoration-none small">${escapeHTML(r.customer_name || r.canon_code)}</a>
               ${r.promised_date ? `<br><span class="badge promised-badge bg-green-lt text-green">承諾 ${fmtDate(r.promised_date)}</span>` : ''}
             </td>
             <td class="d-none d-md-table-cell">
-              <span class="badge ${bucketBadge[r.bucket] || 'bg-secondary-lt'} tab-badge">${r.slot}</span>
+              <span class="badge ${bucketBadge[r.bucket] || 'bg-secondary-lt'} tab-badge">${escapeHTML(r.slot || '—')}</span>
             </td>
-            <td class="d-none d-md-table-cell small text-muted">${r.salesperson || '—'}</td>
+            <td class="d-none d-md-table-cell small text-muted">${escapeHTML(r.salesperson || '—')}</td>
             <td class="text-end fw-semibold font-mono small">${fmt(r.outstanding)}</td>
             <td class="d-none d-sm-table-cell last-action">
               ${r.last_action_date
-                ? `${methodIcon[r.last_action_method] || ''}${fmtDate(r.last_action_date)}<br><span class="text-muted">${r.last_action_notes || ''}</span>`
+                ? `${methodIcon[r.last_action_method] || ''}${fmtDate(r.last_action_date)}<br><span class="text-muted">${escapeHTML(r.last_action_notes || '')}</span>`
                 : '<span class="text-muted">未追收</span>'}
             </td>
             <td>
@@ -258,7 +267,7 @@ function renderFollowupTable(rows, tab) {
       <tfoot class="table-light">
         <tr>
           <td colspan="3" class="small text-muted">共 ${rows.length} 客</td>
-          <td class="text-end fw-bold font-mono small">${fmt(rows.reduce((s, r) => s + Number(r.outstanding), 0))}</td>
+          <td class="text-end fw-bold font-mono small">${fmt(rows.reduce((s, r) => s + num(r.outstanding), 0))}</td>
           <td colspan="2"></td>
         </tr>
       </tfoot>
@@ -285,9 +294,9 @@ function renderChequesTable(rows) {
           const urgent = due <= today ? 'table-danger' : (due <= new Date(Date.now() + 7*86400000).toISOString().slice(0,10) ? 'table-warning' : '');
           return `
             <tr class="${urgent}">
-              <td class="small fw-semibold">${r.customer_name || r.customer_code}</td>
-              <td class="font-mono small">${r.cheque_no || '—'}</td>
-              <td class="d-none d-md-table-cell small text-muted">${r.cheque_bank || '—'}</td>
+              <td class="small fw-semibold">${escapeHTML(r.customer_name || r.customer_code)}</td>
+              <td class="font-mono small">${escapeHTML(r.cheque_no || '—')}</td>
+              <td class="d-none d-md-table-cell small text-muted">${escapeHTML(r.cheque_bank || '—')}</td>
               <td class="small">${fmtDate(due)}</td>
               <td class="text-end font-mono small fw-semibold">${fmt(r.amount)}</td>
             </tr>`;
@@ -296,53 +305,52 @@ function renderChequesTable(rows) {
       <tfoot class="table-light">
         <tr>
           <td colspan="4" class="small text-muted">共 ${rows.length} 張</td>
-          <td class="text-end fw-bold font-mono small">${fmt(rows.reduce((s, r) => s + Number(r.amount), 0))}</td>
+          <td class="text-end fw-bold font-mono small">${fmt(rows.reduce((s, r) => s + num(r.amount), 0))}</td>
         </tr>
       </tfoot>
     </table>`;
 }
 
-// ── ZONE C: Trend (lazy load) ──
+// ── ZONE C: Trend (lazy load, 共用 _feedPromise 快取) ──
 async function loadTrend() {
   const content = document.getElementById('trend-content');
   if (content.dataset.loaded) return;
   content.dataset.loaded = '1';
   try {
-    const res = await fetch('/api/admin/collections');
-    if (!res.ok) throw new Error(await res.text());
-    const data = await res.json();
-    const months = data.trend || [];
+    // sales3m shape: [{ym, 月結, 過數, 現金, total}]
+    const data = await getFeed();
+    const months = data.sales3m || [];
     if (!months.length) { content.innerHTML = '<div class="text-muted small">無趨勢數據</div>'; return; }
 
-    const maxAmt = Math.max(...months.map(m => m.total || 0), 1);
-    const ptColors = { '現金': '#f76707', '轉帳': '#1c7ed6', '月結': '#2f9e44', '月結核銷': '#2f9e44', '支票': '#7048e8' };
-    const ptypes = [...new Set(months.flatMap(m => Object.keys(m.by_type || {})))];
+    const maxAmt = Math.max(...months.map(m => num(m.total)), 1);
+    const ptColors = { '現金': '#f76707', '過數': '#1c7ed6', '月結': '#2f9e44' };
+    const ptypes = ['月結', '過數', '現金'];
 
     content.innerHTML = `
       <div class="row g-3">
         <div class="col-12">
-          <div class="small fw-semibold mb-2">各月收款總額</div>
+          <div class="small fw-semibold mb-2">近3個月收款（按收款方式）</div>
           <div class="trend-bar-wrap">
             ${months.map(m => {
-              const pct = Math.round((m.total || 0) / maxAmt * 100);
-              return `<div class="trend-bar bg-blue" style="height:${Math.max(pct,4)}%" title="${m.ym}: ${fmt(m.total)}"></div>`;
+              const pct = Math.round(num(m.total) / maxAmt * 100);
+              return `<div class="trend-bar bg-blue" style="height:${Math.max(pct,4)}%" title="${escapeHTML(m.ym)}: ${fmt(m.total)}"></div>`;
             }).join('')}
           </div>
           <div class="d-flex gap-1 mt-1">
-            ${months.map(m => `<div class="flex-1 text-center text-muted" style="font-size:.65rem;min-width:8px">${(m.ym||'').slice(5)}</div>`).join('')}
+            ${months.map(m => `<div class="flex-1 text-center text-muted" style="font-size:.65rem;min-width:8px">${escapeHTML((m.ym||'').slice(5))}</div>`).join('')}
           </div>
         </div>
         <div class="col-12">
           <div class="d-flex flex-wrap gap-3">
             ${ptypes.map(pt => {
-              const total = months.reduce((s, m) => s + (m.by_type?.[pt] || 0), 0);
-              return total > 0 ? `<span class="small"><span style="color:${ptColors[pt]||'#aaa'}">■</span> ${pt}: <strong>${fmt(total)}</strong></span>` : '';
+              const total = months.reduce((s, m) => s + num(m[pt]), 0);
+              return total > 0 ? `<span class="small"><span style="color:${ptColors[pt]||'#aaa'}">■</span> ${escapeHTML(pt)}: <strong>${fmt(total)}</strong></span>` : '';
             }).join('')}
           </div>
         </div>
       </div>`;
   } catch (e) {
-    content.innerHTML = `<div class="text-danger small">⚠ 趨勢載入失敗：${e.message}</div>`;
+    content.innerHTML = `<div class="text-danger small">⚠ 趨勢載入失敗：${escapeHTML(e.message)}</div>`;
   }
 }
 

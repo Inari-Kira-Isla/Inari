@@ -284,7 +284,7 @@ const { id } = Astro.params;
       const arTbody = document.getElementById('ar-tbody');
       if (arRes.status === 'fulfilled' && arRes.value.ok) {
         const arData = await arRes.value.json();
-        const months = (arData.monthly_ar || []).slice(0, 6);
+        const months = (arData.ar_history || []).slice(0, 6);
         if (!months.length) {
           arTbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted small">無應收記錄</td></tr>';
         } else {
