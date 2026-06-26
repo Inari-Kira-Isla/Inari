@@ -1,7 +1,7 @@
 ---
 interface Props {
   title: string;
-  active: 'dashboard' | 'orders' | 'customers' | 'products' | 'uni' | 'uni-prices' | 'knowledge' | 'users' | 'analytics' | 'suppliers' | 'sales' | 'inventory';
+  active: 'dashboard' | 'orders' | 'customers' | 'products' | 'uni' | 'uni-prices' | 'knowledge' | 'users' | 'analytics' | 'suppliers' | 'sales' | 'inventory' | 'collections';
   pageTitle: string;
   pageSubtitle?: string;
 }
@@ -75,6 +75,15 @@ const username = Astro.locals.username || '管理員';
                   <i class="ti ti-home"></i>
                 </span>
                 <span class="nav-link-title">儀表板</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class:list={["nav-link", { active: active === 'collections' }]} href="/admin/collections">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-cash"></i>
+                </span>
+                <span class="nav-link-title">收款管理</span>
               </a>
             </li>
 

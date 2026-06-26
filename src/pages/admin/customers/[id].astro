@@ -116,6 +116,59 @@ const { id } = Astro.params;
         </div>
       </div>
     </div>
+
+    <!-- AR History (近6個月應收) -->
+    <div class="row g-3 mt-1">
+      <div class="col-12 col-md-6">
+        <div class="card">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h4 class="card-title mb-0">應收歷史 <span class="text-muted fw-normal small">近6個月</span></h4>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-vcenter card-table mb-0">
+              <thead>
+                <tr>
+                  <th>月份</th>
+                  <th class="text-end">開單</th>
+                  <th class="text-end">已收</th>
+                  <th class="text-end">未收</th>
+                </tr>
+              </thead>
+              <tbody id="ar-tbody">
+                <tr><td colspan="4" class="text-center py-3 text-muted small">載入中…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collection Actions (追收記錄) -->
+      <div class="col-12 col-md-6">
+        <div class="card">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <h4 class="card-title mb-0">追收記錄 <span class="text-muted fw-normal small">近6個月</span></h4>
+            <a href="/admin/collections" class="btn btn-sm btn-outline-primary">
+              <i class="ti ti-plus me-1"></i>新增
+            </a>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-vcenter card-table mb-0">
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>方式</th>
+                  <th>備注</th>
+                  <th class="d-none d-sm-table-cell">承諾日</th>
+                </tr>
+              </thead>
+              <tbody id="actions-tbody">
+                <tr><td colspan="4" class="text-center py-3 text-muted small">載入中…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="error-state" style="display:none" class="alert alert-danger"></div>
@@ -209,11 +262,65 @@ const { id } = Astro.params;
             </td>
           </tr>`;
         }).join('');
+
+        // Load AR history and collection actions in parallel
+        loadArAndActions(c.customer_code);
       } catch (e) {
         document.getElementById('loading-state').style.display = 'none';
         const errEl = document.getElementById('error-state');
         errEl.textContent = `網路錯誤：${e.message}`;
         errEl.style.display = '';
+      }
+    }
+
+    async function loadArAndActions(customerCode) {
+      const methodIcon = { '電話': '📞', 'WhatsApp': '💬', 'Telegram': '✈️', '當面': '🤝' };
+      const [arRes, actRes] = await Promise.allSettled([
+        fetch(`/api/admin/customers/${customerId}/ar`),
+        fetch(`/api/admin/customers/${customerId}/actions`),
+      ]);
+
+      // AR history
+      const arTbody = document.getElementById('ar-tbody');
+      if (arRes.status === 'fulfilled' && arRes.value.ok) {
+        const arData = await arRes.value.json();
+        const months = (arData.monthly_ar || []).slice(0, 6);
+        if (!months.length) {
+          arTbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted small">無應收記錄</td></tr>';
+        } else {
+          arTbody.innerHTML = months.map(m => {
+            const outstanding = Number(m.outstanding || 0);
+            const rowClass = outstanding > 0 ? '' : 'text-muted';
+            return `<tr class="${rowClass}">
+              <td class="small font-mono">${m.ym || '—'}</td>
+              <td class="text-end small font-mono">${fmt(m.billed)}</td>
+              <td class="text-end small font-mono text-success">${fmt(m.collected)}</td>
+              <td class="text-end small font-mono ${outstanding > 0 ? 'fw-bold text-danger' : ''}">${outstanding > 0 ? fmt(outstanding) : '—'}</td>
+            </tr>`;
+          }).join('');
+        }
+      } else {
+        arTbody.innerHTML = '<tr><td colspan="4" class="text-danger small p-2">⚠ 載入失敗</td></tr>';
+      }
+
+      // Collection actions
+      const actTbody = document.getElementById('actions-tbody');
+      if (actRes.status === 'fulfilled' && actRes.value.ok) {
+        const actData = await actRes.value.json();
+        const rows = actData.rows || [];
+        if (!rows.length) {
+          actTbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted small">尚無追收記錄</td></tr>';
+        } else {
+          actTbody.innerHTML = rows.map(r => `
+            <tr>
+              <td class="small text-muted">${fmtDate(r.action_date)}</td>
+              <td class="small">${methodIcon[r.method] || ''} ${r.method}</td>
+              <td class="small text-muted">${r.notes || '—'}</td>
+              <td class="small d-none d-sm-table-cell ${r.promised_date ? 'text-success fw-semibold' : 'text-muted'}">${fmtDate(r.promised_date)}</td>
+            </tr>`).join('');
+        }
+      } else {
+        actTbody.innerHTML = '<tr><td colspan="4" class="text-danger small p-2">⚠ 載入失敗</td></tr>';
       }
     }
 
