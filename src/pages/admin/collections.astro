@@ -287,12 +287,12 @@ function renderCashInvoiceTable(rows) {
     </table>`;
 }
 
-// Tab 5：停供候選
+// Tab 5：停供候選（純信號，只顯示，不執行停供）
 function renderSuspendTable(rows) {
   if (!rows.length) return `<div class="text-success text-center py-4 small">✅ 無月結逾期客戶，供貨正常</div>`;
   return `
     <div class="alert alert-danger m-2 py-2 small">
-      <strong>⛔ 以下客戶上月貨款本月仍未收，應立即停止供貨並追收。</strong>
+      <strong>⛔ 以下客戶上月貨款本月仍未收，建議聯繫後考慮暫停供貨。</strong>
     </div>
     <table class="table table-sm table-hover mb-0">
       <thead class="table-light">
@@ -302,7 +302,6 @@ function renderSuspendTable(rows) {
           <th class="text-center">逾期月</th>
           <th class="text-end">逾期總額</th>
           <th class="text-center">發票數</th>
-          <th>狀態</th>
           <th></th>
         </tr>
       </thead>
@@ -310,25 +309,19 @@ function renderSuspendTable(rows) {
         ${rows.map(r => {
           const months = Number(r.months_overdue || 0);
           const rowCls = months >= 2 ? 'table-danger' : 'table-warning';
-          const suspended = r.is_suspended;
           return `<tr class="${rowCls}">
             <td>
               <a href="/admin/customers/${encodeURIComponent(r.canon_code)}" class="fw-bold text-decoration-none small">${escapeHTML(r.customer_name || r.canon_code)}</a>
-              <br><span class="text-muted" style="font-size:.65rem">${escapeHTML(r.due_date || '')} 結單</span>
+              <br><span class="text-muted" style="font-size:.65rem">${escapeHTML(r.due_date || '')} 結單 · 最早未收 ${fmtDate(r.earliest_unpaid_date)}</span>
             </td>
             <td class="d-none d-md-table-cell small text-muted">${escapeHTML(r.salesperson || '—')}</td>
             <td class="text-center fw-bold small ${months >= 2 ? 'text-danger' : 'text-warning'}">${months} 個月</td>
             <td class="text-end fw-bold font-mono small">${fmt(r.total_overdue)}</td>
             <td class="text-center small">${r.invoice_count}</td>
             <td>
-              ${suspended
-                ? '<span class="badge bg-danger">已停供</span>'
-                : '<span class="badge bg-warning text-dark">候選</span>'}
-            </td>
-            <td>
-              <button class="btn btn-sm ${suspended ? 'btn-outline-success' : 'btn-danger'} action-btn"
-                onclick="toggleSuspend(${JSON.stringify(JSON.stringify({canon_code:r.canon_code,customer_name:r.customer_name,is_suspended:!suspended}))})">
-                ${suspended ? '✅ 解除' : '⛔ 停供'}
+              <button class="btn btn-sm btn-outline-primary action-btn"
+                onclick="openActionModal(${JSON.stringify(JSON.stringify({canon_code:r.canon_code,customer_name:r.customer_name,outstanding:r.total_overdue}))})">
+                📝
               </button>
             </td>
           </tr>`;
@@ -336,9 +329,9 @@ function renderSuspendTable(rows) {
       </tbody>
       <tfoot class="table-light">
         <tr>
-          <td colspan="3" class="small text-muted">共 ${rows.length} 客</td>
-          <td class="text-end fw-bold font-mono small">${fmt(rows.reduce((s, r) => s + num(r.total_overdue), 0))}</td>
-          <td colspan="3"></td>
+          <td colspan="2" class="small text-muted">共 ${rows.length} 客需注意</td>
+          <td colspan="2" class="text-end fw-bold font-mono small">${fmt(rows.reduce((s, r) => s + num(r.total_overdue), 0))}</td>
+          <td colspan="2"></td>
         </tr>
       </tfoot>
     </table>`;
@@ -471,26 +464,6 @@ async function loadTrend() {
       </div>`;
   } catch (e) {
     content.innerHTML = `<div class="text-danger small">⚠ 趨勢載入失敗：${escapeHTML(e.message)}</div>`;
-  }
-}
-
-// ── 停供/解除停供 ──
-async function toggleSuspend(jsonStr) {
-  const d = JSON.parse(jsonStr);
-  const action = d.is_suspended ? '標記停供' : '解除停供';
-  if (!confirm(`確認對「${d.customer_name || d.canon_code}」${action}？`)) return;
-  try {
-    const res = await fetch('/api/admin/collections/suspend', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ canon_code: d.canon_code, is_suspended: d.is_suspended }),
-    });
-    const result = await res.json();
-    if (!res.ok) throw new Error(result.error || '操作失敗');
-    _daily = null;
-    await loadDaily();
-  } catch (e) {
-    alert('操作失敗：' + e.message);
   }
 }
 
