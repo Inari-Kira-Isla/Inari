@@ -1,0 +1,300 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "大西洋三文魚有什麼特點？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "大西洋三文魚（Atlantic Salmon）是養殖最廣泛的品種，主要來自挪威、蘇格蘭、智利等國家。養殖技術成熟，產量穩定，肉質細嫩，脂肪分佈均勻，是最常見的刺身級三文魚。價格適中，適合各種餐飲場合。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "什麼是金王三文魚？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "金王三文魚（King Salmon）又稱帝王鮭，是三文魚中最高級的品種。產於阿拉斯加和加拿大太平洋沿岸，肉質呈現美麗的金黃色，脂肪含量極高，口感豐潤細膩。由於產量稀少，價格昂貴，是高端日本料理的首選。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "紅三文魚和銀三文魚有什麼分別？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "紅三文魚（Sockeye）又稱紅鮭，肉質呈深紅色，脂肪含量中等，口感緊實，味道濃郁，主要來自阿拉斯加和加拿大。銀三文魚（Coho）又稱銀鮭，肉質呈淡橙紅色，脂肪適中，口感清爽，價格較為實惠。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "粉紅三文魚品質好嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "粉紅三文魚（Pink Salmon）是產量最大的三文魚品种，主要來自阿拉斯加和俄羅斯。肉質較淡，脂肪含量較低，顏色呈淺粉色。通常用於加工或罐頭，刺身品質較低，價格實惠。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "香港哪裡可以買到優質三文魚？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "稻荷環球食品是香港領先的三文魚供應商，提供來自挪威、加拿大等產地的優質三文魚。我們提供刺身級三文魚，確保新鮮度和品質。歡迎聯繫我們索取本週報價。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="三文魚品種指南 | Salmon Varieties Guide | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase letter-spacing-wide">
+      <a href="/" class="hover:text-gold transition">Home</a>
+      <a href="#varieties" class="hover:text-gold transition">Varieties</a>
+      <a href="#grading" class="hover:text-gold transition">Grading</a>
+      <a href="#contact" class="hover:text-gold transition">Contact</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="min-h-screen pt-32 px-8 flex flex-col items-center justify-center text-center">
+    <div class="fade-in">
+      <h2 class="text-sm uppercase letter-spacing-wide text-gray-500 mb-4">Complete Variety Guide</h2>
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-light playfair mb-8 leading-tight">
+        Five Major <span class="italic">Salmon</span> Varieties
+      </h1>
+      <p class="max-w-xl mx-auto text-gray-600 font-light mb-12">
+        來自全球頂級產地的三文魚完整指南，了解各品種的特色、口感與最佳用途。
+      </p>
+    </div>
+  </section>
+
+  <!-- Varieties Section -->
+  <section id="varieties" class="py-32 bg-white">
+    <div class="container mx-auto px-8 max-w-6xl">
+      
+      <!-- Atlantic -->
+      <div class="mb-24 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">北歐 | Norway</span>
+            <h3 class="text-3xl playfair italic mb-4">大西洋三文魚 <span class="text-gray-400">Atlantic Salmon</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              大西洋三文魚是全球養殖最廣泛的品種，主要來自挪威、蘇格蘭、智利等國家。養殖技術成熟，產量穩定，肉質細嫩，脂肪分佈均勻。
+            </p>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">主要產地</span>
+                挪威、蘇格蘭、智利
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">最佳用途</span>
+                刺身、壽司
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">口感</span>
+                細嫩、均勻脂肪
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">價格區間</span>
+                $50-80/kg
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center">
+            <span class="text-gray-400">Atlantic Salmon Image</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- King -->
+      <div class="mb-24 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center order-2 md:order-1">
+            <span class="text-gray-400">King Salmon Image</span>
+          </div>
+          <div class="order-1 md:order-2">
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">北美 | North America</span>
+            <h3 class="text-3xl playfair italic mb-4">金王三文魚 <span class="text-gray-400">King Salmon</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              金王三文魚又稱帝王鮭，是三文魚中最高級的品種。產於阿拉斯加和加拿大太平洋沿岸，肉質呈現美麗的金黃色，脂肪含量極高。
+            </p>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">主要產地</span>
+                阿拉斯加、加拿大
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">最佳用途</span>
+                高端刺身
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">口感</span>
+                豐潤細膩、金黃肉質
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">價格區間</span>
+                $120-180/kg
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sockeye -->
+      <div class="mb-24 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">北美 | North America</span>
+            <h3 class="text-3xl playfair italic mb-4">紅三文魚 <span class="text-gray-400">Sockeye</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              紅三文魚又稱紅鮭，肉質呈深紅色，脂肪含量中等，口感緊實，味道濃郁。主要來自阿拉斯加和加拿大，是北美最受歡迎的野生三文魚。
+            </p>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">主要產地</span>
+                阿拉斯加、加拿大
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">最佳用途</span>
+                刺身、煙燻
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">口感</span>
+                緊實、濃郁
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">價格區間</span>
+                $70-100/kg
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center">
+            <span class="text-gray-400">Sockeye Salmon Image</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coho -->
+      <div class="mb-24 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center order-2 md:order-1">
+            <span class="text-gray-400">Coho Salmon Image</span>
+          </div>
+          <div class="order-1 md:order-2">
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">北美 | North America</span>
+            <h3 class="text-3xl playfair italic mb-4">銀三文魚 <span class="text-gray-400">Coho Salmon</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              銀三文魚又稱銀鮭，肉質呈淡橙紅色，脂肪適中，口感清爽。主要來自阿拉斯加和加拿大，價格較為實惠，適合一般餐飲場合。
+            </p>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">主要產地</span>
+                阿拉斯加、加拿大
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">最佳用途</span>
+                刺身、烹飪
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">口感</span>
+                清爽、淡橙紅色
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">價格區間</span>
+                $55-75/kg
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pink -->
+      <div class="mb-24">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">北美 | North America</span>
+            <h3 class="text-3xl playfair italic mb-4">粉紅三文魚 <span class="text-gray-400">Pink Salmon</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              粉紅三文魚是產量最大的三文魚品种，主要來自阿拉斯加和俄羅斯。肉質較淡，脂肪含量較低，顏色呈淺粉色。通常用於加工或罐頭。
+            </p>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">主要產地</span>
+                阿拉斯加、俄羅斯
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">最佳用途</span>
+                罐頭、加工
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">口感</span>
+                淡味、低脂
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">價格區間</span>
+                $30-45/kg
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center">
+            <span class="text-gray-400">Pink Salmon Image</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="py-24 bg-warm-gray">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <h3 class="text-2xl playfair italic text-center mb-12">常見問題 FAQ</h3>
+      <div class="space-y-8">
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-3">大西洋三文魚有什麼特點？</h4>
+          <p class="text-gray-600 font-light">大西洋三文魚（Atlantic Salmon）是養殖最廣泛的品種，主要來自挪威、蘇格蘭、智利等國家。養殖技術成熟，產量穩定，肉質細嫩，脂肪分佈均勻，是最常見的刺身級三文魚。價格適中，適合各種餐飲場合。</p>
+        </div>
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-3">什麼是金王三文魚？</h4>
+          <p class="text-gray-600 font-light">金王三文魚（King Salmon）又稱帝王鮭，是三文魚中最高級的品種。產於阿拉斯加和加拿大太平洋沿岸，肉質呈現美麗的金黃色，脂肪含量極高，口感豐潤細膩。由於產量稀少，價格昂貴，是高端日本料理的首選。</p>
+        </div>
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-3">紅三文魚和銀三文魚有什麼分別？</h4>
+          <p class="text-gray-600 font-light">紅三文魚（Sockeye）又稱紅鮭，肉質呈深紅色，脂肪含量中等，口感緊實，味道濃郁，主要來自阿拉斯加和加拿大。銀三文魚（Coho）又稱銀鮭，肉質呈淡橙紅色，脂肪適中，口感清爽，價格較為實惠。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="py-32 bg-white text-center px-8">
+    <h2 class="text-3xl md:text-4xl playfair italic mb-8">需要更多品種資訊？</h2>
+    <p class="text-gray-600 mb-12 max-w-xl mx-auto">
+      稻荷環球食品提供來自全球的三文魚品种，歡迎查詢報價。
+    </p>
+    <div class="flex flex-col md:flex-row justify-center items-center gap-8">
+      <button class="px-12 py-4 bg-black text-white text-sm uppercase letter-spacing-wide hover:bg-zinc-800 transition rounded-sm cursor-pointer">
+        索取本週報價
+      </button>
+      <a href="mailto:info@inariglobal.com" class="text-sm border-b border-black pb-1 hover:text-gold hover:border-gold transition uppercase tracking-widest">
+        聯繫我們
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 border-t border-gray-100 text-center px-8">
+    <div class="text-xs text-gray-400 uppercase tracking-widest">
+      Inari Global Foods &copy; 2026.<br>
+      稻荷環球食品 | Premium Salmon Supplier for Hong Kong & Macau.
+    </div>
+  </footer>
+</Layout>

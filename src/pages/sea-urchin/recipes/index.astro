@@ -1,0 +1,33 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "海膽怎麼吃最好？", "acceptedAnswer": {"@type": "Answer", "text": "新鮮海膽直接食用最能品嚐鮮味，佐以醬油、山葵即可。"}},
+    {"@type": "Question", "name": "海膽可以煮熟嗎？", "acceptedAnswer": {"@type": "Answer", "text": "可以，但建議輕蒸或火烤，過度加熱會影響口感。"}},
+    {"@type": "Question", "name": "海膽多少錢？", "acceptedAnswer": {"@type": "Answer", "text": "日本馬糞海膽每公斤800-1500港元，視乎季節和品質。"}}
+  ]
+};
+---
+
+<Layout title="10道海膽料理 | Sea Urchin Recipes | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+  <nav class="fixed top-0 w-full z-50 px-8 py-6"><div class="text-xl font-bold">INARI GLOBAL</div></nav>
+  <section class="pt-32 px-8 text-center"><h1 class="text-4xl">10道海膽料理</h1><p>經典海膽食譜</p></section>
+  <section class="py-12 px-8 max-w-4xl mx-auto">
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="p-4 border"><h3>1. 海膽刺身</h3><p>直接食用，感受鮮甜</p></div>
+      <div class="p-4 border"><h3>2. 海膽壽司</h3><p>握壽司經典款式</p></div>
+      <div class="p-4 border"><h3>3. 海膽軍艦</h3><p>海苔包醋飯</p></div>
+      <div class="p-4 border"><h3>4. 海膽 Pasta</h3><p>奶油海膽意粉</p></div>
+      <div class="p-4 border"><h3>5. 海膽蒸蛋</h3><p>滑嫩鮮美</p></div>
+      <div class="p-4 border"><h3>6. 海膽火鍋</h3><p>湯底更鮮</p></div>
+      <div class="p-4 border"><h3>7. 海膽天婦羅</h3><p>酥脆口感</p></div>
+      <div class="p-4 border"><h3>8. 烤海膽</h3><p>火烤风味</p></div>
+      <div class="p-4 border"><h3>9. 海膽拌飯</h3><p>簡單美味</p></div>
+      <div class="p-4 border"><h3>10. 海膽沙拉</h3><p>清爽選擇</p></div>
+    </div>
+  </section>
+</Layout>

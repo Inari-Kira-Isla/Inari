@@ -58,10 +58,18 @@ export async function onRequestPatch(context) {
   const [order] = getResp.ok ? await getResp.json() : [];
   if (!order) return json({ error: "訂單不存在" }, 404);
 
-  if (order.status === "invoiced") return json({ error: "已開單訂單不可修改" }, 400);
-  if (order.status === "cancelled") return json({ error: "已取消訂單不可修改" }, 400);
-  if (newStatus === "invoiced" && order.status !== "confirmed") {
-    return json({ error: "只有已確認訂單可標記開單" }, 400);
+  const allowedTransitions = {
+    draft: ["confirmed", "cancelled"],
+    confirmed: ["invoiced", "cancelled"],
+    invoiced: [],
+    cancelled: [],
+  };
+
+  if (!allowedTransitions[order.status]?.includes(newStatus)) {
+    if (order.status === "invoiced") return json({ error: "已開單訂單不可修改" }, 400);
+    if (order.status === "cancelled") return json({ error: "已取消訂單不可修改" }, 400);
+    if (newStatus === "invoiced") return json({ error: "只有已確認訂單可標記開單" }, 400);
+    return json({ error: "不允許的狀態轉換" }, 400);
   }
 
   const patch = {

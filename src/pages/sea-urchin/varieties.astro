@@ -1,0 +1,321 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "馬糞海膽有什麼特點？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "馬糞海膽（Maza）是最受推崇的日本品種，外觀呈深綠色至黑色，刺短而密集。肉質呈現濃郁的甜味和醇厚的旨味（umami），被認為是海膽中的極品。主要產於北海道、根室海域，每年夏季（6-8月）為最佳季節。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "紫海膽和馬糞海膽有什麼分別？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "紫海膽（Murasaki）外觀呈紫黑色，刺較長且稀疏。味道相對清爽，甜味較淡，但仍有獨特的海洋鮮味。產量較多，價格較馬糞海膽實惠。主要產於東京灣、相模灣一带。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "加拿大海膽品質好嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "加拿大海膽（Red Sea Urchin）主要產於BC省海域，外觀呈暗紅色。由於水溫較低，生長週期較長，肉質肥厚且口感細膩。品質穩定，是日本以外最優質的選擇之一。適合追求性價比的餐廳。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "緬因海膽有什麼特色？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "緬因海膽（Green Sea Urchin）產於美國東北部海域，外觀呈淺綠色。肉質較為清爽，甜味適中，是美國市場的主流品種。由於距離香港較遠，空運成本較高。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "智利和澳洲海膽品質如何？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "智利和澳洲海膽屬於南半球產品，品質參差不齊。智利海膽價格較低但品質不穩定；澳洲海膽近年品質有所提升。主要供應低端市場或加工用途。建議選擇有信譽的供應商。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "香港哪裡可以購買優質海膽？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "稻荷環球食品是香港領先的海膽供應商，提供來自日本、加拿大等地的優質海膽。我們提供A級、B級、C級分級標準，確保品質稳定。歡迎聯繫我們索取本週報價。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="海膽品種完整指南 | Sea Urchin Varieties Guide | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase letter-spacing-wide">
+      <a href="/" class="hover:text-gold transition">Home</a>
+      <a href="#varieties" class="hover:text-gold transition">Varieties</a>
+      <a href="#grading" class="hover:text-gold transition">Grading</a>
+      <a href="#contact" class="hover:text-gold transition">Contact</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="min-h-screen pt-32 px-8 flex flex-col items-center justify-center text-center">
+    <div class="fade-in">
+      <h2 class="text-sm uppercase letter-spacing-wide text-gray-500 mb-4">Complete Variety Guide</h2>
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-light playfair mb-8 leading-tight">
+        Six Major <span class="italic">Sea Urchin</span> Varieties
+      </h1>
+      <p class="max-w-xl mx-auto text-gray-600 font-light mb-12">
+        來自全球六大產地的海膽完整指南，了解各品種的特色、口感與最佳季節。
+      </p>
+    </div>
+  </section>
+
+  <!-- Varieties Section -->
+  <section id="varieties" class="py-32 bg-white">
+    <div class="container mx-auto px-8 max-w-6xl">
+      
+      <!-- Maza -->
+      <div class="mb-24 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">日本 | Japan</span>
+            <h3 class="text-3xl playfair italic mb-4">馬糞海膽 <span class="text-gray-400">Maza</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              被譽為海膽中的極品，外觀呈深綠色至黑色，刺短而密集。肉質呈現濃郁的甜味和醇厚的旨味，是日本料理店的首選。
+            </p>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">主要產地</span>
+                北海道、根室
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">最佳季節</span>
+                6月 - 8月
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">口味</span>
+                濃郁甜味、醇厚旨味
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">外觀</span>
+                深綠/黑色、刺短密
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center">
+            <span class="text-gray-400">Maza Sea Urchin Image</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Murasaki -->
+      <div class="mb-24 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center order-2 md:order-1">
+            <span class="text-gray-400">Murasaki Sea Urchin Image</span>
+          </div>
+          <div class="order-1 md:order-2">
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">日本 | Japan</span>
+            <h3 class="text-3xl playfair italic mb-4">紫海膽 <span class="text-gray-400">Murasaki</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              外觀呈紫黑色，刺較長且稀疏。味道相對清爽，甜味較淡但有獨特的海洋鮮味。產量較多，價格較馬糞實惠。
+            </p>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">主要產地</span>
+                東京灣、相模灣
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">最佳季節</span>
+                9月 - 11月
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">口味</span>
+                清爽、海洋鮮味
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">外觀</span>
+                紫黑色、刺長稀疏
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canada -->
+      <div class="mb-24 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">加拿大 | Canada</span>
+            <h3 class="text-3xl playfair italic mb-4">加拿大海膽 <span class="text-gray-400">Red Sea Urchin</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              主要產於BC省海域，外觀呈暗紅色。由於水溫較低，生長週期較長，肉質肥厚且口感細膩。品質穩定，是日本以外最優質的選擇。
+            </p>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">主要產地</span>
+                BC省、溫哥華島
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">最佳季節</span>
+                全年供應
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">口味</span>
+                肥厚細膩、甜味適中
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">外觀</span>
+                暗紅色、刺粗壯
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center">
+            <span class="text-gray-400">Canadian Red Sea Urchin Image</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Maine -->
+      <div class="mb-24 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center order-2 md:order-1">
+            <span class="text-gray-400">Maine Green Sea Urchin Image</span>
+          </div>
+          <div class="order-1 md:order-2">
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">美國 | USA</span>
+            <h3 class="text-3xl playfair italic mb-4">緬因海膽 <span class="text-gray-400">Green Sea Urchin</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              產於美國東北部海域，外觀呈淺綠色。肉質較為清爽，甜味適中，是美國市場的主流品種。
+            </p>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">主要產地</span>
+                緬因州、麻省
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">最佳季節</span>
+                10月 - 3月
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">口味</span>
+                清爽、甜味適中
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">外觀</span>
+                淺綠色、刺中等
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chile -->
+      <div class="mb-24 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">智利 | Chile</span>
+            <h3 class="text-3xl playfair italic mb-4">智利海膽 <span class="text-gray-400">Chile Sea Urchin</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              來自南美洲的海膽，價格較低但品質參差不齊。主要供應低端市場或加工用途。建議選擇有信譽的供應商。
+            </p>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">主要產地</span>
+                智利南部
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">最佳季節</span>
+                4月 - 9月
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">口味</span>
+                淡味、價格實惠
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">外觀</span>
+                紅棕色、刺稀疏
+              </div>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center">
+            <span class="text-gray-400">Chile Sea Urchin Image</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Australia -->
+      <div class="mb-24">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center order-2 md:order-1">
+            <span class="text-gray-400">Australian Sea Urchin Image</span>
+          </div>
+          <div class="order-1 md:order-2">
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">澳洲 | Australia</span>
+            <h3 class="text-3xl playfair italic mb-4">澳洲海膽 <span class="text-gray-400">Long Spine Urchin</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              澳洲海域產的長刺海膽，近年品質有所提升。適合對品質有一定要求但預算有限的客戶。
+            </p>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">主要產地</span>
+                維多利亞州、塔斯馬尼亞
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">最佳季節</span>
+                6月 - 10月
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">口味</span>
+                中等甜度、口感普通
+              </div>
+              <div>
+                <span class="text-gray-400 block text-xs uppercase">外觀</span>
+                深綠/棕色、長刺
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="py-32 bg-warm-gray text-center px-8">
+    <h2 class="text-3xl md:text-4xl playfair italic mb-8">需要更多品種資訊？</h2>
+    <p class="text-gray-600 mb-12 max-w-xl mx-auto">
+      稻荷環球食品提供來自全球的海膽品种，歡迎查詢報價。我們的專業團隊可以根據您的需求推薦最適合的品種。
+    </p>
+    <div class="flex flex-col md:flex-row justify-center items-center gap-8">
+      <button class="px-12 py-4 bg-black text-white text-sm uppercase letter-spacing-wide hover:bg-zinc-800 transition rounded-sm cursor-pointer">
+        索取本週報價
+      </button>
+      <a href="mailto:info@inariglobal.com" class="text-sm border-b border-black pb-1 hover:text-gold hover:border-gold transition uppercase tracking-widest">
+        聯繫我們
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 border-t border-gray-100 text-center px-8">
+    <div class="text-xs text-gray-400 uppercase tracking-widest">
+      Inari Global Foods &copy; 2026.<br>
+      稻荷環球食品 | Curating the Finest Sea Treasures for Hong Kong & Macau.
+    </div>
+  </footer>
+</Layout>

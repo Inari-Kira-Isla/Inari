@@ -1,8 +1,5 @@
 // GET /api/admin/collections/daily — 每日收款工作板（manager only）
-// 四個 Tab：現金待收 / 月結應收 / 逾期追收 / 支票到期
-// 資料來源：v_daily_followup（v_collection_tracking + inari_collection_actions）
-//           inari_collections（支票）
-
+// Tab1=現結逐張(v_cash_invoice_detail) / Tab2=月結應收 / Tab3=逾期 / Tab4=支票 / Tab5=停供候選
 import type { APIRoute } from 'astro';
 
 const SUPABASE_URL = 'https://cqartwwsbxnjjatmndtt.supabase.co';
@@ -25,7 +22,7 @@ function macauDatePlus(days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-// POST /api/admin/collections/daily — 寫入追收記錄
+// POST — 寫入追收記錄
 export const POST: APIRoute = async ({ locals, request }) => {
   if (locals.userType !== 'manager') {
     return new Response(JSON.stringify({ error: '權限不足' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
@@ -41,34 +38,26 @@ export const POST: APIRoute = async ({ locals, request }) => {
     return new Response(JSON.stringify({ error: '必填：canon_code, method' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
   }
 
-  const payload = {
-    tenant_id: TENANT_ID,
-    canon_code,
-    customer_name: customer_name || null,
-    invoice_ref: invoice_ref || null,
-    action_date: macauToday(),
-    method,
-    notes: notes || null,
-    promised_date: promised_date || null,
-    created_by: (locals as any).userEmail || 'manager',
-  };
-
   const r = await withTimeout(
     fetch(`${SUPABASE_URL}/rest/v1/inari_collection_actions`, {
       method: 'POST',
       headers: { ...sbHeaders(key), Prefer: 'return=representation' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        tenant_id: TENANT_ID, canon_code,
+        customer_name: customer_name || null, invoice_ref: invoice_ref || null,
+        action_date: macauToday(), method,
+        notes: notes || null, promised_date: promised_date || null,
+        created_by: (locals as any).userEmail || 'manager',
+      }),
     }),
     5000
   );
-  if (!r.ok) {
-    const err = await r.text();
-    return new Response(JSON.stringify({ error: `寫入失敗: ${err}` }), { status: 500, headers: { 'Content-Type': 'application/json' } });
-  }
+  if (!r.ok) return new Response(JSON.stringify({ error: `寫入失敗: ${await r.text()}` }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   const data = await r.json();
   return new Response(JSON.stringify({ ok: true, id: data[0]?.id }), { headers: { 'Content-Type': 'application/json' } });
 };
 
+// GET — 每日工作板
 export const GET: APIRoute = async ({ locals }) => {
   if (locals.userType !== 'manager') {
     return new Response(JSON.stringify({ error: '權限不足' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
@@ -86,19 +75,18 @@ export const GET: APIRoute = async ({ locals }) => {
   const chequeDeadline = macauDatePlus(30);
 
   try {
-    const [followup, cheques, freshness] = await Promise.all([
-      // v_daily_followup：所有未收（含上次追收記錄）
+    const [followup, cashInvoices, cheques, suspendRows, freshness] = await Promise.all([
+      // v_daily_followup：月結/逾期 tab 使用
       get('v_daily_followup?select=canon_code,customer_name,salesperson,slot,inv_ym,expect_ym,outstanding,n_inv,bucket,last_action_date,last_action_method,last_action_notes,promised_date,last_action_by'),
-      // 支票：未兌現 + 30天內到期 + tenant filter（service key bypass RLS，必須顯式過濾）
+      // v_cash_invoice_detail：Tab1 現結逐張發票
+      get('v_cash_invoice_detail?select=invoice_no,invoice_date,canon_code,customer_code,customer_name,salesperson,payment_type,amount,status,days_overdue,last_action_date,last_action_method,last_action_notes,promised_date&order=days_overdue.desc,amount.desc'),
+      // 支票：30天內到期
       get(`inari_collections?select=id,customer_code,customer_name,amount,cheque_no,cheque_bank,cheque_due_date,cheque_status,invoice_no&cheque_status=eq.待兌現&cheque_due_date=lte.${chequeDeadline}&order=cheque_due_date.asc`),
+      // 停供候選（上月或更早仍未收的月結客）
+      get('v_suspend_candidates?select=canon_code,customer_name,salesperson,due_date,is_suspended,earliest_unpaid_date,total_overdue,invoice_count,months_overdue'),
       // 數據新鮮度
       get('inari_daily_invoices?select=invoice_date&order=invoice_date.desc&limit=1'),
     ]);
-
-    // Tab 1：現金/轉帳待收（本月到期 + 槽='現金即收'；逾期現金也含）
-    const cashTab = followup
-      .filter((r: any) => r.slot === '現金即收' && (r.bucket === '本月到期' || r.bucket === '逾期·要追' || r.bucket === '現金·需即收'))
-      .sort((a: any, b: any) => num(b.outstanding) - num(a.outstanding));
 
     // Tab 2：月結應收（本月到期，非現金即收）
     const monthlyTab = followup
@@ -109,13 +97,12 @@ export const GET: APIRoute = async ({ locals }) => {
         return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || num(b.outstanding) - num(a.outstanding);
       });
 
-    // Tab 3：逾期追收（所有逾期，按金額排）
+    // Tab 3：逾期追收（所有逾期，按金額）
     const overdueTab = followup
       .filter((r: any) => r.bucket === '逾期·要追')
       .sort((a: any, b: any) => num(b.outstanding) - num(a.outstanding));
 
-    // 統計
-    const sumAmt = (arr: any[]) => arr.reduce((s: number, r: any) => s + num(r.outstanding), 0);
+    const sumAmt = (arr: any[], key = 'outstanding') => arr.reduce((s: number, r: any) => s + num(r[key]), 0);
 
     return new Response(JSON.stringify({
       meta: {
@@ -124,9 +111,9 @@ export const GET: APIRoute = async ({ locals }) => {
         cheque_window_days: 30,
       },
       cash: {
-        count: cashTab.length,
-        total: sumAmt(cashTab),
-        rows: cashTab,
+        count: cashInvoices.length,
+        total: sumAmt(cashInvoices, 'amount'),
+        rows: cashInvoices,
       },
       monthly: {
         count: monthlyTab.length,
@@ -143,12 +130,14 @@ export const GET: APIRoute = async ({ locals }) => {
         total: cheques.reduce((s: number, r: any) => s + num(r.amount), 0),
         rows: cheques,
       },
+      suspend: {
+        count: suspendRows.length,
+        total: sumAmt(suspendRows, 'total_overdue'),
+        rows: suspendRows,
+      },
     }), { headers: { 'Content-Type': 'application/json' } });
 
   } catch (e: any) {
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 };

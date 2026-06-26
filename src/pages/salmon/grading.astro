@@ -1,0 +1,282 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "如何判斷三文魚是否適合刺身？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "判斷三文魚是否適合刺身有以下標準：1) 顏色：新鮮的刺身級三文魚呈現鮮豔的橙紅色；2) 脂肪紋路：優質刺身有明顯的白色脂肪紋路（大理石紋）；3) 氣味：無腥臭味，有淡淡的海鮮鮮味；4) 肉質：有彈性，不軟爛；5) 來源：必須來自可信賴的養殖場或捕撈區。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "挪威三文魚和日本三文魚有什麼分別？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "挪威三文魚是養殖的（大西洋三文魚），品質穩定，脂肪含量適中，全年供應，價格適中。日本三文魚主要是野生捕撈的太平洋三文魚（如銀鮭、紅鮭），產季在秋冬，脂肪含量較低，口感較緊實。兩者都可用於刺身，但風格不同。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "三文魚分哪些等級？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "三文魚一般分為刺身級、烹飪級和加工級。刺身級要求最高：顏色鮮豔、脂肪紋路清晰、無寄生蟲風險、來自優質養殖場。烹飪級可用於煎、烤、蒸等烹飪方式。加工級通常用於罐頭或加工食品。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "養殖三文魚和野生三文魚哪個更好？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "養殖和野生三文魚各有優勢：養殖三文魚品質穩定，脂肪含量較高（口感更豐潤），全年供應，價格適中。野生三文魚脂肪含量較低，口感較緊實，味道更濃郁，但產量不穩定，價格較高。選擇取決於用途和預算。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "三文魚寄生蟲問題如何解決？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "優質供應商會對三文魚進行嚴格的寄生蟲檢查和處理。養殖三文魚因為在受控環境中生長，寄生蟲風險較低。野生三文魚可能需要進行低溫冷凍處理（-20°C以下冷凍7天或-35°C以下冷凍15小時）來殺死寄生蟲。購買時請確保來源可靠。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="三文魚刺身級別認定 | Salmon Grading Guide | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase letter-spacing-wide">
+      <a href="/" class="hover:text-gold transition">Home</a>
+      <a href="#grading" class="hover:text-gold transition">Grading</a>
+      <a href="#freshness" class="hover:text-gold transition">Freshness</a>
+      <a href="#faq" class="hover:text-gold transition">FAQ</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="min-h-screen pt-32 px-8 flex flex-col items-center justify-center text-center">
+    <div class="fade-in">
+      <h2 class="text-sm uppercase letter-spacing-wide text-gray-500 mb-4">Quality Standards</h2>
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-light playfair mb-8 leading-tight">
+        Salmon <span class="italic">Grading</span> Guide
+      </h1>
+      <p class="max-w-xl mx-auto text-gray-600 font-light mb-12">
+        專業三文魚分級標準，教您如何挑選優質刺身級三文魚。我們的嚴格品質控制確保每一份三文魚都符合最高標準。
+      </p>
+    </div>
+  </section>
+
+  <!-- Grading Standards -->
+  <section id="grading" class="py-32 bg-white">
+    <div class="container mx-auto px-8 max-w-6xl">
+      <div class="text-center mb-16">
+        <h3 class="text-2xl playfair italic mb-4">刺身級別認定標準</h3>
+        <p class="text-gray-600 font-light">Sashimi Grade Salmon Standards</p>
+      </div>
+
+      <!-- Sashimi Grade -->
+      <div class="mb-16 p-8 bg-gradient-to-r from-amber-50 to-orange-50 rounded-sm border border-amber-100">
+        <div class="flex items-center justify-between mb-6">
+          <h4 class="text-3xl playfair">刺身級 <span class="text-gray-400">Sashimi Grade</span></h4>
+          <span class="text-xs uppercase tracking-widest bg-amber-200 px-4 py-2 rounded-full">最高品質 Premium</span>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">外觀 Appearance</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 顏色：鮮豔橙紅色</li>
+              <li>• 脂肪紋路：明顯大理石紋</li>
+              <li>• 肉質：緊實有彈性</li>
+              <li>• 光澤：自然光澤</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">品質要求 Requirements</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 來自優質養殖場</li>
+              <li>• 寄生蟲檢查合格</li>
+              <li>• 冷鏈運輸</li>
+              <li>• 新鮮度達標</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">適用用途</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 刺身直接食用</li>
+              <li>• 壽司</li>
+              <li>• 軍事壽司</li>
+              <li>• 高端日本料理</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cooking Grade -->
+      <div class="mb-16 p-8 bg-gradient-to-r from-gray-50 to-zinc-50 rounded-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+          <h4 class="text-3xl playfair">烹飪級 <span class="text-gray-400">Cooking Grade</span></h4>
+          <span class="text-xs uppercase tracking-widest bg-gray-200 px-4 py-2 rounded-full">標準品質 Standard</span>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">外觀 Appearance</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 顏色：橙紅至淡紅</li>
+              <li>• 脂肪紋路：少量或不明显</li>
+              <li>• 肉質：正常</li>
+              <li>• 無嚴重缺陷</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">品質要求</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 適合各種烹飪方式</li>
+              <li>• 無變質跡象</li>
+              <li>• 基本衛生標準</li>
+              <li>• 價格實惠</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">適用用途</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 煎烤三文魚</li>
+              <li>• 蒸煮</li>
+              <li>• 烤焗</li>
+              <li>• 湯類</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Processing Grade -->
+      <div class="p-8 bg-gradient-to-r from-stone-50 to-neutral-50 rounded-sm border border-stone-100">
+        <div class="flex items-center justify-between mb-6">
+          <h4 class="text-3xl playfair">加工級 <span class="text-gray-400">Processing Grade</span></h4>
+          <span class="text-xs uppercase tracking-widest bg-stone-200 px-4 py-2 rounded-full">經濟實惠 Economy</span>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">特點</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 價格最低</li>
+              <li>• 適合加工</li>
+              <li>• 大量採購</li>
+              <li>• 品質一般</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">品質要求</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 適合加工處理</li>
+              <li>• 需烹飪後食用</li>
+              <li>• 適合罐頭</li>
+              <li>• 適合煙燻</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">適用用途</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 罐頭食品</li>
+              <li>• 魚塊/魚柳</li>
+              <li>• 加工食品</li>
+              <li>• 餐飲業大批量</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Freshness Guide -->
+  <section id="freshness" class="py-24 bg-warm-gray">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <h3 class="text-2xl playfair italic text-center mb-12">新鮮度判斷指標</h3>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-4 text-green-600">✅ 新鮮特徵 Fresh</h4>
+          <ul class="text-sm space-y-3 text-gray-600">
+            <li>• 顏色：鮮豔橙紅色</li>
+            <li>• 氣味：淡淡海鮮鮮味</li>
+            <li>• 觸感：有彈性</li>
+            <li>• 脂肪紋路：明顯大理石紋</li>
+            <li>• 包裝：無液体滲出</li>
+          </ul>
+        </div>
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-4 text-red-600">❌ 不新鮮特徵 Not Fresh</h4>
+          <ul class="text-sm space-y-3 text-gray-600">
+            <li>• 顏色：暗淡或變灰</li>
+            <li>• 氣味：腥臭異味</li>
+            <li>• 觸感：軟爛或黏稠</li>
+            <li>• 脂肪紋路：消失或不見</li>
+            <li>• 包裝：有異味滲出</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="py-32 bg-white">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <h3 class="text-2xl playfair italic text-center mb-12">常見問題 FAQ</h3>
+      <div class="space-y-8">
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">如何判斷三文魚是否適合刺身？</h4>
+          <p class="text-gray-600 font-light">判斷三文魚是否適合刺身有以下標準：1) 顏色：新鮮的刺身級三文魚呈現鮮豔的橙紅色；2) 脂肪紋路：優質刺身有明顯的白色脂肪紋路（大理石紋）；3) 氣味：無腥臭味，有淡淡的海鮮鮮味；4) 肉質：有彈性，不軟爛；5) 來源：必須來自可信賴的養殖場或捕撈區。</p>
+        </div>
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">挪威三文魚和日本三文魚有什麼分別？</h4>
+          <p class="text-gray-600 font-light">挪威三文魚是養殖的（大西洋三文魚），品質穩定，脂肪含量適中，全年供應，價格適中。日本三文魚主要是野生捕撈的太平洋三文魚（如銀鮭、紅鮭），產季在秋冬，脂肪含量較低，口感較緊實。兩者都可用於刺身，但風格不同。</p>
+        </div>
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">三文魚分哪些等級？</h4>
+          <p class="text-gray-600 font-light">三文魚一般分為刺身級、烹飪級和加工級。刺身級要求最高：顏色鮮豔、脂肪紋路清晰、無寄生蟲風險、來自優質養殖場。烹飪級可用於煎、烤、蒸等烹飪方式。加工級通常用於罐頭或加工食品。</p>
+        </div>
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">養殖三文魚和野生三文魚哪個更好？</h4>
+          <p class="text-gray-600 font-light">養殖和野生三文魚各有優勢：養殖三文魚品質穩定，脂肪含量較高（口感更豐潤），全年供應，價格適中。野生三文魚脂肪含量較低，口感較緊實，味道更濃郁，但產量不穩定，價格較高。選擇取決於用途和預算。</p>
+        </div>
+        <div class="pb-8">
+          <h4 class="text-lg mb-3">三文魚寄生蟲問題如何解決？</h4>
+          <p class="text-gray-600 font-light">優質供應商會對三文魚進行嚴格的寄生蟲檢查和處理。養殖三文魚因為在受控環境中生長，寄生蟲風險較低。野生三文魚可能需要進行低溫冷凍處理（-20°C以下冷凍7天或-35°C以下冷凍15小時）來殺死寄生蟲。購買時請確保來源可靠。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section class="py-32 bg-warm-gray text-center px-8">
+    <h2 class="text-3xl md:text-4xl playfair italic mb-8">需要專業建議？</h2>
+    <p class="text-gray-600 mb-12 max-w-xl mx-auto">
+      稻荷環球食品擁有豐富的三文魚採購經驗，我們的專業團隊可以幫助您選擇最適合的產品。
+    </p>
+    <div class="flex flex-col md:flex-row justify-center items-center gap-8">
+      <button class="px-12 py-4 bg-black text-white text-sm uppercase letter-spacing-wide hover:bg-zinc-800 transition rounded-sm cursor-pointer">
+        索取本週報價
+      </button>
+      <a href="mailto:info@inariglobal.com" class="text-sm border-b border-black pb-1 hover:text-gold hover:border-gold transition uppercase tracking-widest">
+        聯繫我們
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 border-t border-gray-100 text-center px-8">
+    <div class="text-xs text-gray-400 uppercase tracking-widest">
+      Inari Global Foods &copy; 2026.<br>
+      稻荷環球食品 | Premium Salmon for Hong Kong & Macau.
+    </div>
+  </footer>
+</Layout>

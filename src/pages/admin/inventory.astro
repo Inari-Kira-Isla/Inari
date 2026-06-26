@@ -65,9 +65,9 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <table class="table table-vcenter card-table table-sm">
             <thead>
               <tr>
-                <th>SKU</th>
+                <th class="sortable-col" data-col="sku" style="cursor:pointer;user-select:none">SKU <span id="sort-icon-sku">▲</span></th>
                 <th>商品</th>
-                <th class="d-none d-md-table-cell">類別</th>
+                <th class="sortable-col d-none d-md-table-cell" data-col="category" style="cursor:pointer;user-select:none">類別 <span id="sort-icon-category"></span></th>
                 <th class="text-end">在手</th>
                 <th class="text-end">可用</th>
                 <th class="text-end d-none d-md-table-cell">批數</th>
@@ -381,6 +381,8 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     let lotsData = [];
     let legacyData = [];
     let allProducts = []; // {sku, name, on_hand, avg_cost, unit, category}
+    let sortKey: string = 'sku';
+    let sortDir: number = 1; // 1=asc, -1=desc
     const excludedSkus = new Set<string>(['B2B02052']); // 預設排除待 review 的
 
     async function loadProductCatalog() {
@@ -428,8 +430,35 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       renderSummary();
     }
 
+    function getSortedSummary() {
+      const key = sortKey;
+      return [...summaryData].sort((a, b) => {
+        let va: string, vb: string;
+        if (key === 'category') {
+          va = (a.category || '').toLowerCase();
+          vb = (b.category || '').toLowerCase();
+        } else {
+          va = (a.sku || '').toLowerCase();
+          vb = (b.sku || '').toLowerCase();
+        }
+        if (va < vb) return -1 * sortDir;
+        if (va > vb) return 1 * sortDir;
+        return 0;
+      });
+    }
+
+    function updateSortIcons() {
+      ['sku', 'category'].forEach(col => {
+        const el = document.getElementById(`sort-icon-${col}`);
+        if (!el) return;
+        if (col === sortKey) el.textContent = sortDir === 1 ? '▲' : '▼';
+        else el.textContent = '';
+      });
+    }
+
     function renderSummary() {
       const tbody = document.getElementById('summary-tbody')!;
+      const sorted = getSortedSummary();
       const totalSkus = summaryData.length;
       const totalLots = summaryData.reduce((s, r) => s + Number(r.lot_count || 0), 0);
       const totalValue = summaryData.reduce((s, r) => s + Number(r.stock_value_mop || 0), 0);
@@ -444,7 +473,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">無庫存資料 — 點上方「進貨」開始</td></tr>';
         return;
       }
-      tbody.innerHTML = summaryData.map(r => {
+      tbody.innerHTML = sorted.map(r => {
         const daysExpiry = r.days_until_earliest_expiry;
         const expiryBadge = daysExpiry == null ? '<span class="text-muted">—</span>'
           : daysExpiry <= 0 ? `<span class="badge bg-red-lt text-red">已過期</span>`
@@ -700,6 +729,17 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       });
     });
 
+    // Sort column headers
+    document.querySelectorAll<HTMLElement>('.sortable-col').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.getAttribute('data-col') || 'sku';
+        if (sortKey === col) sortDir = -sortDir;
+        else { sortKey = col; sortDir = 1; }
+        updateSortIcons();
+        renderSummary();
+      });
+    });
+
     // Search debounce
     let searchTimer: any = null;
     document.getElementById('summary-search')!.addEventListener('input', () => {
@@ -917,6 +957,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     bindSkuHint('r-sku', 'r-sku-hint');
     bindSkuHint('p-sku', 'p-stock-hint');
 
+    updateSortIcons();
     loadProductCatalog().then(() => {
       loadSummary();
       loadLegacy();

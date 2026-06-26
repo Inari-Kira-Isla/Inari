@@ -1,0 +1,263 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "海膽如何保存最好？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "海膽最佳保存方式是冷藏（0-4°C），放在乾淨的容器中，用保鮮膜包好避免異味傳入。建議在2-3天內食用完畢以保持最佳風味。如需長期保存，可進行冷冻處理。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "海膽可以冷冻保存嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "可以冷冻保存，但會影響口感。建議先將海膽水分瀝乾，用保鮮膜包好放入密閉袋中，排除空氣後冷冻。食用前在冷藏室慢慢解凍，不要用熱水或微波爐快速解凍。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "如何判斷海膽是否變質？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "變質的海膽有以下特徵：1) 顏色變暗淡或發灰；2) 產生腥臭異味；3) 肉質變得黏稠或過於軟爛；4) 包裝內有過多液體；5) 刺狀完全脫落。一旦發現這些跡象，請勿食用。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "海膽在室溫下可以放多久？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "室溫下海膽不宜放置超過2小時。海膽是高蛋白海鮮，常溫下細菌繁殖迅速。如需暫時放置，請放在冰袋上並盡快食用或冷藏。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "真空包裝的海膽如何保存？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "真空包裝可延長海膽保存期限。冷藏可保存3-5天，冷冻可保存1-2個月。保存時避免光照，確保包裝無破損。解凍後請盡快食用，不要再次冷冻。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="海膽保存方法 | Sea Urchin Storage | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase letter-spacing-wide">
+      <a href="/" class="hover:text-gold transition">Home</a>
+      <a href="#storage" class="hover:text-gold transition">Storage</a>
+      <a href="#faq" class="hover:text-gold transition">FAQ</a>
+      <a href="#contact" class="hover:text-gold transition">Contact</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="min-h-screen pt-32 px-8 flex flex-col items-center justify-center text-center">
+    <div class="fade-in">
+      <h2 class="text-sm uppercase letter-spacing-wide text-gray-500 mb-4">Storage Guide</h2>
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-light playfair mb-8 leading-tight">
+        Sea Urchin <span class="italic">Storage</span> Methods
+      </h1>
+      <p class="max-w-xl mx-auto text-gray-600 font-light mb-12">
+        專業海膽保存指南，教您如何保持海膽的最佳鮮度與風味。正確的保存方法可以延長食用期限。
+      </p>
+    </div>
+  </section>
+
+  <!-- Storage Methods -->
+  <section id="storage" class="py-32 bg-white">
+    <div class="container mx-auto px-8 max-w-6xl">
+      <div class="text-center mb-16">
+        <h3 class="text-2xl playfair italic mb-4">保存方法總覽</h3>
+        <p class="text-gray-600 font-light">Storage Methods Overview</p>
+      </div>
+
+      <!-- Refrigeration -->
+      <div class="mb-16 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">冷藏保存 Refrigeration</span>
+            <h3 class="text-3xl playfair italic mb-4">0°C - 4°C <span class="text-gray-400 text-lg">最佳方式</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              冷藏是保持海膽最佳風味的方法。將海膽放入乾淨容器，用保鮮膜包好，放在冰箱最深處（溫度最穩定）。
+            </p>
+            <div class="bg-blue-50 p-6 rounded-sm">
+              <h5 class="text-sm uppercase tracking-widest text-blue-600 mb-3">保存期限 Shelf Life</h5>
+              <p class="text-3xl font-light">2-3 <span class="text-sm text-gray-500">天</span></p>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center">
+            <span class="text-gray-400">Refrigeration Storage Image</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Freezing -->
+      <div class="mb-16 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center order-2 md:order-1">
+            <span class="text-gray-400">Freezing Storage Image</span>
+          </div>
+          <div class="order-1 md:order-2">
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">冷冻保存 Freezing</span>
+            <h3 class="text-3xl playfair italic mb-4">-18°C <span class="text-gray-400 text-lg">長期保存</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              如需長期保存，可選擇冷冻。請確保包裝密封良好，避免水分流失。請注意：冷冻會略微影響口感。
+            </p>
+            <div class="bg-blue-50 p-6 rounded-sm">
+              <h5 class="text-sm uppercase tracking-widest text-blue-600 mb-3">保存期限 Shelf Life</h5>
+              <p class="text-3xl font-light">3-6 <span class="text-sm text-gray-500">個月</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vacuum -->
+      <div class="mb-16 border-b border-gray-100 pb-16">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <span class="text-xs uppercase tracking-widest text-gold mb-2 block">真空包裝 Vacuum Pack</span>
+            <h3 class="text-3xl playfair italic mb-4">真空保鮮 <span class="text-gray-400 text-lg">延長保質</span></h3>
+            <p class="text-gray-600 font-light mb-6">
+              真空包裝可有效阻隔空氣和細菌，顯著延長保存期限。這是專業餐廳和批發商常用的保存方式。
+            </p>
+            <div class="bg-blue-50 p-6 rounded-sm">
+              <h5 class="text-sm uppercase tracking-widest text-blue-600 mb-3">保存期限 Shelf Life</h5>
+              <p class="text-3xl font-light">冷藏 3-5 天<br/>冷冻 1-2 個月</p>
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-sm h-80 flex items-center justify-center">
+            <span class="text-gray-400">Vacuum Packaging Image</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Best Practices -->
+  <section class="py-24 bg-warm-gray">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <h3 class="text-2xl playfair italic text-center mb-12">保存最佳實踐</h3>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-sm">
+          <h4 class="text-lg mb-4">✅ 應該做 Do</h4>
+          <ul class="text-sm space-y-3 text-gray-600">
+            <li>• 使用乾淨容器</li>
+            <li>• 保鮮膜包緊</li>
+            <li>• 放在冰箱最深處</li>
+            <li>• 盡快食用</li>
+            <li>• 避光保存</li>
+          </ul>
+        </div>
+        <div class="bg-white p-6 rounded-sm">
+          <h4 class="text-lg mb-4">❌ 不應該做 Don't</h4>
+          <ul class="text-sm space-y-3 text-gray-600">
+            <li>• 不要直接放室溫</li>
+            <li>• 不要接觸其他強味食物</li>
+            <li>• 不要重複冷冻</li>
+            <li>• 不要用熱水解凍</li>
+            <li>• 不要保存超過期限</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Freshness Indicators -->
+  <section class="py-24 bg-white">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <h3 class="text-2xl playfair italic text-center mb-12">新鮮度指標</h3>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="bg-green-50 p-8 rounded-sm border border-green-100">
+          <h4 class="text-lg mb-4 text-green-700">✅ 可以食用 Good to Eat</h4>
+          <ul class="text-sm space-y-3 text-gray-600">
+            <li>• 顏色：鮮豔橙黃</li>
+            <li>• 氣味：淡淡海水味</li>
+            <li>• 觸感：有彈性</li>
+            <li>• 包裝：無異味滲出</li>
+          </ul>
+        </div>
+        <div class="bg-red-50 p-8 rounded-sm border border-red-100">
+          <h4 class="text-lg mb-4 text-red-700">❌ 請勿食用 Do Not Eat</h4>
+          <ul class="text-sm space-y-3 text-gray-600">
+            <li>• 顏色：暗淡或灰暗</li>
+            <li>• 氣味：腥臭異味</li>
+            <li>• 觸感：過於軟爛</li>
+            <li>• 包裝：有異味液體</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="py-32 bg-warm-gray">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <h3 class="text-2xl playfair italic text-center mb-12">常見問題 FAQ</h3>
+      
+      <div class="space-y-8">
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-3">海膽如何保存最好？</h4>
+          <p class="text-gray-600 font-light">海膽最佳保存方式是冷藏（0-4°C），放在乾淨的容器中，用保鮮膜包好避免異味傳入。建議在2-3天內食用完畢以保持最佳風味。如需長期保存，可進行冷冻處理。</p>
+        </div>
+        
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-3">海膽可以冷冻保存嗎？</h4>
+          <p class="text-gray-600 font-light">可以冷冻保存，但會影響口感。建議先將海膽水分瀝乾，用保鮮膜包好放入密閉袋中，排除空氣後冷冻。食用前在冷藏室慢慢解凍，不要用熱水或微波爐快速解凍。</p>
+        </div>
+        
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-3">如何判斷海膽是否變質？</h4>
+          <p class="text-gray-600 font-light">變質的海膽有以下特徵：1) 顏色變暗淡或發灰；2) 產生腥臭異味；3) 肉質變得黏稠或過於軟爛；4) 包裝內有過多液體；5) 刺狀完全脫落。一旦發現這些跡象，請勿食用。</p>
+        </div>
+        
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-3">海膽在室溫下可以放多久？</h4>
+          <p class="text-gray-600 font-light">室溫下海膽不宜放置超過2小時。海膽是高蛋白海鮮，常溫下細菌繁殖迅速。如需暫時放置，請放在冰袋上並盡快食用或冷藏。</p>
+        </div>
+        
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-3">真空包裝的海膽如何保存？</h4>
+          <p class="text-gray-600 font-light">真空包裝可延長海膽保存期限。冷藏可保存3-5天，冷冻可保存1-2個月。保存時避免光照，確保包裝無破損。解凍後請盡快食用，不要再次冷冻。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="py-32 bg-white text-center px-8">
+    <h2 class="text-3xl md:text-4xl playfair italic mb-8">需要更多保存建議？</h2>
+    <p class="text-gray-600 mb-12 max-w-xl mx-auto">
+      稻荷環球食品提供專業的海膽保存建議，我們的團隊可以根據您的使用情況提供最適合的保存方案。
+    </p>
+    <div class="flex flex-col md:flex-row justify-center items-center gap-8">
+      <button class="px-12 py-4 bg-black text-white text-sm uppercase letter-spacing-wide hover:bg-zinc-800 transition rounded-sm cursor-pointer">
+        索取本週報價
+      </button>
+      <a href="mailto:info@inariglobal.com" class="text-sm border-b border-black pb-1 hover:text-gold hover:border-gold transition uppercase tracking-widest">
+        聯繫我們
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 border-t border-gray-100 text-center px-8">
+    <div class="text-xs text-gray-400 uppercase tracking-widest">
+      Inari Global Foods &copy; 2026.<br>
+      稻荷環球食品 | Curating the Finest Sea Treasures for Hong Kong & Macau.
+    </div>
+  </footer>
+</Layout>

@@ -1,0 +1,415 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "日本海膽主要產區在哪裡？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "日本海膽主要產區包括：北海道（最優質，馬糞海膽主要產地）、根室（頂級馬糞海膽）、東京灣和相模灣（紫海膽為主）、九州地區（少量優質海膽）。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "挪威三文魚養殖區有哪些？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "挪威是全球最大的養殖三文魚出口國，主要養殖區包括：挪威南部（最優質）、特倫德拉格峽灣、北部芬馬克地區。挪威三文魚以其優質的肉質、均勻的脂肪分佈聞名。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "加拿大紅海膽品質好嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "加拿大紅海膽（Red Sea Urchin）主要產於 BC 省海域，是日本以外最優質的選擇之一。由於水溫較低，生長週期較長，肉質肥厚且口感細膩。品質穩定，適合追求性價比的餐廳。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "智利和澳洲海膽品質如何？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "智利和澳洲海膽屬於南半球產品，品質參差不齊。智利海膽價格較低但品質不穩定；澳洲海膽近年品質有所提升。主要供應低端市場或加工用途。建議選擇有信譽的供應商。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "全球海膽產季分別是什麼時候？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "全球海膽產季：日本馬糞 6-8月，紫海膽 9-11月；加拿大全年供應；智利 4-9月；澳洲 6-10月。了解產季可以確保最佳品質和合理價格。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="全球海膽三文魚產地指南 | Global Sourcing Guide | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase letter-spacing-wide">
+      <a href="/" class="hover:text-gold transition">Home</a>
+      <a href="#japan" class="hover:text-gold transition">Japan</a>
+      <a href="#norway" class="hover:text-gold transition">Norway</a>
+      <a href="#canada" class="hover:text-gold transition">Canada</a>
+      <a href="#other" class="hover:text-gold transition">Other</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="min-h-screen pt-32 px-8 flex flex-col items-center justify-center text-center">
+    <div class="fade-in">
+      <h2 class="text-sm uppercase letter-spacing-wide text-gray-500 mb-4">Global Sourcing Network</h2>
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-light playfair mb-8 leading-tight">
+        Worldwide <span class="italic">Sourcing</span> Guide
+      </h1>
+      <p class="max-w-xl mx-auto text-gray-600 font-light mb-12">
+        全球頂級海膽與三文魚產地指南，涵蓋日本、挪威、加拿大等主要產區的詳細資訊。為您提供最優質的採購建議。
+      </p>
+    </div>
+  </section>
+
+  <!-- Japan Sea Urchin -->
+  <section id="japan" class="py-32 bg-white">
+    <div class="container mx-auto px-8 max-w-6xl">
+      <div class="text-center mb-16">
+        <span class="text-xs uppercase tracking-widest text-gold mb-2 block">日本 | Japan</span>
+        <h3 class="text-3xl playfair italic mb-4">海膽王國</h3>
+        <p class="text-gray-600 font-light">World's Premium Sea Urchin Source</p>
+      </div>
+
+      <div class="space-y-12">
+        <!-- Hokkaido -->
+        <div class="border-b border-gray-100 pb-12">
+          <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h4 class="text-2xl playfair italic mb-2">北海道 <span class="text-gray-400">Hokkaido</span></h4>
+              <span class="text-xs uppercase tracking-widest bg-amber-100 text-amber-700 px-3 py-1 rounded-full">最高品質 Premium</span>
+              <p class="text-gray-600 font-light mt-4">
+                 北海道是全球最優質海膽的產地，擁有清澈冰冷的海水和優質的生態環境。馬糞海膽（Maza）以此地為最佳。
+              </p>
+              <div class="grid grid-cols-2 gap-4 mt-6 text-sm">
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">主要品種</span>
+                  馬糞海膽
+                </div>
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">產季</span>
+                  6月 - 8月
+                </div>
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">價格區間</span>
+                  $150-300/盒
+                </div>
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">年產量</span>
+                  約 500 噸
+                </div>
+              </div>
+            </div>
+            <div class="bg-gray-50 rounded-sm h-64 flex items-center justify-center">
+              <span class="text-gray-400">Hokkaido Sea Urchin Image</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nemuro -->
+        <div class="border-b border-gray-100 pb-12">
+          <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="bg-gray-50 rounded-sm h-64 flex items-center justify-center order-2 md:order-1">
+              <span class="text-gray-400">Nemuro Region Image</span>
+            </div>
+            <div class="order-1 md:order-2">
+              <h4 class="text-2xl playfair italic mb-2">根室 <span class="text-gray-400">Nemuro</span></h4>
+              <span class="text-xs uppercase tracking-widest bg-amber-100 text-amber-700 px-3 py-1 rounded-full">頂級品質 Top Grade</span>
+              <p class="text-gray-600 font-light mt-4">
+                根室位於北海道最東端，是日本海膽產量最高的地區。這裡的海膽以品質穩定、味道濃郁著稱。
+              </p>
+              <div class="grid grid-cols-2 gap-4 mt-6 text-sm">
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">主要品種</span>
+                  馬糞海膽
+                </div>
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">產季</span>
+                  7月 - 9月
+                </div>
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">價格區間</span>
+                  $180-350/盒
+                </div>
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">年產量</span>
+                  約 300 噸
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tokyo Bay -->
+        <div>
+          <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h4 class="text-2xl playfair italic mb-2">東京灣 <span class="text-gray-400">Tokyo Bay</span></h4>
+              <span class="text-xs uppercase tracking-widest bg-gray-100 text-gray-600 px-3 py-1 rounded-full">標準品質 Standard</span>
+              <p class="text-gray-600 font-light mt-4">
+                東京灣和相模灣是紫海膽（Murasaki）的主要產地。雖然品質不及馬糞海膽，但供應穩定，價格實惠。
+              </p>
+              <div class="grid grid-cols-2 gap-4 mt-6 text-sm">
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">主要品種</span>
+                  紫海膽
+                </div>
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">產季</span>
+                  9月 - 11月
+                </div>
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">價格區間</span>
+                  $80-150/盒
+                </div>
+                <div>
+                  <span class="text-gray-400 block text-xs uppercase">年產量</span>
+                  約 200 噸
+                </div>
+              </div>
+            </div>
+            <div class="bg-gray-50 rounded-sm h-64 flex items-center justify-center">
+              <span class="text-gray-400">Tokyo Bay Sea Urchin Image</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Norway Salmon -->
+  <section id="norway" class="py-32 bg-warm-gray">
+    <div class="container mx-auto px-8 max-w-6xl">
+      <div class="text-center mb-16">
+        <span class="text-xs uppercase tracking-widest text-gold mb-2 block">挪威 | Norway</span>
+        <h3 class="text-3xl playfair italic mb-4">三文魚之國</h3>
+        <p class="text-gray-600 font-light">World's Leading Salmon Producer</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-xl playfair italic mb-4">南部產區 <span class="text-gray-400">Southern</span></h4>
+          <p class="text-gray-600 font-light mb-4">
+            挪威南部水溫適宜，是最優質三文魚的養殖區。養殖技術成熟，品質控制嚴格。
+          </p>
+          <ul class="text-sm space-y-2 text-gray-500">
+            <li>• 養殖量：佔挪威 40%</li>
+            <li>• 品質：最高</li>
+            <li>• 產季：全年</li>
+          </ul>
+        </div>
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-xl playfair italic mb-4">特倫德拉格 <span class="text-gray-400">Trøndelag</span></h4>
+          <p class="text-gray-600 font-light mb-4">
+            挪威中部重要養殖區，海水清澈，三文魚品質穩定。是挪威傳統養殖區。
+          </p>
+          <ul class="text-sm space-y-2 text-gray-500">
+            <li>• 養殖量：佔挪威 25%</li>
+            <li>• 品質：優質</li>
+            <li>• 產季：全年</li>
+          </ul>
+        </div>
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-xl playfair italic mb-4">芬馬克 <span class="text-gray-400">Finnmark</span></h4>
+          <p class="text-gray-600 font-light mb-4">
+            挪威北部偏遠海域，水溫較低，三文魚生長週期長，肉質更加緊實。
+          </p>
+          <ul class="text-sm space-y-2 text-gray-500">
+            <li>• 養殖量：佔挪威 15%</li>
+            <li>• 品質：極佳</li>
+            <li>• 產季：全年</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-12 bg-white p-8 rounded-sm">
+        <h4 class="text-lg mb-4">挪威三文魚價格資訊（2026年）</h4>
+        <div class="grid md:grid-cols-4 gap-6 text-sm">
+          <div>
+            <span class="text-gray-400 block text-xs uppercase">D 重</span>
+            <span class="text-lg">$40-50/kg</span>
+          </div>
+          <div>
+            <span class="text-gray-400 block text-xs uppercase">C 重</span>
+            <span class="text-lg">$55-65/kg</span>
+          </div>
+          <div>
+            <span class="text-gray-400 block text-xs uppercase">B 重</span>
+            <span class="text-lg">$70-85/kg</span>
+          </div>
+          <div>
+            <span class="text-gray-400 block text-xs uppercase">A 重</span>
+            <span class="text-lg">$90-120/kg</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Canada -->
+  <section id="canada" class="py-32 bg-white">
+    <div class="container mx-auto px-8 max-w-6xl">
+      <div class="text-center mb-16">
+        <span class="text-xs uppercase tracking-widest text-gold mb-2 block">加拿大 | Canada</span>
+        <h3 class="text-3xl playfair italic mb-4">紅海膽之鄉</h3>
+        <p class="text-gray-600 font-light">Premium Red Sea Urchin Source</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <h4 class="text-2xl playfair italic mb-4">BC 省 <span class="text-gray-400">British Columbia</span></h4>
+          <p class="text-gray-600 font-light mb-6">
+            加拿大紅海膽主要產於 BC 省海域。由於水溫較低，生長週期較長（5-7年），肉質肥厚且口感細膩。是日本以外最優質的選擇之一。
+          </p>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span class="text-gray-400 block text-xs uppercase">主要品種</span>
+              紅海膽
+            </div>
+            <div>
+              <span class="text-gray-400 block text-xs uppercase">產季</span>
+              全年供應
+            </div>
+            <div>
+              <span class="text-gray-400 block text-xs uppercase">價格區間</span>
+              $60-120/盒
+            </div>
+            <div>
+              <span class="text-gray-400 block text-xs uppercase">年產量</span>
+              約 1,500 噸
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 rounded-sm h-64 flex items-center justify-center">
+          <span class="text-gray-400">BC Red Sea Urchin Image</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Other Regions -->
+  <section id="other" class="py-32 bg-warm-gray">
+    <div class="container mx-auto px-8 max-w-6xl">
+      <div class="text-center mb-16">
+        <span class="text-xs uppercase tracking-widest text-gold mb-2 block">其他產區 | Other Sources</span>
+        <h3 class="text-3xl playfair italic mb-4">新興市場</h3>
+        <p class="text-gray-600 font-light">Emerging Markets</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-xl playfair italic mb-4">🇨🇱 智利 Chile</h4>
+          <p class="text-gray-600 font-light mb-4">
+            智利是南美洲最大的海膽生產國，價格較低但品質參差不齊。主要供應加工市場。
+          </p>
+          <ul class="text-sm space-y-2 text-gray-500">
+            <li>• 產季：4月 - 9月</li>
+            <li>• 價格：$30-60/盒</li>
+            <li>• 品質：一般</li>
+          </ul>
+        </div>
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-xl playfair italic mb-4">🇦🇺 澳洲 Australia</h4>
+          <p class="text-gray-600 font-light mb-4">
+            澳洲長刺海膽近年品質有所提升，主要產區在維多利亞州和塔斯馬尼亞。
+          </p>
+          <ul class="text-sm space-y-2 text-gray-500">
+            <li>• 產季：6月 - 10月</li>
+            <li>• 價格：$40-80/盒</li>
+            <li>• 品質：中上</li>
+          </ul>
+        </div>
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-xl playfair italic mb-4">🇺🇸 美國 USA</h4>
+          <p class="text-gray-600 font-light mb-4">
+            美國主要產區在緬因州和加利福尼亞，綠色海膽和紅色海膽都有供應。
+          </p>
+          <ul class="text-sm space-y-2 text-gray-500">
+            <li>• 產季：10月 - 3月</li>
+            <li>• 價格：$50-100/盒</li>
+            <li>• 品質：中等</li>
+          </ul>
+        </div>
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-xl playfair italic mb-4">🇳🇿 紐西蘭 NZ</h4>
+          <p class="text-gray-600 font-light mb-4">
+            紐西蘭海膽為野生捕撈，產量有限但品質独特。主要是 kina 品種。
+          </p>
+          <ul class="text-sm space-y-2 text-gray-500">
+            <li>• 產季：全年</li>
+            <li>• 價格：$70-110/盒</li>
+            <li>• 品質：獨特</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="py-24 bg-white">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <h3 class="text-2xl playfair italic text-center mb-12">常見問題 FAQ</h3>
+      <div class="space-y-8">
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">日本海膽主要產區在哪裡？</h4>
+          <p class="text-gray-600 font-light">日本海膽主要產區包括：北海道（最優質，馬糞海膽主要產地）、根室（頂級馬糞海膽）、東京灣和相模灣（紫海膽為主）、九州地區（少量優質海膽）。</p>
+        </div>
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">挪威三文魚養殖區有哪些？</h4>
+          <p class="text-gray-600 font-light">挪威是全球最大的養殖三文魚出口國，主要養殖區包括：挪威南部（最優質）、特倫德拉格峽灣、北部芬馬克地區。挪威三文魚以其優質的肉質、均勻的脂肪分佈聞名。</p>
+        </div>
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">加拿大紅海膽品質好嗎？</h4>
+          <p class="text-gray-600 font-light">加拿大紅海膽（Red Sea Urchin）主要產於 BC 省海域，是日本以外最優質的選擇之一。由於水溫較低，生長週期較長，肉質肥厚且口感細膩。品質穩定，適合追求性價比的餐廳。</p>
+        </div>
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">智利和澳洲海膽品質如何？</h4>
+          <p class="text-gray-600 font-light">智利和澳洲海膽屬於南半球產品，品質參差不齊。智利海膽價格較低但品質不穩定；澳洲海膽近年品質有所提升。主要供應低端市場或加工用途。建議選擇有信譽的供應商。</p>
+        </div>
+        <div class="pb-8">
+          <h4 class="text-lg mb-3">全球海膽產季分別是什麼時候？</h4>
+          <p class="text-gray-600 font-light">全球海膽產季：日本馬糞 6-8月，紫海膽 9-11月；加拿大全年供應；智利 4-9月；澳洲 6-10月。了解產季可以確保最佳品質和合理價格。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section class="py-32 bg-warm-gray text-center px-8">
+    <h2 class="text-3xl md:text-4xl playfair italic mb-8">需要採購建議？</h2>
+    <p class="text-gray-600 mb-12 max-w-xl mx-auto">
+      稻荷環球食品擁有全球採購網絡，可以幫助您選擇最適合的產品。
+    </p>
+    <div class="flex flex-col md:flex-row justify-center items-center gap-8">
+      <button class="px-12 py-4 bg-black text-white text-sm uppercase letter-spacing-wide hover:bg-zinc-800 transition rounded-sm cursor-pointer">
+        索取本週報價
+      </button>
+      <a href="mailto:info@inariglobal.com" class="text-sm border-b border-black pb-1 hover:text-gold hover:border-gold transition uppercase tracking-widest">
+        聯繫我們
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 border-t border-gray-100 text-center px-8">
+    <div class="text-xs text-gray-400 uppercase tracking-widest">
+      Inari Global Foods &copy; 2026.<br>
+      稻荷環球食品 | Global Seafood Sourcing Expert.
+    </div>
+  </footer>
+</Layout>

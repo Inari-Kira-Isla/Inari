@@ -1,0 +1,189 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "挪威三文魚有什麼特點？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "挪威是全球最大的養殖三文魚出口國，採用先進的北極圈冷水養殖技術，三文魚品質穩定，脂肪含量適中，是刺身的首選。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "智利三文魚和挪威三文魚有什麼分別？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "挪威三文魚肉質更細嫩，脂肪均勻，價格較高。智利三文魚價格實惠，但品質略有參差，適合一般餐廳使用。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "蘇格蘭三文魚好在哪裡？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "蘇格蘭三文魚養殖歷史悠久，水質純淨，魚肉呈現獨特的鮮甜味，是高端餐廳的熱門選擇。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="三文魚產地分析 | Salmon Sourcing | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase">
+      <a href="/" class="hover:text-gold transition">Home</a>
+    </div>
+  </nav>
+
+  <section class="min-h-screen pt-32 px-8 text-center">
+    <h2 class="text-sm uppercase text-gray-500 mb-4">Origin Guide</h2>
+    <h1 class="text-4xl md:text-6xl font-light playfair mb-8">Salmon <span class="italic">Sourcing</span></h1>
+    <p class="max-w-xl mx-auto text-gray-600 mb-12">全球主要三文魚產地分析，幫助您選擇最適合的產品。</p>
+  </section>
+
+  <section class="py-24 bg-white">
+    <div class="container mx-auto px-8 max-w-6xl">
+      <div class="space-y-12">
+        <!-- Norway -->
+        <div class="border-b border-gray-200 pb-12">
+          <div class="flex items-start gap-6">
+            <div class="text-4xl">🇳🇴</div>
+            <div>
+              <h3 class="text-2xl font-bold mb-2">挪威 Norway</h3>
+              <p class="text-gray-600 mb-4">全球最大的養殖三文魚出口國，採用先進的北極圈冷水養殖技術</p>
+              <div class="grid md:grid-cols-3 gap-4 mt-6">
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">品質</h4>
+                  <p class="text-sm text-gray-600">⭐⭐⭐⭐⭐</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">價格區間</h4>
+                  <p class="text-sm text-gray-600">$$$ (HKD 55-80/kg)</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">供應</h4>
+                  <p class="text-sm text-gray-600">全年穩定</p>
+                </div>
+              </div>
+              <h4 class="font-bold mt-6 mb-2">特點</h4>
+              <ul class="text-gray-600 list-disc list-inside">
+                <li>北極圈冷水養殖，水質純淨</li>
+                <li>嚴格的食品安全標準</li>
+                <li>脂肪含量適中，均勻分佈</li>
+                <li>最適合刺身和壽司</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scotland -->
+        <div class="border-b border-gray-200 pb-12">
+          <div class="flex items-start gap-6">
+            <div class="text-4xl">🏴󠁧󠁢󠁳󠁣󠁴󠁿</div>
+            <div>
+              <h3 class="text-2xl font-bold mb-2">蘇格蘭 Scotland</h3>
+              <p class="text-gray-600 mb-4">養殖歷史悠久，品質優異，適合高端餐飲</p>
+              <div class="grid md:grid-cols-3 gap-4 mt-6">
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">品質</h4>
+                  <p class="text-sm text-gray-600">⭐⭐⭐⭐⭐</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">價格區間</h4>
+                  <p class="text-sm text-gray-600">$$$ (HKD 50-75/kg)</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">供應</h4>
+                  <p class="text-sm text-gray-600">全年穩定</p>
+                </div>
+              </div>
+              <h4 class="font-bold mt-6 mb-2">特點</h4>
+              <ul class="text-gray-600 list-disc list-inside">
+                <li>傳統養殖方法</li>
+                <li>獨特鮮甜味</li>
+                <li>肉質緊實有彈性</li>
+                <li>高端餐廳首選</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chile -->
+        <div class="border-b border-gray-200 pb-12">
+          <div class="flex items-start gap-6">
+            <div class="text-4xl">🇨🇱</div>
+            <div>
+              <h3 class="text-2xl font-bold mb-2">智利 Chile</h3>
+              <p class="text-gray-600 mb-4">南美洲最大的三文魚養殖國，價格實惠</p>
+              <div class="grid md:grid-cols-3 gap-4 mt-6">
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">品質</h4>
+                  <p class="text-sm text-gray-600">⭐⭐⭐☆☆</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">價格區間</h4>
+                  <p class="text-sm text-gray-600">$ (HKD 30-45/kg)</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">供應</h4>
+                  <p class="text-sm text-gray-600">全年穩定</p>
+                </div>
+              </div>
+              <h4 class="font-bold mt-6 mb-2">特點</h4>
+              <ul class="text-gray-600 list-disc list-inside">
+                <li>價格實惠</li>
+                <li>供應穩定</li>
+                <li>適合一般餐廳</li>
+                <li>加工用途廣泛</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canada -->
+        <div>
+          <div class="flex items-start gap-6">
+            <div class="text-4xl">🇨🇦</div>
+            <div>
+              <h3 class="text-2xl font-bold mb-2">加拿大 Canada</h3>
+              <p class="text-gray-600 mb-4">優質冷水養殖，野生和養殖兼備</p>
+              <div class="grid md:grid-cols-3 gap-4 mt-6">
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">品質</h4>
+                  <p class="text-sm text-gray-600">⭐⭐⭐⭐☆</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">價格區間</h4>
+                  <p class="text-sm text-gray-600">$$ (HKD 45-70/kg)</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                  <h4 class="font-bold text-sm mb-2">供應</h4>
+                  <p class="text-sm text-gray-600">全年穩定</p>
+                </div>
+              </div>
+              <h4 class="font-bold mt-6 mb-2">特點</h4>
+              <ul class="text-gray-600 list-disc list-inside">
+                <li>太平洋冷水養殖</li>
+                <li>野生紅鮭供應</li>
+                <li>品質穩定</li>
+                <li>適合多元料理</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="py-12 text-center text-xs text-gray-400">
+    Inari Global Foods &copy; 2026. 稻荷環球食品
+  </footer>
+</Layout>

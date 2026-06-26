@@ -1,0 +1,74 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "什麼是可持續海鮮？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "可持續海鮮是指來自可持續管理漁業或養殖場的海產品，這些資源不會過度捕撈，有助於保護海洋生態系統。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "如何辨別可持續海鮮？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "可通過MSC（海洋管理委員會）或ASC（水產養殖管理委員會）認證標籤來辨別。這些認證確保產品來自可持續來源。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "稻荷提供可持續海鮮嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "是的，我們優先採購具有 MSC/ASC 認證的海鮮，並支持可持續漁業發展。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="可持續海鮮指南 | Sustainable Seafood Guide | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+  </nav>
+
+  <section class="pt-32 px-8 max-w-3xl mx-auto">
+    <span class="text-sm text-gray-500 uppercase">Blog</span>
+    <h1 class="text-3xl md:text-4xl font-light playfair mt-2 mb-6">可持續海鮮指南 Sustainable Seafood Guide</h1>
+    <p class="text-gray-600 mb-8">了解如何選擇對環境友善的海鮮</p>
+  </section>
+
+  <section class="pb-24 px-8 max-w-3xl mx-auto">
+    <article class="prose prose-lg text-gray-700">
+      <h2>什麼是可持續海鮮？</h2>
+      <p>可持續海鮮是指來自可持續管理漁業或養殖場的海產品。這些資源不會過度捕撈，有助於保護海洋生態系統，確保未來世代也能享受海鮮的美味。</p>
+
+      <h2>為什麼選擇可持續海鮮？</h2>
+      <ul>
+        <li>保護海洋生態環境</li>
+        <li>確保魚類資源長期供應</li>
+        <li>支持負責任的漁業養殖</li>
+        <li>提供更健康的食品選擇</li>
+      </ul>
+
+      <h2>認證標準</h2>
+      <p>選擇可持續海鮮時，請留意以下認證：</p>
+      <ul>
+        <li><strong>MSC (Marine Stewardship Council)</strong> - 野生捕撈魚類認證</li>
+        <li><strong>ASC (Aquaculture Stewardship Council)</strong> - 養殖魚類認證</li>
+        <li><strong>ISO 14001</strong> - 環境管理系統認證</li>
+      </ul>
+
+      <h2>稻荷的承諾</h2>
+      <p>稻荷環球食品致力於推廣可持續海鮮：我們優先採購具有 MSC/ASC 認證的產品，並與供應商合作確保養殖場和漁業的可持續性。</p>
+    </article>
+  </section>
+</Layout>

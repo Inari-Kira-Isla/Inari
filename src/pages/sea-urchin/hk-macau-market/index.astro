@@ -1,0 +1,204 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "香港海膽市場有多大？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "香港是亞洲最大的海膽進口市場之一，每年進口額超過10億港元。主要供應來自日本北海道、根室，以及加拿大。香港擁有超過2000間日本料理店，海膽需求持續增長。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "澳門海膽供應商有哪些？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "澳門主要海膽供應商包括稻荷環球食品，為各大酒店和餐廳提供日本、加拿大進口海膽。其他主要供應商包括xxx海產、xxx食品等。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "港澳海膽價格趨勢如何？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "夏季（6-8月）價格較低，因日本馬糞海膽產季供應充足。冬季節日前（12-1月）價格上漲20-30%。2025年平均價格為每公斤800-1200港元。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "日本核廢水排放影響海膽進口嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "目前日本海膽進口香港需通過嚴格的輻射檢測。稻荷環球食品所有日本產品均附有輻射檢測報告，確保安全達標。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "哪個季節海膽最便宜？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "每年6-8月是日本馬糞海膽的旺季，供應充足，價格最具競爭力。此時購買可節省20-30%成本。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="港澳海膽市場 | HK-Macau Sea Urchin Market | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase">
+      <a href="/" class="hover:text-gold transition">Home 首頁</a>
+      <a href="/sea-urchin" class="hover:text-gold transition">Sea Urchin 海膽</a>
+      <a href="/salmon" class="hover:text-gold transition">Salmon 三文魚</a>
+    </div>
+  </nav>
+
+  <section class="min-h-screen pt-32 px-8 text-center">
+    <h2 class="text-sm uppercase text-gray-500 mb-4">Market Analysis</h2>
+    <h1 class="text-4xl md:text-6xl font-light playfair mb-8">HK-Macau <span class="italic">Market</span></h1>
+    <p class="max-w-xl mx-auto text-gray-600 mb-12">港澳海膽市場完整分析<br/>Complete Analysis of Sea Urchin Market in Hong Kong &amp; Macau</p>
+  </section>
+
+  <section class="py-24 bg-white">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <div class="space-y-12">
+        <div>
+          <h3 class="text-2xl font-bold mb-4">市場規模 Market Size</h3>
+          <p class="text-gray-600 mb-4">香港是亞洲最大的海膽消費市場之一：</p>
+          <ul class="list-disc list-inside text-gray-600 space-y-2">
+            <li>每年進口額超過 10 億港元 HKD 1 Billion+ Annual Import Value</li>
+            <li>日本海膽進口量亞洲前三 Top 3 in Asia for Japanese Urchin Imports</li>
+            <li>高端日本料理店超過 2000 間 2000+ Japanese Restaurants</li>
+            <li>五星級酒店自助餐需求強勁 Strong Demand from Five-Star Hotel Buffets</li>
+            <li>每年人均海膽消費約 200 港元 Per Capita Consumption ~HKD 200</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="text-2xl font-bold mb-4">主要供應國 Major Supply Countries</h3>
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="bg-gray-50 p-4 rounded">
+              <h4 class="font-bold">🇯🇵 日本 Japan</h4>
+              <p class="text-sm text-gray-600">60% 市場份額</p>
+              <p class="text-xs text-gray-500">北海道、根室、青森</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded">
+              <h4 class="font-bold">🇨🇦 加拿大 Canada</h4>
+              <p class="text-sm text-gray-600">25% 市場份額</p>
+              <p class="text-xs text-gray-500">BC省、大西洋省份</p>
+            </div>
+            <div class="bg-gray-50 p-4 rounded">
+              <h4 class="font-bold">🌏 其他 Others</h4>
+              <p class="text-sm text-gray-600">15% 市場份額</p>
+              <p class="text-xs text-gray-500">美國、智利、韓國</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-2xl font-bold mb-4">價格趨勢 Price Trends</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b-2 border-black">
+                  <th class="text-left py-2">時期 Season</th>
+                  <th class="text-left py-2">趨勢 Trend</th>
+                  <th class="text-right py-2">價格變化 Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-gray-100">
+                  <td class="py-2">6-8月（夏季）Summer</td>
+                  <td class="py-2">⬇️ 下跌 Down</td>
+                  <td class="text-right py-2">-20%</td>
+                </tr>
+                <tr class="border-b border-gray-100">
+                  <td class="py-2">9-11月（秋季）Autumn</td>
+                  <td class="py-2">➡️ 穩定 Stable</td>
+                  <td class="text-right py-2">±5%</td>
+                </tr>
+                <tr class="border-b border-gray-100">
+                  <td class="py-2">12-1月（冬季）Winter</td>
+                  <td class="py-2">⬆️ 上漲 Up</td>
+                  <td class="text-right py-2">+20-30%</td>
+                </tr>
+                <tr class="border-b border-gray-100">
+                  <td class="py-2">2-5月（春季）Spring</td>
+                  <td class="py-2">➡️ 穩定 Stable</td>
+                  <td class="text-right py-2">±10%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-2xl font-bold mb-4">主要客戶 Major Clients</h3>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="p-4 border border-gray-200 rounded">
+              <h4 class="font-bold mb-2">五星級酒店</h4>
+              <p class="text-gray-600 text-sm">自助餐、日本餐廳、宴會</p>
+            </div>
+            <div class="p-4 border border-gray-200 rounded">
+              <h4 class="font-bold mb-2">高端日本料理</h4>
+              <p class="text-gray-600 text-sm">壽司吧、割烹、料亭</p>
+            </div>
+            <div class="p-4 border border-gray-200 rounded">
+              <h4 class="font-bold mb-2">粵菜餐廳</h4>
+              <p class="text-gray-600 text-sm">婚宴、私房菜、高端會所</p>
+            </div>
+            <div class="p-4 border border-gray-200 rounded">
+              <h4 class="font-bold mb-2">批發商</h4>
+              <p class="text-gray-600 text-sm">二級批發、超市供應</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-2xl font-bold mb-4">進口流程 Import Process</h3>
+          <ol class="list-decimal list-inside text-gray-600 space-y-2">
+            <li>供應商準備出口文件 Export Documentation</li>
+            <li>香港食物安全中心進口牌照 Application</li>
+            <li>航班/船運運輸 Air/Sea Freight</li>
+            <li>香港海關清關 Customs Clearance</li>
+            <li>品質檢驗 Quality Inspection</li>
+            <li>冷鏈配送至客戶 Cold Chain Delivery</li>
+          </ol>
+        </div>
+
+        <div>
+          <h3 class="text-2xl font-bold mb-4">2026 年市場展望 2026 Market Outlook</h3>
+          <div class="bg-blue-50 p-6 rounded">
+            <p class="text-gray-700">預計2026年港澳海膽市場將增長8-12%，主要驅動因素包括：</p>
+            <ul class="mt-4 list-disc list-inside text-gray-600">
+              <li>日本料理店數量持續增加</li>
+              <li>旅遊業復甦帶動酒店需求</li>
+              <li>消費者對高端海產認知提升</li>
+              <li>電商平台銷售渠道拓展</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-black text-white text-center">
+    <h3 class="text-2xl playfair italic mb-4">需要更多市場資訊？</h3>
+    <p class="text-gray-400 mb-8">Contact us for more market information</p>
+    <a href="mailto:info@inariglobal.com" class="inline-block px-8 py-3 bg-white text-black hover:bg-gray-200 transition">
+      聯繫我們 Contact Us
+    </a>
+  </section>
+
+  <footer class="py-12 text-center text-xs text-gray-400">
+    Inari Global Foods &copy; 2026. 稻荷環球食品
+  </footer>
+</Layout>

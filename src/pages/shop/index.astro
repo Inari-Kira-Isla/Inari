@@ -11,6 +11,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      .menu-card.admin-card { border-color: #c0392b; }
+      .menu-card.admin-card:hover { border-color: #a93226; box-shadow: 0 4px 16px rgba(192,57,43,0.15); }
+    </style>
   </head>
   <body>
     <!-- App header -->
@@ -56,7 +60,8 @@
       </div>
 
       <!-- Quick tile grid -->
-      <div class="tile-grid">
+      <div class="tile-grid menu-grid">
+        <a href="/shop/catalog" class="menu-card" style="border-color:#c0392b22;background:linear-gradient(135deg,#fff5f5,#fff)"><div class="menu-icon">🛒</div><div class="menu-title">商品目錄</div><div class="menu-desc">瀏覽全部商品</div></a>
         <button class="tile dark" onclick="window.location.href='/shop/order/new'">
           <div class="icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
@@ -170,6 +175,17 @@
 
       const auth = getAuth();
       if (!auth.isLoggedIn) { window.location.href = '/shop/login'; }
+      window.logout = () => { doLogout(); };
+      if (auth.isStaff || auth.user?.user_type === 'manager') {
+        const menuGrid = document.querySelector('.menu-grid');
+        if (menuGrid) {
+          const adminCard = document.createElement('a');
+          adminCard.href = '/shop/admin/orders';
+          adminCard.className = 'menu-card admin-card';
+          adminCard.innerHTML = '<div class="menu-icon">⚙️</div><div class="menu-title">訂單管理</div><div class="menu-desc">查看/確認/開單</div>';
+          menuGrid.appendChild(adminCard);
+        }
+      }
 
       // Greetings
       const now = new Date();

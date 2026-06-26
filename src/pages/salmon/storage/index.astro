@@ -1,0 +1,19 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "三文魚如何保存？", "acceptedAnswer": {"@type": "Answer", "text": "冷藏0-4°C可保存2-3天，冷凍-18°C可保存3-6個月。"}},
+    {"@type": "Question", "name": "三文魚可以放多久？", "acceptedAnswer": {"@type": "Answer", "text": "刺身級三文魚冷藏建議48小時內食用。"}},
+    {"@type": "Question", "name": "如何判斷三文魚不新鮮？", "acceptedAnswer": {"@type": "Answer", "text": "聞味道、摸手感、看顏色。新鮮三文魚有淡淡海水味，肉質有彈性，顏色鮮橙。"}}
+  ]
+};
+---
+<Layout title="三文魚保存方法 | Salmon Storage | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+  <nav class="fixed top-0 w-full z-50 px-8 py-6"><div class="text-xl font-bold">INARI GLOBAL</div></nav>
+  <section class="pt-32 px-8"><h1 class="text-4xl">三文魚保存方法</h1><p>專業冷鏈保存指南</p></section>
+  <section class="py-12 px-8"><h2>保存方法</h2><ul><li>冷藏：0-4°C，2-3天</li><li>冷凍：-18°C，3-6個月</li></ul></section>
+</Layout>

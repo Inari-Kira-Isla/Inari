@@ -1,0 +1,18 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "如何選擇優質三文魚？", "acceptedAnswer": {"@type": "Answer", "text": "選擇顏色鮮橙、有彈性、無異味的魚肉。"}},
+    {"@type": "Question", "name": "挪威三文魚和智利三文魚有什麼分別？", "acceptedAnswer": {"@type": "Answer", "text": "挪威三文魚肉質更肥美，適合刺身；智利價格較低，適合加工。"}}
+  ]
+};
+---
+<Layout title="三文魚選購指南 | Salmon Sourcing Guide | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+  <nav class="fixed top-0 w-full z-50 px-8 py-6"><div class="text-xl font-bold">INARI GLOBAL</div></nav>
+  <section class="pt-32 px-8"><h1 class="text-4xl">三文魚選購指南</h1><p>餐廳老闆必讀</p></section>
+  <section class="py-12 px-8"><h2>選購要點</h2><ul><li>看顏色：鮮橙色為佳</li><li>摸彈性：有彈性更新鮮</li><li>聞味道：無腥臭味</li></ul></section>
+</Layout>

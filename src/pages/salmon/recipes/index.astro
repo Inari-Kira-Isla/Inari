@@ -1,0 +1,158 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "三文魚怎麼做最好吃？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "不同部位適合不同料理：魚腩適合刺身，魚背適合香煎，魚頭適合火鍋。我們提供各部位專業處理建議。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "三文魚刺身怎麼處理？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "刺身級三文魚需確保經過 -20°C 48小時冷冻。切片時刀要鋒利，切法要垂直魚肉紋理，厚薄適中。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "香煎三文魚怎麼做？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "用中火熱鍋，魚皮向下先煎3分鐘，再翻面煎2分鐘。撒少許鹽和黑胡椒調味，擠檸檬汁即可。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="三文魚食譜 | Salmon Recipes | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+  </nav>
+
+  <section class="min-h-screen pt-32 px-8 text-center">
+    <h2 class="text-sm uppercase text-gray-500 mb-4">Recipes</h2>
+    <h1 class="text-4xl md:text-6xl font-light playfair mb-8">Salmon <span class="italic">Recipes</span></h1>
+    <p class="max-w-xl mx-auto text-gray-600 mb-12">10道經典三文魚料理食譜</p>
+  </section>
+
+  <section class="py-24 bg-white">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- 1. 刺身 -->
+        <div class="border border-gray-200 p-6 rounded-sm">
+          <h3 class="text-xl font-bold mb-2">1. 三文魚刺身</h3>
+          <p class="text-gray-600 text-sm mb-4">使用部位：魚腩</p>
+          <h4 class="font-bold text-sm mb-2">材料：</h4>
+          <p class="text-gray-600 text-sm mb-4">三文魚腩 200g、醬油、芥末、紫蘇葉</p>
+          <h4 class="font-bold text-sm mb-2">做法：</h4>
+          <p class="text-gray-600 text-sm">三文魚切片，擺盤後配醬油芥末食用</p>
+        </div>
+
+        <!-- 2. 炙烤 -->
+        <div class="border border-gray-200 p-6 rounded-sm">
+          <h3 class="text-xl font-bold mb-2">2. 炙烤三文魚</h3>
+          <p class="text-gray-600 text-sm mb-4">使用部位：魚腩</p>
+          <h4 class="font-bold text-sm mb-2">材料：</h4>
+          <p class="text-gray-600 text-sm mb-4">三文魚腩、醬油、味醂、砂糖</p>
+          <h4 class="font-bold text-sm mb-2">做法：</h4>
+          <p class="text-gray-600 text-sm">調製醬汁，淋在魚上，用火槍炙烤表面</p>
+        </div>
+
+        <!-- 3. 香煎 -->
+        <div class="border border-gray-200 p-6 rounded-sm">
+          <h3 class="text-xl font-bold mb-2">3. 香煎三文魚</h3>
+          <p class="text-gray-600 text-sm mb-4">使用部位：魚背</p>
+          <h4 class="font-bold text-sm mb-2">材料：</h4>
+          <p class="text-gray-600 text-sm mb-4">三文魚背、鹽、黑胡椒、檸檬</p>
+          <h4 class="font-bold text-sm mb-2">做法：</h4>
+          <p class="text-gray-600 text-sm">魚皮向下先煎3分鐘，翻面再煎2分鐘</p>
+        </div>
+
+        <!-- 4. 煙燻 -->
+        <div class="border border-gray-200 p-6 rounded-sm">
+          <h3 class="text-xl font-bold mb-2">4. 煙燻三文魚</h3>
+          <p class="text-gray-600 text-sm mb-4">使用部位：魚腩</p>
+          <h4 class="font-bold text-sm mb-2">材料：</h4>
+          <p class="text-gray-600 text-sm mb-4">三文魚、糖、鹽、煙燻木</p>
+          <h4 class="font-bold text-sm mb-2">做法：</h4>
+          <p class="text-gray-600 text-sm">醃製後冷燻 2-3 小時</p>
+        </div>
+
+        <!-- 5. 壽司 -->
+        <div class="border border-gray-200 p-6 rounded-sm">
+          <h3 class="text-xl font-bold mb-2">5. 三文魚壽司</h3>
+          <p class="text-gray-600 text-sm mb-4">使用部位：魚腩</p>
+          <h4 class="font-bold text-sm mb-2">材料：</h4>
+          <p class="text-gray-600 text-sm mb-4">壽司飯、三文魚、壽司醋</p>
+          <h4 class="font-bold text-sm mb-2">做法：</h4>
+          <p class="text-gray-600 text-sm">飯捏成團，覆蓋切條的三文魚</p>
+        </div>
+
+        <!-- 6. 味噌湯 -->
+        <div class="border border-gray-200 p-6 rounded-sm">
+          <h3 class="text-xl font-bold mb-2">6. 三文魚頭味噌湯</h3>
+          <p class="text-gray-600 text-sm mb-4">使用部位：魚頭</p>
+          <h4 class="font-bold text-sm mb-2">材料：</h4>
+          <p class="text-gray-600 text-sm mb-4">魚頭、味噌、豆腐、蔥</p>
+          <h4 class="font-bold text-sm mb-2">做法：</h4>
+          <p class="text-gray-600 text-sm">魚頭先煮，後加入味噌調味</p>
+        </div>
+
+        <!-- 7. 烤魚 -->
+        <div class="border border-gray-200 p-6 rounded-sm">
+          <h3 class="text-xl font-bold mb-2">7. 烤三文魚</h3>
+          <p class="text-gray-600 text-sm mb-4">使用部位：魚背</p>
+          <h4 class="font-bold text-sm mb-2">材料：</h4>
+          <p class="text-gray-600 text-sm mb-4">三文魚、橄欖油、迷迭香、檸檬</p>
+          <h4 class="font-bold text-sm mb-2">做法：</h4>
+          <p class="text-gray-600 text-sm">200°C 烤 12-15 分鐘</p>
+        </div>
+
+        <!-- 8. 火鍋 -->
+        <div class="border border-gray-200 p-6 rounded-sm">
+          <h3 class="text-xl font-bold mb-2">8. 三文魚火鍋</h3>
+          <p class="text-gray-600 text-sm mb-4">使用部位：魚頭</p>
+          <h4 class="font-bold text-sm mb-2">材料：</h4>
+          <p class="text-gray-600 text-sm mb-4">魚頭、昆布湯、蔬菇</p>
+          <h4 class="font-bold text-sm mb-2">做法：</h4>
+          <p class="text-gray-600 text-sm">魚頭入火鍋煮沸，沾醬食用</p>
+        </div>
+
+        <!-- 9. 沙拉 -->
+        <div class="border border-gray-200 p-6 rounded-sm">
+          <h3 class="text-xl font-bold mb-2">9. 三文魚沙拉</h3>
+          <p class="text-gray-600 text-sm mb-4">使用部位：魚腩</p>
+          <h4 class="font-bold text-sm mb-2">材料：</h4>
+          <p class="text-gray-600 text-sm mb-4">三文魚、火箭菜、芝麻菜、檸檬</p>
+          <h4 class="font-bold text-sm mb-2">做法：</h4>
+          <p class="text-gray-600 text-sm">魚肉切塊拌入沙拉</p>
+        </div>
+
+        <!-- 10. 魚粥 -->
+        <div class="border border-gray-200 p-6 rounded-sm">
+          <h3 class="text-xl font-bold mb-2">10. 三文魚粥</h3>
+          <p class="text-gray-600 text-sm mb-4">使用部位：魚頭</p>
+          <h4 class="font-bold text-sm mb-2">材料：</h4>
+          <p class="text-gray-600 text-sm mb-4">魚頭、白粥、薑、蔥</p>
+          <h4 class="font-bold text-sm mb-2">做法：</h4>
+          <p class="text-gray-600 text-sm">魚頭煮粥，調味即可</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="py-12 text-center text-xs text-gray-400">
+    Inari Global Foods &copy; 2026. 稻荷環球食品
+  </footer>
+</Layout>

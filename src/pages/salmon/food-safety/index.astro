@@ -1,0 +1,109 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "三文魚進口香港需要什麼認證？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "進口三文魚需要來源國家的健康證明書、養殖場合格證書，以及香港食物安全中心的進口牌照。我們所有產品均符合相關法規。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "如何確保三文魚安全？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "我們從信譽良好的養殖場採購，產品均附有ISO22000或HACCP認證。進口後進行重金屬和寄生蟲檢測，確保安全。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "三文魚有寄生蟲風險嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "養殖三文魚寄生蟲風險較低，因為養殖環境受控制。所有刺身級三文魚都經過低溫冷凍處理 (-20°C 48小時) 來殺死寄生蟲。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="三文魚食品安全 | Salmon Food Safety | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+  </nav>
+
+  <section class="min-h-screen pt-32 px-8 text-center">
+    <h2 class="text-sm uppercase text-gray-500 mb-4">Quality Assurance</h2>
+    <h1 class="text-4xl md:text-6xl font-light playfair mb-8">Salmon <span class="italic">Food Safety</span></h1>
+    <p class="max-w-xl mx-auto text-gray-600 mb-12">嚴格的食品安全標準，確保品質安全。</p>
+  </section>
+
+  <section class="py-24 bg-white">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <div class="space-y-12">
+        <div>
+          <h3 class="text-2xl font-bold mb-4">進口認證</h3>
+          <p class="text-gray-600 mb-4">我們的所有三文魚產品均附有以下認證：</p>
+          <ul class="list-disc list-inside text-gray-600 space-y-2">
+            <li>來源國家健康證明書</li>
+            <li>養殖場合格證書 (ISO 22000)</li>
+            <li>HACCP 食品安全管理認證</li>
+            <li>香港食物安全中心進口牌照</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="text-2xl font-bold mb-4">品質檢測</h3>
+          <p class="text-gray-600 mb-4">每批進口三文魚都會進行：</p>
+          <ul class="list-disc list-inside text-gray-600 space-y-2">
+            <li>重金屬檢測 (鉛、鎘、汞)</li>
+            <li>寄生蟲檢測</li>
+            <li>細菌檢測 (大腸桿菌、金黃葡萄球菌)</li>
+            <li>藥物殘留檢測</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="text-2xl font-bold mb-4">處理標準</h3>
+          <p class="text-gray-600 mb-4">刺身級三文魚處理流程：</p>
+          <div class="bg-gray-50 p-6 rounded">
+            <ol class="list-decimal list-inside text-gray-600 space-y-2">
+              <li>來源養殖場預先處理</li>
+              <li>-20°C 冷藏 48 小時 (殺死寄生蟲)</li>
+              <li>真空包裝</li>
+              <li>冷鏈運輸 (0-4°C)</li>
+              <li>香港入境檢驗</li>
+              <li>本地品質複檢</li>
+            </ol>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-2xl font-bold mb-4">儲存建議</h3>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-amber-50 p-4 rounded">
+              <h4 class="font-bold mb-2">冷藏 (0-4°C)</h4>
+              <p class="text-sm text-gray-600">2-3 天內食用</p>
+            </div>
+            <div class="bg-blue-50 p-4 rounded">
+              <h4 class="font-bold mb-2">冷凍 (-18°C)</h4>
+              <p class="text-sm text-gray-600">3-6 個月</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="py-12 text-center text-xs text-gray-400">
+    Inari Global Foods &copy; 2026. 稻荷環球食品
+  </footer>
+</Layout>

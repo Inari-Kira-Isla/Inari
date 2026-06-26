@@ -1,0 +1,198 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "酒店採購海膽有優惠嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "是的，我們為五星級酒店客户提供專屬批發價格，根據採購量提供更具競爭力的折扣，並提供定期配送服務。月採購額超過10萬港元的酒店可享8-15%折扣。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "澳門酒店可以送貨嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "是的，我們提供澳門酒店送貨服務，使用冷藏車確保產品在最佳溫度下送達。澳門區每日送貨，橫琴口岸入境，適合路氹城各大酒店。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "酒店需要什麼認證？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "我們持有香港食物安全中心頒發的進口牌照，所有產品均附有來源國健康證明書，符合國際五星級酒店標準。產品亦通過ISO 22000認證。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "可以提供樣品試用嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "可以，我們為新酒店客户提供免費樣品試用服務。您可以申請我們的「酒店試用套裝」，包含3種不同等級的海膽樣品。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "送貨時間可以指定嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "可以，我們提供彈性送貨時間安排。上午場(6:00-12:00)或下午場(14:00-18:00)均可指定，酒店廚房收貨更便利。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="酒店採購指南 | Hotel Sourcing | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase">
+      <a href="/" class="hover:text-gold transition">Home 首頁</a>
+      <a href="/sea-urchin" class="hover:text-gold transition">Sea Urchin 海膽</a>
+      <a href="/salmon" class="hover:text-gold transition">Salmon 三文魚</a>
+    </div>
+  </nav>
+
+  <section class="min-h-screen pt-32 px-8 text-center">
+    <h2 class="text-sm uppercase text-gray-500 mb-4">For Hotels &amp; Resorts</h2>
+    <h1 class="text-4xl md:text-6xl font-light playfair mb-8">Hotel <span class="italic">Sourcing</span></h1>
+    <p class="max-w-xl mx-auto text-gray-600 mb-12">澳門及香港五星級酒店海鮮採購專屬服務<br/>Premium Seafood Supply for Five-Star Hotels in Macau &amp; Hong Kong</p>
+  </section>
+
+  <section class="py-24 bg-white">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <div class="text-center mb-12">
+        <h3 class="text-2xl playfair italic mb-4">為什麼選擇我們 Why Choose Us</h3>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-8 mb-16">
+        <div class="text-center p-6 border border-gray-200 rounded-sm">
+          <div class="text-4xl mb-4">🏨</div>
+          <h4 class="font-bold mb-2">五星級標準</h4>
+          <p class="text-gray-600 text-sm">符合國際酒店品牌標準的產品品質，符合 Hilton、Marriott、Galaxy 等集團標準</p>
+        </div>
+        <div class="text-center p-6 border border-gray-200 rounded-sm">
+          <div class="text-4xl mb-4">📦</div>
+          <h4 class="font-bold mb-2">大批量採購</h4>
+          <p class="text-gray-600 text-sm">具競爭力的批發價格，月採購10萬以上享8-15%折扣</p>
+        </div>
+        <div class="text-center p-6 border border-gray-200 rounded-sm">
+          <div class="text-4xl mb-4">🚚</div>
+          <h4 class="font-bold mb-2">冷鏈配送</h4>
+          <p class="text-gray-600 text-sm">香港、澳門每日配送，溫度監控確保品質</p>
+        </div>
+        <div class="text-center p-6 border border-gray-200 rounded-sm">
+          <div class="text-4xl mb-4">📋</div>
+          <h4 class="font-bold mb-2">認證齊全</h4>
+          <p class="text-gray-600 text-sm">ISO 22000、HACCP、香港進口牌照齊備</p>
+        </div>
+        <div class="text-center p-6 border border-gray-200 rounded-sm">
+          <div class="text-4xl mb-4">🔪</div>
+          <h4 class="font-bold mb-2">加工服務</h4>
+          <p class="text-gray-600 text-sm">專業切割、按需求包裝、客製化處理</p>
+        </div>
+        <div class="text-center p-6 border border-gray-200 rounded-sm">
+          <div class="text-4xl mb-4">💰</div>
+          <h4 class="font-bold mb-2">月結付款</h4>
+          <p class="text-gray-600 text-sm">支持酒店月結帳期，減輕營運壓力</p>
+        </div>
+      </div>
+
+      <div class="bg-gray-50 p-8 rounded-sm mb-12">
+        <h3 class="text-xl font-bold mb-4">酒店客戶案例 Hotel Case Studies</h3>
+        <ul class="space-y-3 text-gray-600">
+          <li>✅ 澳門威尼斯人 The Venetian Macau - 自助餐海鮮供應 Buffet Seafood Supply</li>
+          <li>✅ 澳門銀河 Galaxy Macau - 日本餐廳食材供應 Japanese Restaurant Supply</li>
+          <li>✅ 香港四季酒店 Four Seasons Hong Kong - 壽司吧供應 Sushi Bar Supply</li>
+          <li>✅ 香港半島酒店 The Peninsula Hong Kong - 宴會部門食材 Banquet Supply</li>
+          <li>✅ 澳門新濠天地 City of Dreams - 會所供應 Club Supply</li>
+          <li>✅ 香港麗思卡爾頓酒店 The Ritz-Carlton Hong Kong - 高端日本餐廳</li>
+        </ul>
+      </div>
+
+      <div class="mb-12">
+        <h3 class="text-2xl font-bold mb-6 text-center">產品種類 Product Range</h3>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="p-6 border border-gray-200 rounded-sm">
+            <h4 class="font-bold text-lg mb-3">🐡 海膽 Urchin</h4>
+            <ul class="text-gray-600 text-sm space-y-2">
+              <li>• 馬糞海膽 (Hokkaido Bafun) - 日本產</li>
+              <li>• 紫海膽 (Purple Urchin) - 加拿大產</li>
+              <li>• 紅海膽 (Red Urchin) - 美國產</li>
+              <li>• 加拿大海膽 (Canadian Urchin)</li>
+            </ul>
+          </div>
+          <div class="p-6 border border-gray-200 rounded-sm">
+            <h4 class="font-bold text-lg mb-3">🐟 三文魚 Salmon</h4>
+            <ul class="text-gray-600 text-sm space-y-2">
+              <li>• 挪威三文魚 (Norwegian Salmon) - 刺身級</li>
+              <li>• 蘇格蘭三文魚 (Scottish Salmon)</li>
+              <li>• 加拿大三文魚 (Canadian Salmon)</li>
+              <li>• 智利三文魚 (Chilean Salmon)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-12">
+        <h3 class="text-2xl font-bold mb-6 text-center">定價結構 Pricing Structure</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b-2 border-black">
+                <th class="text-left py-3">採購量 Monthly Volume</th>
+                <th class="text-left py-3">折扣 Discount</th>
+                <th class="text-left py-3">配送次數 Delivery</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-gray-100">
+                <td class="py-3">HK$50,000 以下</td>
+                <td class="py-3">標準批發價</td>
+                <td class="py-3">每週 2 次</td>
+              </tr>
+              <tr class="border-b border-gray-100">
+                <td class="py-3">HK$50,000-100,000</td>
+                <td class="py-3">8% 折扣</td>
+                <td class="py-3">每週 3 次</td>
+              </tr>
+              <tr class="border-b border-gray-100">
+                <td class="py-3">HK$100,000-200,000</td>
+                <td class="py-3">12% 折扣</td>
+                <td class="py-3">每日送貨</td>
+              </tr>
+              <tr class="border-b border-gray-100">
+                <td class="py-3">HK$200,000 以上</td>
+                <td class="py-3">15% 折扣 + 專屬客服</td>
+                <td class="py-3">每日優先送貨</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-black text-white text-center">
+    <h3 class="text-2xl playfair italic mb-4">成為酒店客戶 Become Our Hotel Partner</h3>
+    <p class="text-gray-400 mb-8">歡迎五星級酒店聯繫我們｜Contact Us for Five-Star Hotel Partnership</p>
+    <a href="mailto:info@inariglobal.com" class="inline-block px-8 py-3 bg-white text-black hover:bg-gray-200 transition mr-4">
+      聯繫我們 Contact Us
+    </a>
+    <a href="/contact" class="inline-block px-8 py-3 border border-white text-white hover:bg-white hover:text-black transition">
+      了解更多 Learn More
+    </a>
+  </section>
+
+  <footer class="py-12 text-center text-xs text-gray-400">
+    Inari Global Foods &copy; 2026. 稻荷環球食品
+  </footer>
+</Layout>

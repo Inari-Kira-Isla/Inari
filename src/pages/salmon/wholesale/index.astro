@@ -1,0 +1,125 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "三文魚批發最低訂量是多少？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "一般餐廳客戶10kg起批，酒店客戶可協商更低起訂量。我們也提供小量試訂服務。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "三文魚批發有送貨服務嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "是的，我們為香港和澳門客户提供專業冷鏈送貨服務，確保三文魚在最佳溫度下送達。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "可以指定部位訂貨嗎？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "可以，我們提供腩、背、頭、皮等各部位批發，也可按客戶需求切割。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="三文魚批發服務 | Salmon Wholesale | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase">
+      <a href="/" class="hover:text-gold transition">Home</a>
+    </div>
+  </nav>
+
+  <section class="min-h-screen pt-32 px-8 text-center">
+    <h2 class="text-sm uppercase text-gray-500 mb-4">Wholesale Service</h2>
+    <h1 class="text-4xl md:text-6xl font-light playfair mb-8">Salmon <span class="italic">Wholesale</span></h1>
+    <p class="max-w-xl mx-auto text-gray-600 mb-12">專業三文魚批發服務，適合餐廳、酒店及零售商。</p>
+  </section>
+
+  <section class="py-24 bg-white">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <div class="grid md:grid-cols-2 gap-8 mb-16">
+        <div class="text-center p-8 border border-gray-200 rounded-sm">
+          <div class="text-4xl mb-4">📦</div>
+          <h3 class="text-xl font-bold mb-2">最低訂量</h3>
+          <p class="text-gray-600">餐廳：10kg 起<br/>酒店：可協商</p>
+        </div>
+        <div class="text-center p-8 border border-gray-200 rounded-sm">
+          <div class="text-4xl mb-4">🚚</div>
+          <h3 class="text-xl font-bold mb-2">冷鏈配送</h3>
+          <p class="text-gray-600">香港、澳門<br/>全程冷藏</p>
+        </div>
+        <div class="text-center p-8 border border-gray-200 rounded-sm">
+          <div class="text-4xl mb-4">🔪</div>
+          <h3 class="text-xl font-bold mb-2">加工服務</h3>
+          <p class="text-gray-600">按需求切割<br/>部位分裝</p>
+        </div>
+        <div class="text-center p-8 border border-gray-200 rounded-sm">
+          <div class="text-4xl mb-4">📞</div>
+          <h3 class="text-xl font-bold mb-2">專屬服務</h3>
+          <p class="text-gray-600">客戶經理對接<br/>定制方案</p>
+        </div>
+      </div>
+
+      <h3 class="text-2xl playfair italic text-center mb-8">批發價格表</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b-2 border-black">
+              <th class="text-left py-3">品種</th>
+              <th class="text-left py-3">等級</th>
+              <th class="text-right py-3">批發價 (HKD/kg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-gray-100">
+              <td class="py-3">挪威三文魚</td>
+              <td class="py-3">刺身級</td>
+              <td class="text-right py-3 font-bold">$55-70</td>
+            </tr>
+            <tr class="border-b border-gray-100">
+              <td class="py-3">蘇格蘭三文魚</td>
+              <td class="py-3">刺身級</td>
+              <td class="text-right py-3 font-bold">$50-65</td>
+            </tr>
+            <tr class="border-b border-gray-100">
+              <td class="py-3">加拿大三文魚</td>
+              <td class="py-3">刺身級</td>
+              <td class="text-right py-3 font-bold">$45-60</td>
+            </tr>
+            <tr class="border-b border-gray-100">
+              <td class="py-3">智利三文魚</td>
+              <td class="py-3">加工級</td>
+              <td class="text-right py-3 font-bold">$25-35</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-black text-white text-center">
+    <h3 class="text-2xl playfair italic mb-4">立即訂貨</h3>
+    <p class="text-gray-400 mb-8">歡迎餐廳、酒店及零售商聯繫</p>
+    <a href="mailto:info@inariglobal.com" class="inline-block px-8 py-3 bg-white text-black hover:bg-gray-200 transition">
+      聯繫我們
+    </a>
+  </section>
+
+  <footer class="py-12 text-center text-xs text-gray-400">
+    Inari Global Foods &copy; 2026. 稻荷環球食品
+  </footer>
+</Layout>

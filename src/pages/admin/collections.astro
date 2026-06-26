@@ -58,6 +58,11 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           支票到期 <span class="badge bg-purple tab-badge ms-1" id="badge-cheques">—</span>
         </a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link" data-tab="suspend" href="#" role="tab">
+          ⛔ 停供候選 <span class="badge bg-danger tab-badge ms-1" id="badge-suspend">—</span>
+        </a>
+      </li>
     </ul>
     <span class="text-muted small" id="data-freshness"></span>
   </div>
@@ -190,16 +195,20 @@ async function loadDaily() {
     document.getElementById('badge-monthly').textContent = _daily.monthly.count;
     document.getElementById('badge-overdue').textContent = _daily.overdue.count;
     document.getElementById('badge-cheques').textContent = _daily.cheques.count;
+    document.getElementById('badge-suspend').textContent = _daily.suspend?.count || 0;
 
     if (_daily.meta?.latest_invoice) {
       document.getElementById('data-freshness').textContent = `最新發票：${fmtDate(_daily.meta.latest_invoice)}`;
     }
-    // 支票到期警示（cheque data 從 daily 取）
-    if (_daily.cheques?.count > 0) {
+    // 警示 banner：支票 + 停供候選
+    const alertMsgs = [];
+    if (_daily.cheques?.count > 0) alertMsgs.push(`支票即將到期 ${_daily.cheques.count} 張`);
+    if (_daily.suspend?.count > 0) alertMsgs.push(`⛔ 停供候選 ${_daily.suspend.count} 客`);
+    if (alertMsgs.length) {
       const banner = document.getElementById('alert-banner');
       const existing = document.getElementById('alert-text').textContent;
-      const chequeMsg = `支票即將到期 ${_daily.cheques.count} 張`;
-      document.getElementById('alert-text').textContent = existing ? `${existing}　|　${chequeMsg}` : chequeMsg;
+      const allMsgs = existing ? [existing, ...alertMsgs].join('　|　') : alertMsgs.join('　|　');
+      document.getElementById('alert-text').textContent = allMsgs;
       banner.classList.add('show');
     }
     renderTab(_activeTab);
@@ -216,12 +225,123 @@ function renderTab(tab) {
   const wrap = document.getElementById('tab-content');
   if (!_daily) return;
 
-  if (tab === 'cheques') {
-    wrap.innerHTML = renderChequesTable(_daily.cheques.rows);
-    return;
-  }
+  if (tab === 'cheques') { wrap.innerHTML = renderChequesTable(_daily.cheques.rows); return; }
+  if (tab === 'suspend') { wrap.innerHTML = renderSuspendTable(_daily.suspend?.rows || []); return; }
+  if (tab === 'cash')    { wrap.innerHTML = renderCashInvoiceTable(_daily.cash.rows || []); return; }
   const rows = _daily[tab]?.rows || [];
   wrap.innerHTML = renderFollowupTable(rows, tab);
+}
+
+// Tab 1：現結逐張發票
+function renderCashInvoiceTable(rows) {
+  if (!rows.length) return `<div class="text-muted text-center py-4 small">暫無現結待收發票</div>`;
+  const dayColor = (d) => d >= 30 ? 'text-danger fw-bold' : d >= 7 ? 'text-warning fw-semibold' : 'text-muted';
+  return `
+    <table class="table table-sm table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>發票</th>
+          <th>客戶</th>
+          <th class="d-none d-md-table-cell">業務</th>
+          <th class="d-none d-sm-table-cell">開單日</th>
+          <th class="text-center d-none d-sm-table-cell">逾期天</th>
+          <th class="text-end">金額</th>
+          <th class="d-none d-md-table-cell">上次追收</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => {
+          const days = Number(r.days_overdue || 0);
+          return `<tr class="action-row">
+            <td class="font-mono small text-muted">${escapeHTML(r.invoice_no || '—')}</td>
+            <td>
+              <a href="/admin/customers/${encodeURIComponent(r.canon_code)}" class="fw-semibold text-decoration-none small">${escapeHTML(r.customer_name || r.canon_code)}</a>
+              ${r.promised_date ? `<br><span class="badge bg-green-lt text-green" style="font-size:.65rem">承諾 ${fmtDate(r.promised_date)}</span>` : ''}
+            </td>
+            <td class="d-none d-md-table-cell small text-muted">${escapeHTML(r.salesperson || '—')}</td>
+            <td class="d-none d-sm-table-cell small text-muted">${fmtDate(r.invoice_date)}</td>
+            <td class="d-none d-sm-table-cell text-center small ${dayColor(days)}">${days > 0 ? days + '天' : '—'}</td>
+            <td class="text-end fw-semibold font-mono small">${fmt(r.amount)}</td>
+            <td class="d-none d-md-table-cell last-action">
+              ${r.last_action_date
+                ? `${methodIcon[r.last_action_method] || ''}${fmtDate(r.last_action_date)}<br><span class="text-muted">${escapeHTML(r.last_action_notes || '')}</span>`
+                : '<span class="text-muted small">未追收</span>'}
+            </td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary action-btn"
+                onclick="openActionModal(${JSON.stringify(JSON.stringify({canon_code:r.canon_code,customer_name:r.customer_name,outstanding:r.amount,invoice_ref:r.invoice_no}))})">
+                📝
+              </button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+      <tfoot class="table-light">
+        <tr>
+          <td colspan="5" class="small text-muted">共 ${rows.length} 張發票</td>
+          <td class="text-end fw-bold font-mono small">${fmt(rows.reduce((s, r) => s + num(r.amount), 0))}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+    </table>`;
+}
+
+// Tab 5：停供候選
+function renderSuspendTable(rows) {
+  if (!rows.length) return `<div class="text-success text-center py-4 small">✅ 無月結逾期客戶，供貨正常</div>`;
+  return `
+    <div class="alert alert-danger m-2 py-2 small">
+      <strong>⛔ 以下客戶上月貨款本月仍未收，應立即停止供貨並追收。</strong>
+    </div>
+    <table class="table table-sm table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>客戶</th>
+          <th class="d-none d-md-table-cell">業務</th>
+          <th class="text-center">逾期月</th>
+          <th class="text-end">逾期總額</th>
+          <th class="text-center">發票數</th>
+          <th>狀態</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => {
+          const months = Number(r.months_overdue || 0);
+          const rowCls = months >= 2 ? 'table-danger' : 'table-warning';
+          const suspended = r.is_suspended;
+          return `<tr class="${rowCls}">
+            <td>
+              <a href="/admin/customers/${encodeURIComponent(r.canon_code)}" class="fw-bold text-decoration-none small">${escapeHTML(r.customer_name || r.canon_code)}</a>
+              <br><span class="text-muted" style="font-size:.65rem">${escapeHTML(r.due_date || '')} 結單</span>
+            </td>
+            <td class="d-none d-md-table-cell small text-muted">${escapeHTML(r.salesperson || '—')}</td>
+            <td class="text-center fw-bold small ${months >= 2 ? 'text-danger' : 'text-warning'}">${months} 個月</td>
+            <td class="text-end fw-bold font-mono small">${fmt(r.total_overdue)}</td>
+            <td class="text-center small">${r.invoice_count}</td>
+            <td>
+              ${suspended
+                ? '<span class="badge bg-danger">已停供</span>'
+                : '<span class="badge bg-warning text-dark">候選</span>'}
+            </td>
+            <td>
+              <button class="btn btn-sm ${suspended ? 'btn-outline-success' : 'btn-danger'} action-btn"
+                onclick="toggleSuspend(${JSON.stringify(JSON.stringify({canon_code:r.canon_code,customer_name:r.customer_name,is_suspended:!suspended}))})">
+                ${suspended ? '✅ 解除' : '⛔ 停供'}
+              </button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+      <tfoot class="table-light">
+        <tr>
+          <td colspan="3" class="small text-muted">共 ${rows.length} 客</td>
+          <td class="text-end fw-bold font-mono small">${fmt(rows.reduce((s, r) => s + num(r.total_overdue), 0))}</td>
+          <td colspan="3"></td>
+        </tr>
+      </tfoot>
+    </table>`;
 }
 
 function renderFollowupTable(rows, tab) {
@@ -354,12 +474,34 @@ async function loadTrend() {
   }
 }
 
+// ── 停供/解除停供 ──
+async function toggleSuspend(jsonStr) {
+  const d = JSON.parse(jsonStr);
+  const action = d.is_suspended ? '標記停供' : '解除停供';
+  if (!confirm(`確認對「${d.customer_name || d.canon_code}」${action}？`)) return;
+  try {
+    const res = await fetch('/api/admin/collections/suspend', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ canon_code: d.canon_code, is_suspended: d.is_suspended }),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || '操作失敗');
+    _daily = null;
+    await loadDaily();
+  } catch (e) {
+    alert('操作失敗：' + e.message);
+  }
+}
+
 // ── Action Modal ──
 function openActionModal(jsonStr) {
   const d = JSON.parse(jsonStr);
   _modalData = d;
   document.getElementById('modal-customer').textContent = d.customer_name || d.canon_code;
-  document.getElementById('modal-outstanding').textContent = `未收：${fmt(d.outstanding)}`;
+  document.getElementById('modal-outstanding').textContent = d.invoice_ref
+    ? `發票 ${d.invoice_ref}：${fmt(d.outstanding)}`
+    : `未收：${fmt(d.outstanding)}`;
   document.getElementById('modal-notes').value = '';
   document.getElementById('modal-promised').value = '';
   document.querySelectorAll('input[name="method"]').forEach(el => el.checked = false);
@@ -379,6 +521,7 @@ document.getElementById('modal-save').addEventListener('click', async () => {
       body: JSON.stringify({
         canon_code: _modalData.canon_code,
         customer_name: _modalData.customer_name,
+        invoice_ref: _modalData.invoice_ref || null,
         method,
         notes: document.getElementById('modal-notes').value || null,
         promised_date: document.getElementById('modal-promised').value || null,

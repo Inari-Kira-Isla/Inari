@@ -1,0 +1,143 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "三文魚腩和三文魚背有什麼分別？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "三文魚腩魚油豐富，口感肥潤，適合刺身和壽司。三文魚背肉質緊實，脂肪較少，適合煎烤和煮食。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "三文魚哪個部位最適合刺身？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "三文魚腩（腹肉）是刺身的最佳選擇，油脂含量高達20%以上，口感綿軟，旨味濃郁。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "三文魚頭可以怎麼做？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "三文魚頭可製作成多種美食：火鍋、味噌湯、烤魚頭、蒸魚等。魚頭膠原蛋白豐富，對皮膚有益。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="三文魚部位指南 | Salmon Cuts Guide | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase">
+      <a href="/" class="hover:text-gold transition">Home</a>
+      <a href="#cuts" class="hover:text-gold transition">Cuts</a>
+    </div>
+  </nav>
+
+  <section class="min-h-screen pt-32 px-8 text-center">
+    <h2 class="text-sm uppercase text-gray-500 mb-4">Product Guide</h2>
+    <h1 class="text-4xl md:text-6xl font-light playfair mb-8">Salmon <span class="italic">Cuts</span></h1>
+    <p class="max-w-xl mx-auto text-gray-600 mb-12">了解三文魚各部位的特點，選擇最適合您的料理。</p>
+  </section>
+
+  <section id="cuts" class="py-24 bg-white">
+    <div class="container mx-auto px-8 max-w-6xl">
+      <div class="grid md:grid-cols-2 gap-8">
+        <!-- Belly -->
+        <div class="border border-gray-200 p-8 rounded-sm">
+          <h3 class="text-2xl playfair italic mb-4">腩 (Belly)</h3>
+          <div class="bg-amber-50 p-4 rounded mb-4">
+            <p class="text-sm text-gray-600">油脂含量：★★★★★</p>
+            <p class="text-sm text-gray-600">價格：$$$</p>
+          </div>
+          <h4 class="font-bold mb-2">特點</h4>
+          <p class="text-gray-600 mb-4">魚腩是三文魚油脂最豐富的部位，約含20-25%脂肪，肉質柔軟綿滑，呈現美麗的橙紅色大理石紋理。</p>
+          <h4 class="font-bold mb-2">適合料理</h4>
+          <ul class="text-gray-600 list-disc list-inside">
+            <li>刺身</li>
+            <li>壽司</li>
+            <li>魚腩壽司</li>
+            <li>輕微炙烤</li>
+          </ul>
+        </div>
+
+        <!-- Back -->
+        <div class="border border-gray-200 p-8 rounded-sm">
+          <h3 class="text-2xl playfair italic mb-4">背 (Back/ loin)</h3>
+          <div class="bg-amber-50 p-4 rounded mb-4">
+            <p class="text-sm text-gray-600">油脂含量：★★☆☆☆</p>
+            <p class="text-sm text-gray-600">價格：$$</p>
+          </div>
+          <h4 class="font-bold mb-2">特點</h4>
+          <p class="text-gray-600 mb-4">魚背肉質緊實，脂肪含量較低（約5-8%），魚肉呈淡橙紅色，纖維分明。</p>
+          <h4 class="font-bold mb-2">適合料理</h4>
+          <ul class="text-gray-600 list-disc list-inside">
+            <li>香煎</li>
+            <li>烤魚</li>
+            <li>煮物</li>
+            <li>中東烤魚</li>
+          </ul>
+        </div>
+
+        <!-- Head -->
+        <div class="border border-gray-200 p-8 rounded-sm">
+          <h3 class="text-2xl playfair italic mb-4">頭 (Head)</h3>
+          <div class="bg-amber-50 p-4 rounded mb-4">
+            <p class="text-sm text-gray-600">油脂含量：★★★☆☆</p>
+            <p class="text-sm text-gray-600">價格：$</p>
+          </div>
+          <h4 class="font-bold mb-2">特點</h4>
+          <p class="text-gray-600 mb-4">魚頭富含膠原蛋白和軟骨，肉質細嫩，臉頰部分尤其美味。</p>
+          <h4 class="font-bold mb-2">適合料理</h4>
+          <ul class="text-gray-600 list-disc list-inside">
+            <li>火鍋</li>
+            <li>味噌湯</li>
+            <li>烤魚頭</li>
+            <li>蒸魚</li>
+          </ul>
+        </div>
+
+        <!-- Skin -->
+        <div class="border border-gray-200 p-8 rounded-sm">
+          <h3 class="text-2xl playfair italic mb-4">皮 (Skin)</h3>
+          <div class="bg-amber-50 p-4 rounded mb-4">
+            <p class="text-sm text-gray-600">油脂含量：★★★★☆</p>
+            <p class="text-sm text-gray-600">價格：$</p>
+          </div>
+          <h4 class="font-bold mb-2">特點</h4>
+          <p class="text-gray-600 mb-4">魚皮富含Omega-3和膠原蛋白，口感Q彈，炙烤後香氣濃郁。</p>
+          <h4 class="font-bold mb-2">適合料理</h4>
+          <ul class="text-gray-600 list-disc list-inside">
+            <li>炙烤壽司</li>
+            <li>香脆魚皮</li>
+            <li>涼拌魚皮</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-16 bg-warm-gray">
+    <div class="container mx-auto px-8 max-w-4xl text-center">
+      <h3 class="text-2xl playfair italic mb-4">需要採購？</h3>
+      <p class="text-gray-600 mb-8">我們提供各部位三文魚批發，歡迎餐廳、酒店採購</p>
+      <a href="mailto:info@inariglobal.com" class="inline-block px-8 py-3 bg-black text-white hover:bg-gray-800 transition">
+        聯繫我們
+      </a>
+    </div>
+  </section>
+
+  <footer class="py-12 text-center text-xs text-gray-400">
+    Inari Global Foods &copy; 2026. 稻荷環球食品
+  </footer>
+</Layout>

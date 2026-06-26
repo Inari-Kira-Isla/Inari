@@ -1,0 +1,287 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "海膽分級標準是什麼？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "海膽一般分為A級、B級、C級三個標準。A級品質最高，肉質飽滿、色澤鮮艷、味道濃郁；B級品質中等，可能有輕微瑕疵；C級為加工級，適合烹飪加工使用。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "如何判斷海膽是否新鮮？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "判斷海膽新鮮度有以下指標：1) 顏色：新鮮海膽呈現鮮豔的橙黃色；2) 氣味：無異味，有淡淡的海水鮮味；3) 觸感：肉質有彈性，不軟爛；4) 刺狀：活動的刺表示新鮮，死刺表示不新鮮。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "A級海膽和B級海膽有什麼分別？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A級海膽肉質飽滿完整，色澤均勻橙黃，旨味濃郁，適合刺身直接食用；B級可能有輕微變色或形狀不完全，但仍可食用，適合一般料理用途。價格方面A級通常比B級高出30-50%。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "海膽保存期限是多久？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "冷藏保存（0-4°C）一般可保存2-3天；冷凍保存（-18°C）可保存3-6個月，但口感會略有下降。建議盡快食用以保持最佳風味。真空包裝可適當延長保存期限。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "什麼是「死棘」？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "死棘是指海膽刺失去活動能力，變得僵硬脆弱。這是海膽不新鮮的信號，表示海膽已經死亡一段時間。優質海膽的刺應該是柔軟且有活動性的。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="海膽分級標準 | Sea Urchin Grading | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase letter-spacing-wide">
+      <a href="/" class="hover:text-gold transition">Home</a>
+      <a href="#grading" class="hover:text-gold transition">Grading</a>
+      <a href="#faq" class="hover:text-gold transition">FAQ</a>
+      <a href="#contact" class="hover:text-gold transition">Contact</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="min-h-screen pt-32 px-8 flex flex-col items-center justify-center text-center">
+    <div class="fade-in">
+      <h2 class="text-sm uppercase letter-spacing-wide text-gray-500 mb-4">Quality Standards</h2>
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-light playfair mb-8 leading-tight">
+        Sea Urchin <span class="italic">Grading</span> Guide
+      </h1>
+      <p class="max-w-xl mx-auto text-gray-600 font-light mb-12">
+        專業海膽分級標準，教您如何挑選優質海膽。我們的A/B/C分級系統確保您獲得最佳品質。
+      </p>
+    </div>
+  </section>
+
+  <!-- Grading Standards -->
+  <section id="grading" class="py-32 bg-white">
+    <div class="container mx-auto px-8 max-w-6xl">
+      <div class="text-center mb-16">
+        <h3 class="text-2xl playfair italic mb-4">三分級標準系統</h3>
+        <p class="text-gray-600 font-light">Three-Tier Grading System</p>
+      </div>
+
+      <!-- Grade A -->
+      <div class="mb-16 p-8 bg-gradient-to-r from-amber-50 to-orange-50 rounded-sm border border-amber-100">
+        <div class="flex items-center justify-between mb-6">
+          <h4 class="text-3xl playfair">A級 <span class="text-gray-400">Grade A</span></h4>
+          <span class="text-xs uppercase tracking-widest bg-amber-200 px-4 py-2 rounded-full">最高品質 Premium</span>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">外觀 Appearance</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 肉質飽滿完整</li>
+              <li>• 色澤均勻橙黃</li>
+              <li>• 無雜質異物</li>
+              <li>• 刺柔軟有光澤</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">口感 Taste</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 旨味濃郁</li>
+              <li>• 甜味明顯</li>
+              <li>• 口感細膩滑潤</li>
+              <li>• 無苦澀異味</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">用途 Recommended</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 刺身直接食用</li>
+              <li>• 高端日本料理</li>
+              <li>• 壽司配料</li>
+              <li>• 重要宴席</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grade B -->
+      <div class="mb-16 p-8 bg-gradient-to-r from-gray-50 to-zinc-50 rounded-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+          <h4 class="text-3xl playfair">B級 <span class="text-gray-400">Grade B</span></h4>
+          <span class="text-xs uppercase tracking-widest bg-gray-200 px-4 py-2 rounded-full">標準品質 Standard</span>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">外觀 Appearance</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 肉質基本完整</li>
+              <li>• 色澤略有不均</li>
+              <li>• 可能有輕微瑕疵</li>
+              <li>• 刺活動性一般</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">口感 Taste</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 旨味中等</li>
+              <li>• 甜味普通</li>
+              <li>• 口感正常</li>
+              <li>• 無明顯異味</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">用途 Recommended</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 一般日本料理</li>
+              <li>• 煮物料理</li>
+              <li>• 軍艦壽司</li>
+              <li>• 家庭用餐</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grade C -->
+      <div class="mb-16 p-8 bg-gradient-to-r from-stone-50 to-neutral-50 rounded-sm border border-stone-100">
+        <div class="flex items-center justify-between mb-6">
+          <h4 class="text-3xl playfair">C級 <span class="text-gray-400">Grade C</span></h4>
+          <span class="text-xs uppercase tracking-widest bg-stone-200 px-4 py-2 rounded-full">加工級別 Processing</span>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8">
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">外觀 Appearance</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 肉質不完整</li>
+              <li>• 色澤不均</li>
+              <li>• 可能含雜質</li>
+              <li>• 刺無活動性</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">口感 Taste</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 旨味較淡</li>
+              <li>• 甜味不明顯</li>
+              <li>• 口感較粗</li>
+              <li>• 可能需調味</li>
+            </ul>
+          </div>
+          <div>
+            <h5 class="text-sm uppercase tracking-widest text-gray-500 mb-2">用途 Recommended</h5>
+            <ul class="text-sm space-y-2">
+              <li>• 烹飪加工</li>
+              <li>• 味噌湯配料</li>
+              <li>• 義大利麵</li>
+              <li>• 食品加工</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Freshness Guide -->
+  <section class="py-24 bg-warm-gray">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <h3 class="text-2xl playfair italic text-center mb-12">新鮮度判斷指標</h3>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-4">✅ 新鮮特徵 Fresh</h4>
+          <ul class="text-sm space-y-3 text-gray-600">
+            <li>• 顏色：鮮豔橙黃色</li>
+            <li>• 氣味：淡淡海水鮮味</li>
+            <li>• 觸感：肉質有彈性</li>
+            <li>• 刺狀：柔軟有活動性</li>
+            <li>• 包裝：無液体滲出</li>
+          </ul>
+        </div>
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-4">❌ 不新鮮特徵 Not Fresh</h4>
+          <ul class="text-sm space-y-3 text-gray-600">
+            <li>• 顏色：暗淡或變色</li>
+            <li>• 氣味：腥臭或異味</li>
+            <li>• 觸感：軟爛或黏稠</li>
+            <li>• 刺狀：僵硬（死棘）</li>
+            <li>• 包裝：有異味滲出</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="py-32 bg-white">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <h3 class="text-2xl playfair italic text-center mb-12">常見問題 FAQ</h3>
+      
+      <div class="space-y-8">
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">海膽分級標準是什麼？</h4>
+          <p class="text-gray-600 font-light">海膽一般分為A級、B級、C級三個標準。A級品質最高，肉質飽滿、色澤鮮艷、味道濃郁；B級品質中等，可能有輕微瑕疵；C級為加工級，適合烹飪加工使用。</p>
+        </div>
+        
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">如何判斷海膽是否新鮮？</h4>
+          <p class="text-gray-600 font-light">判斷海膽新鮮度有以下指標：1) 顏色：新鮮海膽呈現鮮豔的橙黃色；2) 氣味：無異味，有淡淡的海水鮮味；3) 觸感：肉質有彈性，不軟爛；4) 刺狀：活動的刺表示新鮮，死刺表示不新鮮。</p>
+        </div>
+        
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">A級海膽和B級海膽有什麼分別？</h4>
+          <p class="text-gray-600 font-light">A級海膽肉質飽滿完整，色澤均勻橙黃，旨味濃郁，適合刺身直接食用；B級可能有輕微變色或形狀不完全，但仍可食用，適合一般料理用途。價格方面A級通常比B級高出30-50%。</p>
+        </div>
+        
+        <div class="border-b border-gray-100 pb-8">
+          <h4 class="text-lg mb-3">海膽保存期限是多久？</h4>
+          <p class="text-gray-600 font-light">冷藏保存（0-4°C）一般可保存2-3天；冷凍保存（-18°C）可保存3-6個月，但口感會略有下降。建議盡快食用以保持最佳風味。真空包裝可適當延長保存期限。</p>
+        </div>
+        
+        <div class="pb-8">
+          <h4 class="text-lg mb-3">什麼是「死棘」？</h4>
+          <p class="text-gray-600 font-light">死棘是指海膽刺失去活動能力，變得僵硬脆弱。這是海膽不新鮮的信號，表示海膽已經死亡一段時間。優質海膽的刺應該是柔軟且有活動性的。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="py-32 bg-warm-gray text-center px-8">
+    <h2 class="text-3xl md:text-4xl playfair italic mb-8">需要專業建議？</h2>
+    <p class="text-gray-600 mb-12 max-w-xl mx-auto">
+      稻荷環球食品擁有25年海膽鑑定經驗，我們的專業團隊可以幫助您選擇最適合的產品。
+    </p>
+    <div class="flex flex-col md:flex-row justify-center items-center gap-8">
+      <button class="px-12 py-4 bg-black text-white text-sm uppercase letter-spacing-wide hover:bg-zinc-800 transition rounded-sm cursor-pointer">
+        索取本週報價
+      </button>
+      <a href="mailto:info@inariglobal.com" class="text-sm border-b border-black pb-1 hover:text-gold hover:border-gold transition uppercase tracking-widest">
+        聯繫我們
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 border-t border-gray-100 text-center px-8">
+    <div class="text-xs text-gray-400 uppercase tracking-widest">
+      Inari Global Foods &copy; 2026.<br>
+      稻荷環球食品 | Curating the Finest Sea Treasures for Hong Kong & Macau.
+    </div>
+  </footer>
+</Layout>

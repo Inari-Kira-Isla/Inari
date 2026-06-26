@@ -1,0 +1,245 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "香港高端海鮮市場規模有多大？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "香港高端海鮮市場估計年產值約 50-80 億港元，其中海膽和三文魚佔據重要份額。香港作為亞洲美食之都，擁有超過 3,000 家日本料理店，對高端海鮮的需求持續增長。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "澳門海鮮供應主要來自哪裡？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "澳門海鮮供應主要來自香港批發市場和日本直接進口。澳門擁有 20+ 家五星級酒店，各類高端餐廳對優質海膽和三文魚需求旺盛。澳門海關便利政策使得進口流程相對簡便。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "日本海膽如何運送到港澳？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "日本海膽主要通過空運抵達香港機場，再轉運澳門。北海道、根室的海膽經過嚴格品質檢驗後，使用專業保冷設備空運，整個物流過程控制在 24-48 小時內，確保新鲜度。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "港澳海膽需求高峰期是什麼時候？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "港澳海膽需求呈現明顯季節性：夏季（6-9月）是最高峰，日本馬糞海膽當季，供應充足；冬季（11-2月）需求穩定，主要以加拿大和智利海膽補充。節日前後（如農曆新年、聖誕節）是價格高峰期。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "香港日本料理店對海膽的質量要求？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "香港高端日本料理店對海膽品質要求極高：必須達到 A 級標準，肉質飽滿、色澤橙黃、旨味濃郁。大部分高端壽司店要求供應商提供產地證明和品質檢驗報告，並能夠穩定供貨。"
+      }
+    }
+  ]
+};
+---
+
+<Layout title="港澳高端海鮮市場概況 | HK-Macau Seafood Market Overview | Inari Global Foods">
+  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full z-50 px-8 py-6 flex justify-between items-center bg-ivory/80 backdrop-blur-sm">
+    <div class="text-xl font-bold tracking-tighter playfair">INARI GLOBAL</div>
+    <div class="hidden md:flex space-x-8 text-sm uppercase letter-spacing-wide">
+      <a href="/" class="hover:text-gold transition">Home</a>
+      <a href="#market" class="hover:text-gold transition">Market</a>
+      <a href="#sourcing" class="hover:text-gold transition">Sourcing</a>
+      <a href="#contact" class="hover:text-gold transition">Contact</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="min-h-screen pt-32 px-8 flex flex-col items-center justify-center text-center">
+    <div class="fade-in">
+      <h2 class="text-sm uppercase letter-spacing-wide text-gray-500 mb-4">Market Intelligence</h2>
+      <h1 class="text-4xl md:text-6xl lg:text-7xl font-light playfair mb-8 leading-tight">
+        Hong Kong & Macau <span class="italic">Seafood Market</span>
+      </h1>
+      <p class="max-w-xl mx-auto text-gray-600 font-light mb-12">
+        港澳高端海鮮市場深度分析，涵蓋市場規模、需求趨勢、進口物流及季節性模式。為餐飲業者提供決策依據。
+      </p>
+    </div>
+  </section>
+
+  <!-- Market Overview -->
+  <section id="market" class="py-32 bg-white">
+    <div class="container mx-auto px-8 max-w-6xl">
+      <div class="text-center mb-16">
+        <h3 class="text-2xl playfair italic mb-4">市場規模 Market Size</h3>
+        <p class="text-gray-600 font-light">Hong Kong & Macau Premium Seafood Market Overview</p>
+      </div>
+
+      <!-- Key Stats -->
+      <div class="grid md:grid-cols-4 gap-8 mb-16">
+        <div class="text-center p-8 bg-warm-gray rounded-sm">
+          <div class="text-4xl font-light mb-2">$5B+</div>
+          <div class="text-xs uppercase tracking-widest text-gray-500">年度市場規模</div>
+        </div>
+        <div class="text-center p-8 bg-warm-gray rounded-sm">
+          <div class="text-4xl font-light mb-2">3,000+</div>
+          <div class="text-xs uppercase tracking-widest text-gray-500">日本料理店</div>
+        </div>
+        <div class="text-center p-8 bg-warm-gray rounded-sm">
+          <div class="text-4xl font-light mb-2">20+</div>
+          <div class="text-xs uppercase tracking-widest text-gray-500">五星級酒店</div>
+        </div>
+        <div class="text-center p-8 bg-warm-gray rounded-sm">
+          <div class="text-4xl font-light mb-2">48h</div>
+          <div class="text-xs uppercase tracking-widest text-gray-500">空運到貨</div>
+        </div>
+      </div>
+
+      <!-- Demand Segments -->
+      <div class="mb-16">
+        <h4 class="text-xl playfair italic mb-8">主要需求方 Major Demand Sectors</h4>
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="border border-gray-100 p-8 rounded-sm">
+            <h5 class="text-lg mb-4">日本料理店 Japanese Restaurants</h5>
+            <p class="text-gray-600 font-light mb-4">
+              香港擁有超過 3,000 家日本料理店，其中高端壽司店和割烹約佔 15%。這些餐廳對海膽品質要求極高，必須達到 A 級標準。
+            </p>
+            <ul class="text-sm text-gray-500 space-y-2">
+              <li>• 需求：每日 50-200 盒</li>
+              <li>• 價格區間：$80-200/盒</li>
+              <li>• 品質要求：A 級必須</li>
+            </ul>
+          </div>
+          <div class="border border-gray-100 p-8 rounded-sm">
+            <h5 class="text-lg mb-4">粵菜餐廳 Cantonese Restaurants</h5>
+            <p class="text-gray-600 font-light mb-4">
+              高端粵菜餐廳 increasingly採用海膽入饌，創造新穎菜式。婚宴和高端聚餐場合對海膽需求穩定增長。
+            </p>
+            <ul class="text-sm text-gray-500 space-y-2">
+              <li>• 需求：每場宴席 20-50 份</li>
+              <li>• 價格區間：$60-150/份</li>
+              <li>• 品質要求：B 級或以上</li>
+            </ul>
+          </div>
+          <div class="border border-gray-100 p-8 rounded-sm">
+            <h5 class="text-lg mb-4">五星級酒店 Luxury Hotels</h5>
+            <p class="text-gray-600 font-light mb-4">
+              港澳地區 20+ 家五星級酒店的自助餐和高端餐廳對優質海膽有穩定需求，尤其在節日期間。
+            </p>
+            <ul class="text-sm text-gray-500 space-y-2">
+              <li>• 需求：每週 100-500 份</li>
+              <li>• 價格區間：$50-120/份</li>
+              <li>• 品質要求：A-B 級</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Import Routes -->
+      <div class="mb-16">
+        <h4 class="text-xl playfair italic mb-8">進口路線 Import Routes</h4>
+        <div class="bg-warm-gray p-8 rounded-sm">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <div class="text-center">
+              <div class="text-2xl font-light mb-2">🇯🇵 日本</div>
+              <div class="text-sm text-gray-500">北海道、根室</div>
+            </div>
+            <div class="text-gray-400">→</div>
+            <div class="text-center">
+              <div class="text-2xl font-light mb-2">✈️ 空運</div>
+              <div class="text-sm text-gray-500">24-48 小時</div>
+            </div>
+            <div class="text-gray-400">→</div>
+            <div class="text-center">
+              <div class="text-2xl font-light mb-2">🇭🇰 香港</div>
+              <div class="text-sm text-gray-500">機場入境</div>
+            </div>
+            <div class="text-gray-400">→</div>
+            <div class="text-center">
+              <div class="text-2xl font-light mb-2">🇲🇴 澳門</div>
+              <div class="text-sm text-gray-500">蓮花口岸</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seasonal Patterns -->
+      <div>
+        <h4 class="text-xl playfair italic mb-8">季節性需求模式 Seasonal Demand Pattern</h4>
+        <div class="grid md:grid-cols-2 gap-8">
+          <div class="bg-amber-50 p-8 rounded-sm border border-amber-100">
+            <h5 class="text-lg mb-4 text-amber-700">高峰期 High Season</h5>
+            <ul class="text-sm space-y-3 text-gray-600">
+              <li><strong>6月 - 9月：</strong> 日本馬糞海膽當季，供應充足，需求最旺</li>
+              <li><strong>12月 - 1月：</strong> 聖誕節、農曆新年，價格上漲 20-30%</li>
+              <li><strong>價格區間：</strong> A級 $150-250/盒</li>
+            </ul>
+          </div>
+          <div class="bg-blue-50 p-8 rounded-sm border border-blue-100">
+            <h5 class="text-lg mb-4 text-blue-700">穩定期 Stable Season</h5>
+            <ul class="text-sm space-y-3 text-gray-600">
+              <li><strong>10月 - 11月：</strong> 紫海膽當季，價格適中</li>
+              <li><strong>2月 - 5月：</strong> 加拿大、智利海膽補充市場</li>
+              <li><strong>價格區間：</strong> A級 $100-180/盒</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="py-24 bg-warm-gray">
+    <div class="container mx-auto px-8 max-w-4xl">
+      <h3 class="text-2xl playfair italic text-center mb-12">常見問題 FAQ</h3>
+      <div class="space-y-8">
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-3">香港高端海鮮市場規模有多大？</h4>
+          <p class="text-gray-600 font-light">香港高端海鮮市場估計年產值約 50-80 億港元，其中海膽和三文魚佔據重要份額。香港作為亞洲美食之都，擁有超過 3,000 家日本料理店，對高端海鮮的需求持續增長。</p>
+        </div>
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-3">澳門海鮮供應主要來自哪裡？</h4>
+          <p class="text-gray-600 font-light">澳門海鮮供應主要來自香港批發市場和日本直接進口。澳門擁有 20+ 家五星級酒店，各類高端餐廳對優質海膽和三文魚需求旺盛。澳門海關便利政策使得進口流程相對簡便。</p>
+        </div>
+        <div class="bg-white p-8 rounded-sm">
+          <h4 class="text-lg mb-3">日本海膽如何運送到港澳？</h4>
+          <p class="text-gray-600 font-light">日本海膽主要通過空運抵達香港機場，再轉運澳門。北海道、根室的海膽經過嚴格品質檢驗後，使用專業保冷設備空運，整個物流過程控制在 24-48 小時內，確保新鲜度。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact" class="py-32 bg-white text-center px-8">
+    <h2 class="text-3xl md:text-4xl playfair italic mb-8">需要市場數據？</h2>
+    <p class="text-gray-600 mb-12 max-w-xl mx-auto">
+      稻荷環球食品提供專業的市場分析數據，歡迎餐飲業者聯繫查詢。
+    </p>
+    <div class="flex flex-col md:flex-row justify-center items-center gap-8">
+      <button class="px-12 py-4 bg-black text-white text-sm uppercase letter-spacing-wide hover:bg-zinc-800 transition rounded-sm cursor-pointer">
+        索取本週報價
+      </button>
+      <a href="mailto:info@inariglobal.com" class="text-sm border-b border-black pb-1 hover:text-gold hover:border-gold transition uppercase tracking-widest">
+        聯繫我們
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 border-t border-gray-100 text-center px-8">
+    <div class="text-xs text-gray-400 uppercase tracking-widest">
+      Inari Global Foods &copy; 2026.<br>
+      稻荷環球食品 | Hong Kong & Macau Premium Seafood Partner.
+    </div>
+  </footer>
+</Layout>

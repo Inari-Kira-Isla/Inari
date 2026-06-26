@@ -1,0 +1,166 @@
+{
+  "@context": "https://schema.org",
+  "@type": "ProductGroup",
+  "name": "稻荷環球食品產品目錄",
+  "description": "來自日本、加拿大、挪威等全球頂級產區的優質海鮮產品",
+  "productGroupID": "inari-seafood-products",
+  "variesBy": ["size", "weight", "origin"],
+  "hasProductGroupMember": [
+    {
+      "@type": "Product",
+      "name": "日本馬糞海膽",
+      "alternateName": "Maza Sea Urchin",
+      "description": "來自日本北海道、根室海域的頂級馬糞海膽，被譽為海膽中的極品",
+      "brand": {
+        "@type": "Brand",
+        "name": "小川 (Ogawa)",
+        "alternateName": "奥村"
+      },
+      "manufacturer": {
+        "@type": "Organization",
+        "name": "稻荷環球食品有限公司",
+        "url": "https://inariglobal.com"
+      },
+      "origin": ["日本北海道", "日本根室"],
+      "offers": {
+        "@type": "AggregateOffer",
+        "lowPrice": "350",
+        "highPrice": "800",
+        "priceCurrency": "HKD",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition"
+      },
+      "nutrition": {
+        "@type": "NutritionInformation",
+        "servingSize": "100g",
+        "proteinContent": "12g",
+        "fatContent": "15g",
+        "sodiumContent": "200mg"
+      },
+      "additionalProperty": [
+        {"@type": "PropertyValue", "name": "季節", "value": "6月-8月"},
+        {"@type": "PropertyValue", "name": "等級", "value": "A級"},
+        {"@type": "PropertyValue", "name": "包裝規格", "value": "50g, 70g, 100g, 130g, 200g"}
+      ]
+    },
+    {
+      "@type": "Product",
+      "name": "日本紫海膽",
+      "alternateName": "Murasaki Sea Urchin",
+      "description": "產自東京灣、相模灣的紫海膽，味道清爽，價格較馬糞海膽實惠",
+      "brand": {
+        "@type": "Brand",
+        "name": "小川 (Ogawa)"
+      },
+      "manufacturer": {
+        "@type": "Organization",
+        "name": "稻荷環球食品有限公司"
+      },
+      "origin": ["日本東京灣", "日本相模灣"],
+      "offers": {
+        "@type": "AggregateOffer",
+        "lowPrice": "250",
+        "highPrice": "500",
+        "priceCurrency": "HKD",
+        "availability": "https://schema.org/InStock"
+      },
+      "additionalProperty": [
+        {"@type": "PropertyValue", "name": "季節", "value": "9月-11月"},
+        {"@type": "PropertyValue", "name": "包裝規格", "value": "50g, 100g"}
+      ]
+    },
+    {
+      "@type": "Product",
+      "name": "加拿大紅海膽",
+      "alternateName": "Canadian Red Sea Urchin",
+      "description": "來自加拿大BC省海域，肉質肥厚口感細膩，是日本以外最優質的選擇",
+      "manufacturer": {
+        "@type": "Organization",
+        "name": "稻荷環球食品有限公司"
+      },
+      "origin": ["加拿大BC省", "加拿大溫哥華島"],
+      "offers": {
+        "@type": "AggregateOffer",
+        "lowPrice": "180",
+        "highPrice": "400",
+        "priceCurrency": "HKD",
+        "availability": "https://schema.org/InStock"
+      },
+      "additionalProperty": [
+        {"@type": "PropertyValue", "name": "季節", "value": "全年供應"},
+        {"@type": "PropertyValue", "name": "包裝規格", "value": "100g, 200g"}
+      ]
+    },
+    {
+      "@type": "Product",
+      "name": "挪威三文魚",
+      "alternateName": "Norwegian Salmon",
+      "description": "來自挪威海域的優質養殖三文魚，富含Omega-3脂肪",
+      "manufacturer": {
+        "@type": "Organization",
+        "name": "稻荷環球食品有限公司"
+      },
+      "origin": ["挪威"],
+      "offers": {
+        "@type": "AggregateOffer",
+        "lowPrice": "120",
+        "highPrice": "350",
+        "priceCurrency": "HKD",
+        "availability": "https://schema.org/InStock"
+      },
+      "nutrition": {
+        "@type": "NutritionInformation",
+        "servingSize": "100g",
+        "proteinContent": "20g",
+        "fatContent": "13g",
+        "omega3Content": "2.3g"
+      },
+      "additionalProperty": [
+        {"@type": "PropertyValue", "name": "等級", "value": "刺身級"},
+        {"@type": "PropertyValue", "name": "包裝", "value": "真空封裝"}
+      ]
+    },
+    {
+      "@type": "Product",
+      "name": "日本帆立貝柱",
+      "alternateName": "Japanese Scallop",
+      "description": "日本進口帆立貝柱，可刺身或烹調",
+      "manufacturer": {
+        "@type": "Organization",
+        "name": "稻荷環球食品有限公司"
+      },
+      "origin": ["日本"],
+      "offers": {
+        "@type": "AggregateOffer",
+        "lowPrice": "80",
+        "highPrice": "200",
+        "priceCurrency": "HKD",
+        "availability": "https://schema.org/InStock"
+      },
+      "additionalProperty": [
+        {"@type": "PropertyValue", "name": "包裝", "value": "盒裝"}
+      ]
+    },
+    {
+      "@type": "Product",
+      "name": "鮮魚/魚柳批發",
+      "alternateName": "Fresh Fish Fillets",
+      "description": "整魚採購、代客處理（去鱗、取柳、精修）、刺身級真空封裝服務",
+      "manufacturer": {
+        "@type": "Organization",
+        "name": "稻荷環球食品有限公司"
+      },
+      "origin": ["日本", "挪威", "加拿大", "本地"],
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "HKD",
+        "availability": "https://schema.org/InStock",
+        "description": "按需求報價"
+      },
+      "additionalProperty": [
+        {"@type": "PropertyValue", "name": "服務", "value": "代客處理"},
+        {"@type": "PropertyValue", "name": "包裝", "value": "刺身級真空封裝"}
+      ]
+    }
+  ]
+}
