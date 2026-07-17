@@ -40,6 +40,12 @@
         </div>
       </div>
 
+      <!-- 慣用貨 quick-add(入頁即帶客戶常買貨) -->
+      <div id="usual-strip" style="display:none;padding:6px 18px 4px">
+        <div style="font-size:11px;font-weight:700;color:var(--mute);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">你常買 · 㩒即加</div>
+        <div id="usual-chips" style="display:flex;flex-wrap:wrap;gap:7px"></div>
+      </div>
+
       <!-- Voice mode -->
       <div id="voice-panel">
         <div class="mic-stage">
@@ -245,7 +251,7 @@
         if (caption) caption.textContent = '解析中...';
 
         try {
-          const res = await fetch('/api/voice/parse', {
+          const res = await fetch('/api/orders/resolve', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text }),
@@ -398,6 +404,30 @@
         });
         renderParsed();
       };
+
+      // ── 慣用貨(入頁即帶,㩒 chip 加入訂單) ──
+      let usualItems = [];
+      async function loadUsual() {
+        try {
+          const res = await fetch('/api/orders/usual');
+          const data = await res.json();
+          usualItems = data.items || [];
+          if (!usualItems.length) return;
+          document.getElementById('usual-chips').innerHTML = usualItems.map((u, i) => {
+            const nm = (u.product_name || '').replace(/^\([^)]*\)/, '').replace(/\(.*$/, '').slice(0, 10) || u.product_name;
+            return `<button onclick="addUsual(${i})" style="font-size:12.5px;padding:7px 11px;border:1px solid var(--hairline-strong);background:var(--paper-2);border-radius:16px;font-weight:600">${nm}</button>`;
+          }).join('');
+          document.getElementById('usual-strip').style.display = 'block';
+        } catch {}
+      }
+      window.addUsual = function(i) {
+        const u = usualItems[i];
+        const exist = parsedItems.find(p => p.product_code === u.product_code);
+        if (exist) exist.qty = (exist.qty || 1) + 1;
+        else parsedItems.push({ product_code: u.product_code, product_name: u.product_name, qty: 1, unit: u.unit, suggested_price: u.suggested_price, match_confidence: 'history' });
+        renderParsed();
+      };
+      loadUsual();
 
       // ── Submit / Checkout ──
       window.handleCheckout = async function() {
