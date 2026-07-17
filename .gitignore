@@ -25,3 +25,6 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 .vercel
+
+# QR token PNG(含bearer token)絕不入repo
+scripts/qr_out/

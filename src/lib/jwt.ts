@@ -99,6 +99,24 @@ export async function verifyJWT(token: string, secret: string): Promise<JwtPaylo
   }
 }
 
+// QR 免密碼登入 token：wholesale + purpose='qr' + jti(可撤銷)。長效,只用嚟換短效 session。
+export async function signQRToken(
+  customer_code: string, jti: string, sub: string, exp: number, secret: string
+): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: ISSUER, iat: now, exp, tenant_id: TENANT_ID, v: 3,
+    sub, user_type: 'wholesale', customer_code,
+    username: `qr_${customer_code}`, purpose: 'qr', jti,
+  };
+  const enc = new TextEncoder();
+  const header = base64urlEncode(enc.encode(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).buffer as ArrayBuffer);
+  const body = base64urlEncode(enc.encode(JSON.stringify(payload)).buffer as ArrayBuffer);
+  const key = await importKey(secret);
+  const sig = base64urlEncode(await crypto.subtle.sign('HMAC', key, enc.encode(`${header}.${body}`)));
+  return `${header}.${body}.${sig}`;
+}
+
 export function makeTokenExpiry(userType: JwtPayload['user_type']): number {
   const now = Math.floor(Date.now() / 1000);
   if (userType === 'manager') return now + 8 * 3600;       // 8 hours

@@ -115,6 +115,21 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
     </div>
   </div>
 
+  <!-- QR modal -->
+  <div class="modal fade" tabindex="-1" id="qrModal">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header py-2">
+          <h5 class="modal-title" id="qr-title">客戶 QR</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center" id="qr-body">
+          <div class="text-muted py-4">生成中…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     let allCustomers = [], filtered = [];
     let timer = null, currentSearch = '';
@@ -192,14 +207,43 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           <td class="text-muted small d-none d-lg-table-cell">${c.salesperson || '—'}</td>
           <td class="text-center d-none d-lg-table-cell">${webOrders}${draftBadge}</td>
           <td class="text-center">${statusBadge}</td>
-          <td>
-            <a href="/admin/customers/${c.id}" class="btn btn-sm btn-ghost-secondary">
+          <td class="text-nowrap">
+            <button class="btn btn-sm btn-ghost-secondary" title="生成客戶 QR" onclick="genQR('${c.customer_code}')">
+              <i class="ti ti-qrcode"></i>
+            </button>
+            <a href="/admin/customers/${c.id}" class="btn btn-sm btn-ghost-secondary" title="詳情">
               <i class="ti ti-eye"></i>
             </a>
           </td>
         </tr>`;
       }).join('');
     }
+
+    window.genQR = async function(code) {
+      const c = allCustomers.find(x => x.customer_code === code) || { customer_name: code };
+      document.getElementById('qr-title').textContent = `${c.customer_name} QR`;
+      const bodyEl = document.getElementById('qr-body');
+      bodyEl.innerHTML = '<div class="text-muted py-4">生成中…</div>';
+      new bootstrap.Modal(document.getElementById('qrModal')).show();
+      try {
+        const resp = await fetch('/api/admin/qr', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ customer_code: code }),
+        });
+        const d = await resp.json();
+        if (!resp.ok || !d.ok) { bodyEl.innerHTML = `<div class="text-danger py-3">失敗：${d.error || resp.status}</div>`; return; }
+        const exp = new Date(d.expires).toLocaleDateString('zh-TW');
+        bodyEl.innerHTML = `
+          <img src="${d.dataUrl}" alt="QR" style="width:100%;max-width:260px" class="mb-2">
+          <div class="font-mono text-muted small mb-1">${d.customer_code}</div>
+          <div class="text-muted" style="font-size:11px">客戶掃描即登入落單 · 有效至 ${exp}</div>
+          <a class="btn btn-sm btn-primary mt-2 w-100" href="${d.dataUrl}" download="QR_${d.customer_code}.png">
+            <i class="ti ti-download"></i> 下載 QR
+          </a>`;
+      } catch (e) {
+        bodyEl.innerHTML = `<div class="text-danger py-3">網路錯誤：${e.message}</div>`;
+      }
+    };
 
     window.showDetail = async function(c) {
       document.getElementById('drawer-title').textContent = `${c.customer_name}`;
