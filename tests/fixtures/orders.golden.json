@@ -1,0 +1,116 @@
+{
+  "_doc": "訂單解析引擎 gold set。自足(catalog inline,唔打 DB,可重現)。基於 tools/qnl/order_resolve.py 真實客戶例子 + 對抗案例。expect_conf: history|fuzzy|unmatched;expect_code=null 代表應標人手。curated:label=人手正解(ground truth),引擎唔啱=真 miss,唔可為夾引擎改 label。",
+  "global": [
+    { "item_code": "SAL-STD",  "item_name": "三文魚柳",         "revenue_3y": 800000, "last_uom": "條", "last_price": 90 },
+    { "item_code": "SAL-BIG",  "item_name": "大三文魚",         "revenue_3y": 300000, "last_uom": "條", "last_price": 95 },
+    { "item_code": "SAL-ROE",  "item_name": "三文魚籽",         "revenue_3y": 120000, "last_uom": "盒", "last_price": 130 },
+    { "item_code": "AKA-SLICE","item_name": "赤貝片6g",         "revenue_3y": 200000, "last_uom": "包", "last_price": 28 },
+    { "item_code": "AKA-LIVE", "item_name": "活赤貝",           "revenue_3y": 90000,  "last_uom": "斤", "last_price": 60 },
+    { "item_code": "AKA-MEAT", "item_name": "赤貝肉",           "revenue_3y": 150000, "last_uom": "包", "last_price": 21 },
+    { "item_code": "SHR-NH",   "item_name": "無頭甜蝦M50",      "revenue_3y": 250000, "last_uom": "包", "last_price": 55 },
+    { "item_code": "SHR-TIG6", "item_name": "虎蝦6g",           "revenue_3y": 180000, "last_uom": "包", "last_price": 17 },
+    { "item_code": "SHR-TIG10","item_name": "虎蝦10g",          "revenue_3y": 170000, "last_uom": "包", "last_price": 22 },
+    { "item_code": "SHR-TMP",  "item_name": "天婦羅蝦",         "revenue_3y": 110000, "last_uom": "包", "last_price": 45 },
+    { "item_code": "MDG-BEI",  "item_name": "馬刀貝",           "revenue_3y": 95000,  "last_uom": "包", "last_price": 38 },
+    { "item_code": "HOK-N",    "item_name": "北寄貝",           "revenue_3y": 130000, "last_uom": "包", "last_price": 42 },
+    { "item_code": "EEL-SLICE","item_name": "鰻魚片",           "revenue_3y": 140000, "last_uom": "包", "last_price": 68 },
+    { "item_code": "BON-FLK",  "item_name": "木魚花",           "revenue_3y": 40000,  "last_uom": "包", "last_price": 35 },
+    { "item_code": "TAI-FIL",  "item_name": "立魚柳",           "revenue_3y": 60000,  "last_uom": "條", "last_price": 100 },
+    { "item_code": "CRB-ROE",  "item_name": "紅蟹籽",           "revenue_3y": 70000,  "last_uom": "包", "last_price": 88 },
+    { "item_code": "HIR-FISH", "item_name": "希靈魚",           "revenue_3y": 30000,  "last_uom": "條", "last_price": 55 }
+  ],
+  "customers": [
+    {
+      "name": "客甲",
+      "hist": [
+        { "item_code": "SHR-NH",   "item_name": "無頭甜蝦M50", "n_times": 42, "last_uom": "包", "last_price": 55 },
+        { "item_code": "MDG-BEI",  "item_name": "馬刀貝",       "n_times": 30, "last_uom": "包", "last_price": 38 },
+        { "item_code": "AKA-MEAT", "item_name": "赤貝肉",       "n_times": 25, "last_uom": "包", "last_price": 21 },
+        { "item_code": "SHR-TMP",  "item_name": "天婦羅蝦",     "n_times": 18, "last_uom": "包", "last_price": 45 },
+        { "item_code": "BON-FLK",  "item_name": "木魚花",       "n_times": 5,  "last_uom": "包", "last_price": 35 }
+      ],
+      "lines": [
+        { "raw": "无头甜虾肉 20包",  "expect_code": "SHR-NH",   "expect_conf": "history", "note": "簡體+肉字,慣買" },
+        { "raw": "马刀贝 10包",       "expect_code": "MDG-BEI",  "expect_conf": "history" },
+        { "raw": "赤贝肉 10包",       "expect_code": "AKA-MEAT", "expect_conf": "history", "note": "此客慣買赤貝肉,唔係赤貝片" },
+        { "raw": "天婦羅蝦 15包",     "expect_code": "SHR-TMP",  "expect_conf": "history" },
+        { "raw": "木鱼花 1包",        "expect_code": "BON-FLK",  "expect_conf": "history" }
+      ]
+    },
+    {
+      "name": "客乙",
+      "hist": [
+        { "item_code": "SAL-STD",  "item_name": "三文魚柳", "n_times": 50, "last_uom": "條", "last_price": 95 },
+        { "item_code": "AKA-LIVE", "item_name": "活赤貝",   "n_times": 22, "last_uom": "包", "last_price": 28 },
+        { "item_code": "EEL-SLICE","item_name": "鰻魚片",   "n_times": 15, "last_uom": "包", "last_price": 68 }
+      ],
+      "lines": [
+        { "raw": "三文鱼两条95",   "expect_code": "SAL-STD",  "expect_conf": "history", "note": "中文數量兩條" },
+        { "raw": "赤贝10包28",     "expect_code": "AKA-LIVE", "expect_conf": "history", "note": "此客赤貝=活赤貝(消歧靠歷史)" },
+        { "raw": "黄希零3包",      "expect_code": null,       "expect_conf": "unmatched", "note": "口語錯字,唔喺歷史→應標人手,唔好亂對希靈魚" },
+        { "raw": "鳗鱼片5包",      "expect_code": "EEL-SLICE","expect_conf": "history" }
+      ]
+    },
+    {
+      "name": "客丙",
+      "hist": [
+        { "item_code": "SAL-STD",  "item_name": "三文魚柳", "n_times": 40, "last_uom": "條", "last_price": 90 },
+        { "item_code": "HOK-N",    "item_name": "北寄貝",   "n_times": 20, "last_uom": "包", "last_price": 42 },
+        { "item_code": "AKA-MEAT", "item_name": "赤貝肉",   "n_times": 18, "last_uom": "包", "last_price": 21 },
+        { "item_code": "SHR-TIG6", "item_name": "虎蝦6g",   "n_times": 16, "last_uom": "包", "last_price": 17 },
+        { "item_code": "TAI-FIL",  "item_name": "立魚柳",   "n_times": 10, "last_uom": "條", "last_price": 100 }
+      ],
+      "lines": [
+        { "raw": "三文鱼90",      "expect_code": "SAL-STD",  "expect_conf": "history", "note": "缺數量→qty預設1" },
+        { "raw": "S北寄贝",       "expect_code": "HOK-N",    "expect_conf": "history", "note": "S碼前綴" },
+        { "raw": "赤贝肉21",      "expect_code": "AKA-MEAT", "expect_conf": "history" },
+        { "raw": "6g虎虾17",      "expect_code": "SHR-TIG6", "expect_conf": "history", "note": "6g size命中" },
+        { "raw": "立鱼柳100",     "expect_code": "TAI-FIL",  "expect_conf": "history" }
+      ]
+    },
+    {
+      "name": "客丁",
+      "hist": [
+        { "item_code": "SAL-STD",   "item_name": "三文魚柳", "n_times": 35, "last_uom": "條", "last_price": 87 },
+        { "item_code": "SHR-TIG10", "item_name": "虎蝦10g",  "n_times": 20, "last_uom": "包", "last_price": 22 },
+        { "item_code": "AKA-SLICE", "item_name": "赤貝片6g", "n_times": 14, "last_uom": "包", "last_price": 28 },
+        { "item_code": "CRB-ROE",   "item_name": "紅蟹籽",   "n_times": 8,  "last_uom": "包", "last_price": 88 }
+      ],
+      "lines": [
+        { "raw": "三文魚4条7-8@87",     "expect_code": "SAL-STD",   "expect_conf": "history", "note": "range 7-8 + @價" },
+        { "raw": "10g虎虾20包",         "expect_code": "SHR-TIG10", "expect_conf": "history", "note": "10g消歧 vs 6g" },
+        { "raw": "8g赤贝5包",           "expect_code": "AKA-SLICE", "expect_conf": "history", "note": "赤貝片(此客慣買片)" },
+        { "raw": "大粒红蟹籽1包",       "expect_code": "CRB-ROE",   "expect_conf": "history", "note": "大粒 size噪音" }
+      ]
+    },
+    {
+      "name": "客戊",
+      "hist": [
+        { "item_code": "SAL-BIG", "item_name": "大三文魚", "n_times": 12, "last_uom": "條", "last_price": 95 }
+      ],
+      "lines": [
+        { "raw": "大三文魚 5條 (95/kg)", "expect_code": "SAL-BIG", "expect_conf": "history", "note": "括號價要剝" }
+      ]
+    },
+    {
+      "name": "新客A_無歷史",
+      "hist": [],
+      "lines": [
+        { "raw": "三文鱼柳 3条",  "expect_code": "SAL-STD", "expect_conf": "fuzzy", "note": "冇歷史→全局 fuzzy fallback" },
+        { "raw": "北寄贝 5包",    "expect_code": "HOK-N",   "expect_conf": "fuzzy" },
+        { "raw": "xyz亂碼商品",   "expect_code": null,      "expect_conf": "unmatched", "note": "全局都對唔到→人手" }
+      ]
+    },
+    {
+      "name": "對抗_改單動作",
+      "hist": [
+        { "item_code": "SAL-STD", "item_name": "三文魚柳", "n_times": 20, "last_uom": "條", "last_price": 90 }
+      ],
+      "lines": [
+        { "raw": "取消三文魚",     "expect_code": null,      "expect_conf": "unmatched", "note": "取消動作行,唔可當落單" },
+        { "raw": "三文魚更正5條",  "expect_code": null,      "expect_conf": "unmatched", "note": "更正動作,交人手" },
+        { "raw": "三文鱼2条(现金)","expect_code": "SAL-STD", "expect_conf": "history",   "note": "現金備註要剝,仍要落單" }
+      ]
+    }
+  ]
+}

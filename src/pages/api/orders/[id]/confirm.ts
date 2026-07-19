@@ -61,7 +61,10 @@ export const PATCH: APIRoute = async ({ locals, request, params }) => {
     return json({ error: '訂單不存在' }, 404);
   }
 
-  if (userType === 'wholesale' && locals.customerCode !== order.customer_code) {
+  // 正向授權:非 staff/manager 一律要求 session 個 customer_code === 訂單客戶,
+  // 唔理 userType 係乜(避免 retail 等新類型繞過擁有權檢查 confirm 別人訂單)。
+  const isStaff = userType === 'staff' || userType === 'manager';
+  if (!isStaff && locals.customerCode !== order.customer_code) {
     return json({ error: '無權限確認此訂單' }, 403);
   }
 

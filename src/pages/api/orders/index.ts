@@ -78,7 +78,11 @@ export const POST: APIRoute = async ({ locals, request }) => {
     import.meta.env.SUPABASE_SERVICE_KEY || import.meta.env.SUPABASE_ANON_KEY;
   const body = await request.json();
 
-  const customerCode = body.customer_code || locals.customerCode || 'UNKNOWN';
+  // 只有 staff/manager 先可代客戶指定 customer_code;B2B/B2C 客戶一律鎖死自己 session 個 code,
+  // 忽略 client 傳嘅值(否則可冒名幫別家客戶落單=IDOR 寫入)。
+  const isStaff = userType === 'staff' || userType === 'manager';
+  const customerCode = (isStaff && body.customer_code) ? body.customer_code : (locals.customerCode || 'UNKNOWN');
+  const customerName = (isStaff && body.customer_name) ? body.customer_name : customerCode;
   const orderDate = body.order_date || todayStr();
   const items = body.items || [];
   const rawText = body.raw_text || '';
@@ -98,7 +102,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
   const orderPayload: Record<string, unknown> = {
     order_no: orderNo,
     customer_code: customerCode,
-    customer_name: body.customer_name || customerCode,
+    customer_name: customerName,
     order_date: orderDate,
     source,
     status: 'draft',

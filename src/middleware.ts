@@ -2,9 +2,9 @@ import { defineMiddleware } from 'astro:middleware';
 import { verifyJWT } from './lib/jwt';
 
 const COOKIE_V3 = 'inari_auth_v3';
-const COOKIE_V2 = 'inari_auth_v2'; // legacy — readable but no longer issued
-const COOKIE_V1 = 'inari_auth';    // legacy — single-password staff
 const SHOP_LOGIN = '/shop/login';
+// legacy v1(單密碼)/v2(無簽名 base64)cookie 已移除:兩者都可被偽造(v2 冇 HMAC、v1 硬編碼密碼),
+// 係全站淪陷級洞。唯一有效 session = 簽名 v3 JWT。舊 cookie 用戶要重新登入一次。
 
 // Public paths: no auth check
 const PUBLIC_PREFIXES = [
@@ -59,18 +59,6 @@ function getCookie(header: string, name: string): string | null {
   return match ? match.slice(name.length + 1) : null;
 }
 
-// Legacy v2: base64 JSON, no signature — read-only during transition
-function parseV2Legacy(token: string): Record<string, unknown> | null {
-  try {
-    const s = JSON.parse(atob(token)) as Record<string, unknown>;
-    if (s.v !== 2) return null;
-    if (s.exp && (s.exp as number) < Math.floor(Date.now() / 1000)) return null;
-    return s;
-  } catch {
-    return null;
-  }
-}
-
 export const onRequest = defineMiddleware(async (context, next) => {
   const path = context.url.pathname;
 
@@ -91,41 +79,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
   let username = '';
   let customerCode = '';
 
-  // 1. Try v3 JWT (primary)
+  // v3 JWT — 唯一有效 session。
+  // purpose token(如 QR 免密碼登入 token purpose='qr')雖然係合法簽名 v3,但只准喺
+  // /api/auth/retail/qr 換取真 session,唔可以直接當 session cookie 用 —— 否則 QR 撤銷機制失效。
   const v3Token = getCookie(cookie, COOKIE_V3);
   if (v3Token && jwtSecret) {
     const payload = await verifyJWT(v3Token, jwtSecret);
-    if (payload) {
+    if (payload && !(payload as any).purpose) {
       userType = payload.user_type;
       userId = payload.sub;
       username = payload.username;
       customerCode = payload.customer_code ?? '';
-    }
-  }
-
-  // 2. Fall back to legacy v2 (transition period — no JWT_SECRET needed)
-  if (!userType) {
-    const v2Token = getCookie(cookie, COOKIE_V2);
-    if (v2Token) {
-      const s = parseV2Legacy(v2Token);
-      if (s) {
-        userType = (s.user_type as string) || 'staff';
-        userId = (s.id as string) || '';
-        username = (s.username as string) || '';
-        customerCode = (s.customer_code as string) || '';
-      }
-    }
-  }
-
-  // 3. Fall back to legacy v1 (single-password staff)
-  if (!userType) {
-    const v1Token = getCookie(cookie, COOKIE_V1);
-    const expected = import.meta.env.SITE_PASSWORD || 'inari2026';
-    if (v1Token && v1Token === btoa(expected)) {
-      userType = 'staff';
-      userId = '';
-      username = 'staff';
-      customerCode = '';
     }
   }
 
