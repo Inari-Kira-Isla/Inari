@@ -66,7 +66,17 @@
 
 - [ ] `/admin` 同時有 `admin/index.astro` 同 `admin.astro` 兩個檔案撞路由（build有warning，未來Astro版本會變hard error）— 需要揀一個刪
 - [ ] `/salmon/storage` 同樣有 `salmon/storage/index.astro` 同 `salmon/storage.astro` 撞路由，同上處理
-- [ ] Vercel部署現況未核實（CLI查詢逾時，需人手開瀏覽器確認live URL仲正常運作）
+- [x] Vercel部署現況未核實 → **2026-07-23已核實**：live URL = `https://inari-henna.vercel.app`（HTTP 200健康），`JWT_SECRET`喺Vercel Production/Preview已設定（`vercel env pull`因「Sensitive」標記顯示空值屬CLI限制非真相，實測`/api/auth/login`回401非500確認secret真實有效）
+
+## 2026-07-23 銷售員版面SDD Task B 真實UAT紀錄（重要）
+
+**用真實API做咗一次完整真人流程驗證，唔止靠code review**：
+
+1. **用本機`scripts/gen_qr_tokens.mjs`生成嘅QR完全用唔到**——本機`.env`嘅`JWT_SECRET=localtest_s1s2_smoke`只係佔位符，同production實際secret唔一致，簽出嚟嘅QR一scan即fallback去手動登入頁（呢個fallback行為本身都算細bug，應該顯示「QR已失效」清晰提示，唔應該靜默降級去登入頁，令人以為個QR系統唔work）。**後續呢類真人測試一律用真實admin後台/API生成，唔好用呢個本機script。**
+2. **🔴 P0發現：`/api/admin/qr.ts`生成嘅QR URL網域錯誤**——`new URL(request.url).origin`喺Vercel serverless function入面唔反映真實對外域名，實測直接回傳`https://localhost`。即係話由呢個功能上線（commit`be06f2e`）到而家，**任何人經admin後台撳「生成客戶QR」，出嚟嘅QR畀客戶手機掃都係死路**（連唔到localhost）。**呢個好可能就係`inari_qr_tokens`/`inari_customer_orders`「全部0行all-time」嘅真正根因**——唔係冇人試過，而係試極都連唔到，前線員工/客戶大概率靜默放棄，冇人回報。
+3. **已修+已部署+已驗證**（commit `7374c75`）：改用`X-Forwarded-Host`/`Host`request header構造正確base URL，`request.url.origin`降做冇header時嘅fallback。修復後真實測試：登入(manager)→生成QR(customer_code=MM0024)→URL正確顯示`https://inari-henna.vercel.app/...`→模擬掃碼(直接GET個URL)→302正確跳去`/shop/order/new`+設定7日session cookie。**完整鏈路首次證實真係work**。
+4. **新增測試帳號**（供未來UAT用，`inari_users`已有嘅`username='test', user_type='manager'`帳號）：密碼已設為`InariTest2026Qr`（2026-07-23設，先前密碼未知/唔記錄喺文件，UAT_CHECKLIST由頭到尾冇寫過實際測試密碼，呢個係首次補齊）。之後A-H項嘅manager角色測試可以直接用呢個帳號，唔使再猜/再問。
+5. **未完成**：Joe本人真機掃碼(用真實iPhone camera app,唔係curl模擬)嘅最終視覺確認——已send修好版QR圖(`scripts/qr_out/MM0024_fixed.png`)畀Joe,等佢真實掃一次做最終sign-off。
 
 ---
 
