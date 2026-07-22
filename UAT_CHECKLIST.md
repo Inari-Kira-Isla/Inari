@@ -76,7 +76,11 @@
 2. **🔴 P0發現：`/api/admin/qr.ts`生成嘅QR URL網域錯誤**——`new URL(request.url).origin`喺Vercel serverless function入面唔反映真實對外域名，實測直接回傳`https://localhost`。即係話由呢個功能上線（commit`be06f2e`）到而家，**任何人經admin後台撳「生成客戶QR」，出嚟嘅QR畀客戶手機掃都係死路**（連唔到localhost）。**呢個好可能就係`inari_qr_tokens`/`inari_customer_orders`「全部0行all-time」嘅真正根因**——唔係冇人試過，而係試極都連唔到，前線員工/客戶大概率靜默放棄，冇人回報。
 3. **已修+已部署+已驗證**（commit `7374c75`）：改用`X-Forwarded-Host`/`Host`request header構造正確base URL，`request.url.origin`降做冇header時嘅fallback。修復後真實測試：登入(manager)→生成QR(customer_code=MM0024)→URL正確顯示`https://inari-henna.vercel.app/...`→模擬掃碼(直接GET個URL)→302正確跳去`/shop/order/new`+設定7日session cookie。**完整鏈路首次證實真係work**。
 4. **新增測試帳號**（供未來UAT用，`inari_users`已有嘅`username='test', user_type='manager'`帳號）：密碼已設為`InariTest2026Qr`（2026-07-23設，先前密碼未知/唔記錄喺文件，UAT_CHECKLIST由頭到尾冇寫過實際測試密碼，呢個係首次補齊）。之後A-H項嘅manager角色測試可以直接用呢個帳號，唔使再猜/再問。
-5. **未完成**：Joe本人真機掃碼(用真實iPhone camera app,唔係curl模擬)嘅最終視覺確認——已send修好版QR圖(`scripts/qr_out/MM0024_fixed.png`)畀Joe,等佢真實掃一次做最終sign-off。
+5. **🔴 P0發現#2（比#2更根本，真正終極根因）**：修好localhost bug後Joe真機掃碼仍然「一閃即逝」bounce返login頁。追查揪到`public/js/auth.js`嘅`getAuth()`一直讀`inari_auth_v2`（client可見base64 cookie），但`login.ts`/`qr.ts`早已升級用HttpOnly嘅`inari_auth_v3`（真JWT，security hardening），前端呢層從未同步更新——**任何登入方式（QR或者手動用戶名密碼）都會中招**，伺服器session明明成功建立，前端script一查`isLoggedIn`永遠false即刻彈返login。影響7個頁面（index/orders/search/checkout/admin-orders/order-new/catalog）。`logout()`同樣有問題（清緊清唔到嘅HttpOnly cookie+跳去已刪除嘅`/login`死頁）。
+6. **已修+已部署**（commit `0afdd3d`）：`getAuth()`/`logout()`改做async，call真正`GET /api/auth/me`/`POST /api/auth/logout`；7個call site加`await`（全部`type="module"`，top-level await原生支援）；順手移除從未被用到嘅`isB2B`/`isB2C`死欄位。本機`npm run build`通過。
+7. **✅ Joe真機掃碼最終確認成功**（2026-07-23）：用真實iPhone camera掃描修復版QR（客戶MM0024盛悅餐飲），成功進入「新增訂單」頁，常買清單正確帶出，語音/文字下單、底部導覽（首頁/目錄/下單/訂單/購物車）全部顯示正常。**QR登入流程首次證實端對端真係work，Task B正式完成。**
+
+A. 登入/權限對應項已透過本次UAT間接驗證：wholesale QR登入(√)、`/api/auth/me`回傳正確user_type/customer_code(√)、manager帳號可正常登入(√)。其餘細項（staff角色/403邊界/logout完整round-trip等）未逐一勾選，建議下次有空再過一次A-H全表。
 
 ---
 
