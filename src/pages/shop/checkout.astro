@@ -117,7 +117,7 @@
       import { getAuth } from '/js/auth.js';
       import { getCart, getCartTotal, clearCart } from '/js/cart.js';
 
-      const auth = getAuth();
+      const auth = await getAuth();
       if (!auth.isLoggedIn) { window.location.href = '/shop/login'; }
 
       // ── Payment selection ──
@@ -214,17 +214,8 @@
             return;
           }
 
-          const confirmRes = await fetch('/api/orders/' + createData.order_id + '/confirm', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ payment_method: selectedPayment, delivery_date, notes }),
-          });
-          const confirmData = await confirmRes.json();
-          if (!confirmRes.ok || !confirmData.ok) {
-            alert('確認訂單失敗: ' + (confirmData.error || '請稍後重試'));
-            return;
-          }
-
+          // 07-21 Joe拍板：客戶提交後只落 draft，唔可以自己confirm；
+          // 一定要等職員喺 admin/orders 人手核對先可以「確認」→「開單」，避免未經核實嘅訂單直接扣庫存。
           clearCart();
           window.location.href = '/shop/order/confirmed?no=' + encodeURIComponent(createData.order_no);
         } catch {

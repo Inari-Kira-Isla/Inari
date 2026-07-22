@@ -1,55 +1,38 @@
-// Client-side auth hook — reads inari_auth_v2 cookie
-// Returns {user, isStaff, isB2B, isB2C, loading}
+// Client-side auth hook — asks the server (GET /api/auth/me) which reads the
+// real HttpOnly `inari_auth_v3` session cookie (JS can never read it directly).
+// 2026-07-23: rewritten — this file previously read a client-visible
+// `inari_auth_v2` cookie that the backend stopped setting once it moved to
+// HttpOnly `inari_auth_v3` JWT sessions (security hardening). Every page using
+// getAuth() would briefly render then bounce back to /shop/login because
+// isLoggedIn was always false, even with a fully valid server-side session
+// (found during 2026-07-23 QR login UAT — same root cause blocked normal
+// username/password login too, not just QR).
+// Returns {user, isStaff, isLoggedIn}
 
-function getCookie(name) {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie
-    .split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith(`${name}=`));
-  return match ? match.slice(name.length + 1) : null;
-}
-
-function parseSession() {
-  const token = getCookie("inari_auth_v2");
-  if (!token) return null;
+export async function getAuth() {
   try {
-    const session = JSON.parse(atob(token));
-    if (session.v !== 2) return null;
-    if (session.exp && session.exp < Math.floor(Date.now() / 1000)) return null;
-    return session;
+    const resp = await fetch('/api/auth/me', { credentials: 'same-origin' });
+    if (!resp.ok) return { user: null, isStaff: false, isLoggedIn: false };
+    const data = await resp.json();
+    return {
+      user: {
+        username: data.username,
+        user_type: data.user_type,
+        customer_code: data.customer_code || null,
+      },
+      isStaff: !!data.is_staff,
+      isLoggedIn: true,
+    };
   } catch {
-    return null;
+    return { user: null, isStaff: false, isLoggedIn: false };
   }
 }
 
-export function getAuth() {
-  const session = parseSession();
-  if (session) {
-    return {
-      user: session,
-      isStaff: session.user_type === "staff",
-      isB2B: session.user_type === "b2b",
-      isB2C: session.user_type === "b2c",
-      isLoggedIn: true,
-    };
+export async function logout() {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+  } catch {
+    // ignore — still redirect below even if the call fails
   }
-  // Fallback: check legacy cookie for staff
-  const legacyCookie = getCookie("inari_auth");
-  if (legacyCookie) {
-    return {
-      user: { username: "staff", user_type: "staff", role: "staff" },
-      isStaff: true,
-      isB2B: false,
-      isB2C: false,
-      isLoggedIn: true,
-    };
-  }
-  return { user: null, isStaff: false, isB2B: false, isB2C: false, isLoggedIn: false };
-}
-
-export function logout() {
-  document.cookie = "inari_auth_v2=; Path=/; Max-Age=0";
-  document.cookie = "inari_auth=; Path=/; Max-Age=0";
-  window.location.href = "/login";
+  window.location.href = '/shop/login';
 }

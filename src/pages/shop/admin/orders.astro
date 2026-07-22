@@ -170,7 +170,7 @@
     <script type="module">
       import { getAuth, logout as doLogoutFn } from '/js/auth.js';
 
-      const auth = getAuth();
+      const auth = await getAuth();
       if (!auth.isLoggedIn || (!auth.isStaff && auth.user?.user_type !== 'manager')) {
         window.location.href = '/shop/login';
       }
