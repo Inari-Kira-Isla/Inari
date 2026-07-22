@@ -44,7 +44,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
   });
   if (!ins.ok) return json({ error: '寫入失敗', detail: await ins.text() }, 500);
 
-  const base = new URL(request.url).origin; // 用當前站台域名(prod/preview 都啱)
+  // 2026-07-23 UAT 揪出：Vercel serverless function 入面 request.url 唔反映真實對外域名
+  // (實測回傳 https://localhost)，令生成嘅 QR 對客戶手機嚟講係死路。改用 Host/X-Forwarded-* header，
+  // request.url 之origin 淨做最後 fallback（本地 dev 環境可能冇呢啲 header）。
+  const fwdHost = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  const fwdProto = request.headers.get('x-forwarded-proto') || 'https';
+  const base = fwdHost ? `${fwdProto}://${fwdHost}` : new URL(request.url).origin;
   const url = `${base}/api/auth/retail/qr?t=${token}`;
   const dataUrl = await QRCode.toDataURL(url, { width: 512, margin: 2 });
 
