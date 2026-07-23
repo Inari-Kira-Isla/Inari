@@ -161,6 +161,25 @@ export const POST: APIRoute = async ({ locals, request }) => {
   if (!itemsResp.ok) {
     const errText = await itemsResp.text();
     console.error('Items insert failed:', errText);
+    try {
+      const deleteResp = await fetch(
+        `${SUPABASE_URL}/rest/v1/inari_customer_orders?id=eq.${orderId}`,
+        { method: 'DELETE', headers: sbHeaders(serviceKey) }
+      );
+      if (!deleteResp.ok) {
+        const deleteErrText = await deleteResp.text();
+        console.error('Order header cleanup failed:', deleteErrText);
+      }
+    } catch (deleteError) {
+      console.error('Order header cleanup failed:', deleteError);
+    }
+    return new Response(
+      JSON.stringify({ error: '訂單明細建立失敗，請重新落單或聯絡客服' }),
+      {
+        status: 500,
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      }
+    );
   }
 
   return new Response(

@@ -110,6 +110,18 @@ match_confidence text default 'unmatched', tenant_id, created_at
 2. `shop/orders.astro`嘅死link（連去唔存在嘅`/shop/orders/{id}`）改做原地展開accordion（同`/account`頁一致嘅UX pattern），用返上面嘅items embed顯示明細
 3. 刪除`src/pages/api/shop-login.ts`（舊v2登入,無鹽SHA-256,冇人再call）+移除middleware `PUBLIC_PREFIXES`對應嘅`/api/shop-login`
 
+## 十一、07-23 第二輪 /omni-audit：商城功能完整性 + 競品分析（report.md：`~/.openclaw/reports/omni-audit-inari-shop-features-competitive-2026-07-23/`）
+
+**⚠️核心發現**：直接查production DB核實，`inari_customer_orders`/`inari_customer_order_items` 兩表**0行**，即使 `inari_schema_registry` 寫住「live/api/orders live寫入」。B2B自助下單套系統code完整已deploy，但從未有一張訂單真正成功落地過——下次任何商城任務見到「live」標記，記得呢個係「code已通」唔等於「已有人用」，兩者要分開驗證。
+
+**本次新揪到並已修復（code done，未commit）**：
+1. **訂單建立冇transaction保護**（`src/pages/api/orders/index.ts`+`src/pages/api/order/index.ts`）：items insert失敗只log,仍回201成功,產生孤兒訂單頭。已加DELETE補償清理+改回500。已用codex exec修+獨立deep-reasoner覆核(CONFIRMED,無阻塞問題)。
+2. **搜尋頁`shop/search.astro`假「最近搜尋」demo資料**：5個關鍵字+4個寫死價格(MOP550/1280/285/92)全部demo,非真實。已改標題做「熱門搜尋」+移除假價格。
+
+**功能缺口清單（對比9個成熟B2B食材電商標配，詳見report.md）**：客戶端庫存顯示、price_tier定價未接通、訂單狀態主動通知(零)、發票/對帳單下載、地址簿、促銷碼、線上付款閘道、送貨時段選擇、交易頁AI客服widget（得行銷頁有裝）——全部屬新功能開發範圍，本次未動，留待Joe排優先序。
+
+**競品分析結論**：澳門本地暫時搵唔到深度追得上稻荷嘅直接競品；香港**FoodBuyer**（App+AI格價）明確講3年內擴展嚟澳門/大灣區，係最具體嘅未來威脅信號，記入觀察名單。
+
 ## 十、⚠️發現同今次任務無關嘅pre-existing未commit狀態（07-23，唔係我改嘅，特此記錄）
 
 `git status`顯示`src/pages/api/login.ts`/`src/pages/login.astro`/`src/pages/api/orders/[id]/confirm.ts`喺working tree顯示為「已刪除/已改」但從未commit——呢啲檔案喺磁碟上已經唔存在，但`git log`最後commit(`833ed37`前)仲有佢哋。時間點同`UAT_CHECKLIST.md`記錄嘅commit`0afdd3d`(「auth.js改讀真實session」)、`fdca65f`(「Task B UAT最終確認成功」)提到嘅清理工作吻合，估計係之前一個session做咗刪除但漏咗commit。**建議下次git commit時一併處理（同今日B2B/B2C改動一齊定分開commit，睇Joe意願），唔好誤刪或者忽略。**

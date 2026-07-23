@@ -52,7 +52,6 @@ const ROUTE_GUARDS: Array<[string, string[]]> = [
   ['/account',   ['wholesale', 'manager']],
   ['/shop/admin',['staff', 'manager']],
   ['/shop',      ['staff', 'manager', 'wholesale']],
-  ['/retail',    ['retail']],
 ];
 
 function getCookie(header: string, name: string): string | null {

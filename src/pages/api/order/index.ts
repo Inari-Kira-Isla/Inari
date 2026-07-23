@@ -138,6 +138,19 @@ export const POST: APIRoute = async ({ request }) => {
   if (!itemsResp.ok) {
     const errText = await itemsResp.text();
     console.error('B2C order items insert failed:', errText);
+    try {
+      const deleteResp = await fetch(
+        `${SUPABASE_URL}/rest/v1/inari_customer_orders?id=eq.${orderId}`,
+        { method: 'DELETE', headers: sbHeaders(serviceKey) }
+      );
+      if (!deleteResp.ok) {
+        const deleteErrText = await deleteResp.text();
+        console.error('B2C order header cleanup failed:', deleteErrText);
+      }
+    } catch (deleteError) {
+      console.error('B2C order header cleanup failed:', deleteError);
+    }
+    return jsonError('訂單明細建立失敗，請重新落單或聯絡客服', 500);
   }
 
   return new Response(JSON.stringify({ ok: true, order_no: orderNo, order_id: orderId }), {
