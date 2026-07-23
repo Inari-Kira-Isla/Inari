@@ -61,11 +61,11 @@ export const PATCH: APIRoute = async ({ locals, request, params }) => {
     return json({ error: '訂單不存在' }, 404);
   }
 
-  // 正向授權:非 staff/manager 一律要求 session 個 customer_code === 訂單客戶,
-  // 唔理 userType 係乜(避免 retail 等新類型繞過擁有權檢查 confirm 別人訂單)。
+  // 07-21 Joe拍板：客戶落單後必須人手核對先可以「確認」（開單前把關），
+  // 呢個endpoint唔再准客戶自己confirm自己張單——只留staff/manager用（同 /api/admin/orders/[id] 同一套授權）。
   const isStaff = userType === 'staff' || userType === 'manager';
-  if (!isStaff && locals.customerCode !== order.customer_code) {
-    return json({ error: '無權限確認此訂單' }, 403);
+  if (!isStaff) {
+    return json({ error: '訂單需由職員人手確認，客戶不可自行確認' }, 403);
   }
 
   if (order.status !== 'draft') {

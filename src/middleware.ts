@@ -11,7 +11,6 @@ const PUBLIC_PREFIXES = [
   '/shop/login',
   '/login',
   '/api/login',
-  '/api/shop-login',
   '/api/auth/login',
   '/api/auth/logout',
   '/api/auth/retail/',
@@ -20,6 +19,9 @@ const PUBLIC_PREFIXES = [
   '/api/seasonal',
   '/api/brand',
   '/api/products/search',
+  // B2C guest 下單(2026-07-23新增,Joe拍板:免密碼,完全獨立命名空間,同 /shop 嘅B2B app無關)
+  '/order',
+  '/api/order',
   '/brand',
   '/knowledge',
   '/market',

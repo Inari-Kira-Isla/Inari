@@ -11,6 +11,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      /* 07-23修：訂單詳情由「連去唔存在嘅 /shop/orders/{id} 頁」(404) 改做原地展開，
+         同 /account 頁一致嘅 accordion 模式 */
+      .order-body { display: none; padding: 0 16px 14px; border-top: 1px solid var(--hairline); }
+      .card.open .order-body { display: block; }
+      .card.open .order-chevron { transform: rotate(90deg); }
+      .order-chevron { transition: transform .2s; flex-shrink: 0; }
+      .item-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--hairline); font-size: 12px; }
+      .item-row:last-child { border-bottom: none; }
+    </style>
   </head>
   <body>
     <!-- App header -->
@@ -131,32 +141,48 @@
         const micSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>`;
         const bagSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/></svg>`;
 
-        list.innerHTML = filtered.map(o => {
+        list.innerHTML = filtered.map((o, i) => {
           const isMic = o.source === 'voice';
-          const amt = Number(o.amount || 0).toLocaleString('en-US',{maximumFractionDigits:0});
+          const amt = Number(o.total_amount || 0).toLocaleString('en-US',{maximumFractionDigits:0});
           const preview = o.raw_text ? o.raw_text.slice(0,60) : (o.preview || '');
+          const items = o.items || [];
           return `
-            <button class="card" style="text-align:left;padding:0;display:block;width:100%"
-              onclick="window.location.href='/shop/orders/${o.id}'">
-              <div style="padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
-                <div style="width:30px;height:30px;border-radius:8px;background:${isMic ? 'var(--coral-soft)' : 'var(--mist)'};color:${isMic ? 'var(--coral-deep)' : 'var(--ink-2)'};display:grid;place-items:center;flex-shrink:0">
-                  ${isMic ? micSvg : bagSvg}
+            <div class="card" id="oc-${i}" style="padding:0">
+              <button style="all:unset;box-sizing:border-box;cursor:pointer;text-align:left;display:block;width:100%" onclick="toggleOrder(${i})">
+                <div style="padding:14px 16px 10px;display:flex;align-items:center;gap:10px">
+                  <div style="width:30px;height:30px;border-radius:8px;background:${isMic ? 'var(--coral-soft)' : 'var(--mist)'};color:${isMic ? 'var(--coral-deep)' : 'var(--ink-2)'};display:grid;place-items:center;flex-shrink:0">
+                    ${isMic ? micSvg : bagSvg}
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.02em">${o.order_no}</div>
+                    <div style="font-size:11.5px;color:var(--mute);margin-top:2px">${o.customer_name || o.customer_code || ''} · ${o.order_date || ''}</div>
+                  </div>
+                  ${statusBadge(o.status)}
+                  <svg class="order-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:var(--mute)"><path d="m9 6 6 6-6 6"/></svg>
                 </div>
-                <div style="flex:1;min-width:0">
-                  <div style="font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.02em">${o.order_no}</div>
-                  <div style="font-size:11.5px;color:var(--mute);margin-top:2px">${o.customer_name || o.customer_code || ''} · ${o.order_date || ''}</div>
+                <div style="padding:0 16px 14px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+                  <div style="font-size:12px;color:var(--ink-2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1">
+                    ${preview}
+                  </div>
+                  <div style="font-family:var(--mono);font-weight:700;font-size:14px;white-space:nowrap">MOP ${amt}</div>
                 </div>
-                ${statusBadge(o.status)}
+              </button>
+              <div class="order-body">
+                ${items.length ? items.map(item => `
+                  <div class="item-row">
+                    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.product_name || '—'}</span>
+                    <span style="flex-shrink:0;color:var(--mute)">${item.qty ?? '?'} ${item.unit || ''}</span>
+                    <span style="flex-shrink:0;font-family:var(--mono);font-weight:600">${item.unit_price ? 'MOP ' + Number(item.unit_price * item.qty).toLocaleString() : '—'}</span>
+                  </div>`).join('') : '<div style="padding:12px 0;font-size:12px;color:var(--mute)">冇明細記錄</div>'}
+                ${o.notes ? `<div style="margin-top:8px;font-size:11px;color:var(--mute);padding:8px;background:var(--paper-2);border-radius:8px">備注：${o.notes}</div>` : ''}
               </div>
-              <div style="padding:0 16px 14px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
-                <div style="font-size:12px;color:var(--ink-2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1">
-                  ${preview}
-                </div>
-                <div style="font-family:var(--mono);font-weight:700;font-size:14px;white-space:nowrap">MOP ${amt}</div>
-              </div>
-            </button>`;
+            </div>`;
         }).join('');
       }
+
+      window.toggleOrder = function(i) {
+        document.getElementById('oc-' + i)?.classList.toggle('open');
+      };
 
       window.setFilter = function(f, btn) {
         currentFilter = f;

@@ -50,7 +50,10 @@ export const GET: APIRoute = async ({ locals, request, url }) => {
     import.meta.env.SUPABASE_SERVICE_KEY || import.meta.env.SUPABASE_ANON_KEY;
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
 
-  let ordersUrl = `${SUPABASE_URL}/rest/v1/inari_customer_orders?tenant_id=eq.${TENANT_ID}&order=created_at.desc&limit=${limit}&select=*`;
+  // items:inari_customer_order_items(*) — PostgREST embed 用 FK(order_id) 拎返明細,
+  // 07-23修:呢個embed之前一直冇做,orders.astro/account/index.astro 兩個頁面早已寫好讀
+  // `o.items`/`o.total_amount` 嘅render code,但API從未提供過,一直顯示空/MOP 0。
+  let ordersUrl = `${SUPABASE_URL}/rest/v1/inari_customer_orders?tenant_id=eq.${TENANT_ID}&order=created_at.desc&limit=${limit}&select=*,items:inari_customer_order_items(*)`;
 
   // B2B/B2C: only own orders
   if (userType !== 'staff' && locals.customerCode) {

@@ -1,0 +1,128 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>稻荷商城 — 訂單狀態</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
+    <style>body { justify-content: center; }</style>
+  </head>
+  <body>
+    <!-- 有 no+phone 兩個URL參數 = 剛落單/已知訂單,顯示確認詳情;冇就顯示查詢表格 -->
+    <div id="confirm-view" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:40px 30px;text-align:center">
+      <div id="status-icon" style="width:88px;height:88px;background:var(--amber-soft);color:var(--amber-ink);border-radius:50%;display:grid;place-items:center;margin-bottom:24px">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z"/></svg>
+      </div>
+      <div style="font-size:11px;font-family:var(--mono);color:var(--mute);letter-spacing:.14em;text-transform:uppercase">訂單已提交</div>
+      <h1 style="font-size:26px;font-weight:700;margin:10px 0 14px;letter-spacing:-.02em">多謝您嘅訂單。</h1>
+      <div style="font-family:var(--mono);font-size:14px;font-weight:600;background:var(--paper-2);padding:6px 12px;border-radius:999px;margin-bottom:18px" id="order-no-pill">—</div>
+      <div style="font-size:14px;color:var(--ink-2);line-height:1.7;max-width:280px" id="status-note">
+        職員審核後會盡快聯絡您確認送貨安排。
+      </div>
+
+      <div style="margin-top:28px;width:100%;max-width:320px">
+        <div class="card" style="padding:14px 16px;text-align:left;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.06em">狀態</span>
+            <span id="status-badge">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.06em">送貨日期</span>
+            <span style="font-weight:600;font-size:13px" id="delivery-info">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.06em">付款方式</span>
+            <span style="font-weight:600;font-size:13px" id="payment-info">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.06em">送貨地址</span>
+            <span style="font-weight:600;font-size:13px;text-align:right;max-width:180px" id="address-info">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 查詢表格(冇URL參數,或者揾唔到訂單時顯示) -->
+    <div id="lookup-view" style="display:none;flex:1;flex-direction:column;padding:40px 24px;gap:14px">
+      <div class="page-title" style="padding:0">
+        <h1 style="font-size:22px">查詢我的訂單</h1>
+        <div class="meta">請輸入訂單編號同落單電話</div>
+      </div>
+      <div class="field">
+        <label>訂單編號</label>
+        <input class="input" id="lookup-no" placeholder="如 ORD-20260723-B2CXXXX" />
+      </div>
+      <div class="field">
+        <label>聯絡電話</label>
+        <input class="input" id="lookup-phone" placeholder="下單時填寫嘅電話" />
+      </div>
+      <p id="lookup-error" style="font-size:12px;color:var(--coral-deep);min-height:16px;margin:0"></p>
+      <button class="btn primary lg block" onclick="doLookup()">查詢</button>
+    </div>
+
+    <div style="padding:14px 18px 28px;display:flex;flex-direction:column;gap:10px;flex-shrink:0">
+      <button class="btn ghost block" onclick="window.location.href='/order'">返回商城首頁</button>
+    </div>
+
+    <script>
+      const statusMap = { draft: ['草稿 · 等待審核','var(--amber-soft)','var(--amber-ink)'], confirmed: ['已確認','var(--leaf-soft)','var(--leaf)'], invoiced: ['已開單','var(--sea-soft)','var(--sea-ink)'], cancelled: ['已取消','var(--slate-soft)','var(--slate-ink)'] };
+
+      function showOrder(order) {
+        document.getElementById('confirm-view').style.display = 'flex';
+        document.getElementById('lookup-view').style.display = 'none';
+        document.getElementById('order-no-pill').textContent = order.order_no;
+        const [label, bg, fg] = statusMap[order.status] || statusMap.draft;
+        document.getElementById('status-badge').innerHTML = `<span class="badge" style="background:${bg};color:${fg}">${label}</span>`;
+        document.getElementById('delivery-info').textContent = order.delivery_date || '—';
+        document.getElementById('payment-info').textContent = order.payment_method || '—';
+        document.getElementById('address-info').textContent = order.guest_delivery_address || '—';
+        if (order.status === 'draft') {
+          document.getElementById('status-note').textContent = '職員審核後會盡快聯絡您確認送貨安排。';
+        } else if (order.status === 'confirmed' || order.status === 'invoiced') {
+          document.getElementById('status-note').textContent = '訂單已確認，準備出貨。';
+        } else if (order.status === 'cancelled') {
+          document.getElementById('status-note').textContent = '訂單已取消，如有疑問請聯絡我哋。';
+        }
+      }
+
+      function showLookup(err) {
+        document.getElementById('confirm-view').style.display = 'none';
+        document.getElementById('lookup-view').style.display = 'flex';
+        document.getElementById('lookup-error').textContent = err || '';
+      }
+
+      window.doLookup = async function() {
+        const no = document.getElementById('lookup-no').value.trim();
+        const phone = document.getElementById('lookup-phone').value.trim();
+        if (!no || !phone) { document.getElementById('lookup-error').textContent = '請填寫訂單編號同電話'; return; }
+        try {
+          const res = await fetch(`/api/order?order_no=${encodeURIComponent(no)}&phone=${encodeURIComponent(phone)}`);
+          const data = await res.json();
+          if (!res.ok) { showLookup(data.error || '搵唔到訂單'); return; }
+          history.replaceState(null, '', `/order/confirmed?no=${encodeURIComponent(no)}&phone=${encodeURIComponent(phone)}`);
+          showOrder(data.order);
+        } catch {
+          showLookup('查詢失敗，請檢查網絡後重試');
+        }
+      };
+
+      // Init: 有 no+phone 就即刻查
+      const params = new URLSearchParams(location.search);
+      const no = params.get('no');
+      const phone = params.get('phone');
+      if (no && phone) {
+        fetch(`/api/order?order_no=${encodeURIComponent(no)}&phone=${encodeURIComponent(phone)}`)
+          .then(r => r.json().then(d => ({ ok: r.ok, d })))
+          .then(({ ok, d }) => { if (ok) showOrder(d.order); else showLookup(d.error || '搵唔到訂單'); })
+          .catch(() => showLookup('查詢失敗，請檢查網絡後重試'));
+      } else {
+        showLookup();
+      }
+    </script>
+  </body>
+</html>

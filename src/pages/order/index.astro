@@ -1,0 +1,289 @@
+---
+---
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>稻荷商城 — 網上訂購</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/shop/styles.css">
+    <style>
+      .skeleton { background: linear-gradient(90deg, var(--paper-2) 25%, var(--mist) 50%, var(--paper-2) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+      @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+  </head>
+  <body>
+    <!-- App header -->
+    <div class="app-header">
+      <div style="flex:1">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--mute);letter-spacing:.06em">RETAIL · 免登入直接下單</div>
+        <div style="font-weight:700;font-size:15px;letter-spacing:-.01em">稻荷商城 · 網上訂購</div>
+      </div>
+      <button class="icon-btn" id="cart-btn" onclick="openDrawer()" aria-label="購物車" style="position:relative">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.6 12.3a2 2 0 0 0 2 1.7h7.8a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>
+        <span id="cart-badge" style="display:none;position:absolute;top:4px;right:4px;background:var(--coral);color:white;font-size:9px;font-weight:700;font-family:var(--mono);border-radius:999px;padding:1px 5px;min-width:16px;text-align:center"></span>
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div style="padding:10px 18px 4px">
+      <div style="position:relative">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+          style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--mute);pointer-events:none">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+        </svg>
+        <input class="search-input" id="catalog-search" placeholder="搜尋商品名稱…" oninput="debounceSearch(this.value)" />
+      </div>
+    </div>
+
+    <div class="page-title" style="padding-top:8px;padding-bottom:8px">
+      <div class="eyebrow">今日上架 · <span id="total-count">—</span> 件</div>
+      <h1 style="font-size:22px">零售訂購 · 免密碼</h1>
+    </div>
+
+    <div class="pill-rail" id="pill-rail">
+      <button class="pill active" data-cat="" onclick="selectCat('',this)">全部 <span class="ct" id="pill-ct-all">—</span></button>
+    </div>
+
+    <div class="screen-scroll" style="flex:1">
+      <div id="product-grid" style="padding:4px 18px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="product-card"><div class="thumb skeleton" style="aspect-ratio:1"></div><div class="body"><div class="skeleton" style="height:10px;width:60%;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
+        <div class="product-card"><div class="thumb skeleton" style="aspect-ratio:1"></div><div class="body"><div class="skeleton" style="height:10px;width:60%;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:80%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>
+      </div>
+      <div style="padding:0 18px 120px">
+        <button id="load-more-btn" class="btn ghost block" style="display:none" onclick="loadMore()">載入更多商品</button>
+      </div>
+    </div>
+
+    <!-- Sticky bottom cart bar (guest冇tab-bar,因為冇/orders/account呢啲要login嘅頁) -->
+    <div id="bottom-bar" style="display:none;padding:12px 18px 18px;background:var(--paper);border-top:1px solid var(--hairline)">
+      <button class="btn coral lg block" onclick="window.location.href='/order/checkout'">
+        <span id="bottom-bar-label">前往結帳</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    <!-- Cart drawer -->
+    <div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+    <aside class="drawer" id="cart-drawer">
+      <div class="hd">
+        <h3>購物車 <span style="color:var(--mute);font-weight:500;font-size:13px" id="drawer-count">· 0 件</span></h3>
+        <button class="icon-btn" onclick="closeDrawer()" aria-label="關閉">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="items" id="drawer-items">
+        <div style="padding:40px 20px;text-align:center;color:var(--mute);font-size:13px">購物車內無商品</div>
+      </div>
+      <div class="ft" id="drawer-ft" style="display:none">
+        <div class="total-row">
+          <span class="lbl">合計</span>
+          <span class="val" id="drawer-total">MOP 0</span>
+        </div>
+        <button class="btn coral block lg" onclick="window.location.href='/order/checkout'">
+          前往結帳
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <div class="toast" id="toast">
+      <span class="check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="m5 12 5 5L20 7"/></svg>
+      </span>
+      <span id="toast-msg"></span>
+    </div>
+
+    <script type="module">
+      import { addToCart, getCart, updateQty as cartSetQty } from '/js/guest-cart.js';
+
+      let currentPage = 1, currentCat = '', currentSearch = '', isLoading = false, searchTimer = null;
+
+      function getQty(sku) {
+        const item = (getCart().items || []).find(i => i.sku === sku);
+        return item ? item.qty : 0;
+      }
+
+      function updateCartUI() {
+        const items = getCart().items || [];
+        const count = items.reduce((s, i) => s + (i.qty || 0), 0);
+        const total = items.reduce((s, i) => s + (i.line_total || i.qty * i.unit_price || 0), 0);
+
+        const badge = document.getElementById('cart-badge');
+        if (count > 0) { badge.textContent = count; badge.style.display = 'block'; }
+        else badge.style.display = 'none';
+
+        document.getElementById('bottom-bar').style.display = count > 0 ? 'block' : 'none';
+        document.getElementById('bottom-bar-label').textContent = `前往結帳 · MOP ${total.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+
+        document.getElementById('drawer-count').textContent = `· ${count} 件`;
+        document.getElementById('drawer-total').textContent = `MOP ${total.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+        const drawerItems = document.getElementById('drawer-items');
+        const drawerFt = document.getElementById('drawer-ft');
+        if (items.length === 0) {
+          drawerItems.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--mute);font-size:13px">購物車內無商品</div>';
+          drawerFt.style.display = 'none';
+        } else {
+          drawerFt.style.display = 'block';
+          drawerItems.innerHTML = items.map(it => `
+            <div class="cart-item">
+              <div class="ti cat-misc" style="background:var(--mist)"><span style="font-size:18px">🐟</span></div>
+              <div class="info">
+                <div class="nm">${it.product_name}</div>
+                <div class="pr">MOP ${(it.unit_price||0).toLocaleString('en-US',{maximumFractionDigits:0})} / ${it.unit || '件'}</div>
+              </div>
+              <div class="side">
+                <div class="stepper" style="background:var(--paper-2)">
+                  <button onclick="cartDec('${it.sku}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 12h14"/></svg></button>
+                  <span class="val">${it.qty}</span>
+                  <button onclick="cartInc('${it.sku}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg></button>
+                </div>
+                <span class="lt">MOP ${(it.line_total || it.qty * it.unit_price || 0).toLocaleString('en-US',{maximumFractionDigits:0})}</span>
+              </div>
+            </div>`).join('');
+        }
+
+        document.querySelectorAll('[data-sku]').forEach(el => {
+          const sku = el.dataset.sku, qty = getQty(sku);
+          const priceRow = el.querySelector('.price-row');
+          if (!priceRow) return;
+          const addBtn = priceRow.querySelector('.add'), stepper = priceRow.querySelector('.stepper');
+          if (qty > 0) { if (addBtn) addBtn.style.display = 'none'; if (stepper) { stepper.style.display = 'inline-flex'; stepper.querySelector('.val').textContent = qty; } }
+          else { if (addBtn) addBtn.style.display = 'grid'; if (stepper) stepper.style.display = 'none'; }
+        });
+      }
+
+      window.cartInc = function(sku) { cartSetQty(sku, getQty(sku) + 1); updateCartUI(); };
+      window.cartDec = function(sku) { cartSetQty(sku, getQty(sku) - 1); updateCartUI(); };
+      window.addItem = function(sku, name, price, unit) {
+        addToCart({ sku, product_name: name, qty: 1, unit, unit_price: price });
+        updateCartUI();
+        showToast(`已加入 ${name.slice(0,12)}…`);
+      };
+
+      window.openDrawer = function() { document.getElementById('scrim').classList.add('open'); document.getElementById('cart-drawer').classList.add('open'); };
+      window.closeDrawer = function() { document.getElementById('scrim').classList.remove('open'); document.getElementById('cart-drawer').classList.remove('open'); };
+
+      function showToast(msg) {
+        const t = document.getElementById('toast');
+        document.getElementById('toast-msg').textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2200);
+      }
+
+      function typeBadge(item) {
+        if (item.is_air_freight) return `<span class="badge gold sq">空運</span>`;
+        if (item.storage_type === '冷凍') return `<span class="badge ice sq">冷凍</span>`;
+        return `<span class="badge leaf sq">冰鮮</span>`;
+      }
+      function thumbClass(item) {
+        const cat = (item.category || '').toLowerCase();
+        if (cat.includes('魚') || cat.includes('鮭') || cat.includes('鮪') || cat.includes('鰤')) return 'cat-fish';
+        if (cat.includes('貝') || cat.includes('帆立') || cat.includes('蛤')) return 'cat-shell';
+        if (cat.includes('蝦')) return 'cat-shrimp';
+        if (cat.includes('海膽') || cat.includes('uni')) return 'cat-uni';
+        if (cat.includes('章魚') || cat.includes('魷') || cat.includes('蟹')) return 'cat-octopus';
+        return 'cat-misc';
+      }
+      function glyphFor(item) {
+        const name = (item.name || '').toLowerCase(), cat = (item.category || '').toLowerCase();
+        if (cat.includes('鮭') || name.includes('鮭') || name.includes('三文魚')) return '🐟';
+        if (cat.includes('海膽') || name.includes('海膽')) return '🦔';
+        if (cat.includes('蝦') || name.includes('蝦')) return '🦐';
+        if (cat.includes('蟹') || name.includes('蟹')) return '🦀';
+        if (cat.includes('帆立') || name.includes('帆立') || name.includes('扇貝')) return '🐚';
+        return '🐠';
+      }
+
+      function renderProductCard(item) {
+        const sku = item.sku, name = item.name || '', price = item.sales_price || 0, unit = item.unit || '件';
+        const qty = getQty(sku);
+        const fmtPrice = Number(price).toLocaleString('en-US',{maximumFractionDigits:0});
+        return `
+          <div class="product-card" data-sku="${sku}">
+            <div class="thumb ${thumbClass(item)}">
+              <span class="glyph">${glyphFor(item)}</span>
+              <div class="type-tag">${typeBadge(item)}</div>
+              <span class="sku-strip">${sku}</span>
+            </div>
+            <div class="body">
+              <div class="name">${name}</div>
+              <div class="price-row">
+                <div class="price"><span class="cur">MOP</span><span class="num">${fmtPrice}</span><span class="unit">/ ${unit}</span></div>
+                <button class="add" onclick="addItem('${sku}','${name.replace(/'/g,"\\'")}',${price},'${unit}')" aria-label="加入購物車" ${qty > 0 ? 'style="display:none"' : ''}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg>
+                </button>
+                <div class="stepper" style="${qty > 0 ? '' : 'display:none'}">
+                  <button onclick="cartDec('${sku}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M5 12h14"/></svg></button>
+                  <span class="val">${qty}</span>
+                  <button onclick="cartInc('${sku}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg></button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      function renderCatalogData(data, reset) {
+        const grid = document.getElementById('product-grid');
+        if (reset) grid.innerHTML = '';
+        const items = data.items || [];
+        if (reset && items.length === 0) grid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--mute);font-size:13px">無符合的商品</div>';
+        else grid.insertAdjacentHTML('beforeend', items.map(renderProductCard).join(''));
+        document.getElementById('total-count').textContent = data.total || items.length;
+        document.getElementById('load-more-btn').style.display = data.has_more ? 'block' : 'none';
+        if (reset && data.categories && data.categories.length) populateCategories(data.categories);
+        updateCartUI();
+      }
+
+      async function loadProducts(reset = false) {
+        if (isLoading) return;
+        isLoading = true;
+        if (reset) {
+          currentPage = 1;
+          document.getElementById('product-grid').innerHTML = Array(4).fill(`
+            <div class="product-card"><div class="thumb skeleton" style="aspect-ratio:1"></div><div class="body"><div class="skeleton" style="height:10px;width:60%;border-radius:4px;margin-bottom:8px"></div><div class="skeleton" style="height:13px;width:80%;border-radius:4px;margin-bottom:6px"></div><div class="skeleton" style="height:17px;width:50%;border-radius:4px"></div></div></div>`).join('');
+        }
+        const params = new URLSearchParams({ page: currentPage, limit: 24 });
+        if (currentCat) params.set('category', currentCat);
+        if (currentSearch) params.set('q', currentSearch);
+        try {
+          const res = await fetch('/api/order/catalog?' + params);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          renderCatalogData(await res.json(), reset);
+        } catch {
+          if (reset) document.getElementById('product-grid').innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--coral-deep);font-size:13px">載入失敗，請重試</div>';
+        } finally { isLoading = false; }
+      }
+
+      function populateCategories(cats) {
+        const rail = document.getElementById('pill-rail');
+        cats.forEach(cat => {
+          const btn = document.createElement('button');
+          btn.className = 'pill';
+          btn.dataset.cat = cat;
+          btn.textContent = cat;
+          btn.onclick = () => selectCat(cat, btn);
+          rail.appendChild(btn);
+        });
+      }
+
+      window.selectCat = function(cat, btn) {
+        currentCat = cat;
+        document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadProducts(true);
+      };
+      window.debounceSearch = function(val) {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => { currentSearch = val; loadProducts(true); }, 350);
+      };
+      window.loadMore = function() { currentPage++; loadProducts(false); };
+
+      updateCartUI();
+      loadProducts(true);
+    </script>
+  </body>
+</html>
