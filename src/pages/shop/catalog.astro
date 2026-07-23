@@ -336,10 +336,14 @@
         const origin = item.origin || '';
         const fmtPrice = Number(price).toLocaleString('en-US',{maximumFractionDigits:0});
 
+        const imgTag = item.image_url
+          ? `<img src="${item.image_url}" alt="${name.replace(/"/g,'&quot;')}" loading="lazy" style="grid-area:1/1;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">`
+          : '';
         return `
           <div class="product-card" data-sku="${sku}">
             <div class="thumb ${cls}">
-              <span class="glyph">${glyph}</span>
+              <span class="glyph" style="grid-area:1/1">${glyph}</span>
+              ${imgTag}
               <div class="type-tag">${badge}</div>
               ${origin ? `<div class="origin-tag">${origin}</div>` : ''}
               <span class="sku-strip">${sku}</span>

@@ -28,6 +28,8 @@
 
 **核心結論（Joe呢次任務嘅起點）**：`/shop/order/new`（Joe提供嘅URL）同成個`/shop/*`商城，現時**100%要login先入到**（`getAuth()`喺每個`/shop/*`頁面script入面都會`if(!auth.isLoggedIn) location.href='/shop/login'`，加middleware雙重擋）。**B2C零售客戶免密碼直接落單呢個流程，而家完全唔存在**——唔止UI冇做，middleware/API層都冚埋唔畀未登入請求過。
 
+**07-23第二輪審計揪到嘅「production零訂單」已由Joe核實原因（唔係bug）**：商城功能仲未完善，**Joe刻意未開放訂單建立俾真實客戶用**，避免未完善功能寫入污染真實資料庫。即係話而家全站雖然code已deploy，但屬於「仲未正式開放」階段，唔係「已開放但冇人用」或者「開放咗但靜默壞咗」。呢點推翻本次審計原本嘅懸案假設，下次任何商城任務見到呢兩表持續0行，預設解讀係「仲未開放」，唔好誤判做故障。
+
 ## 三、B2B下單流程（現有，已部分work）
 
 - **登入方式兩種**：(a) 用戶名密碼（`/shop/login`→`/api/auth/login`→查`inari_users.web_password`）(b) QR免密碼（銷售員喺admin後台生成→`/api/admin/qr.ts`→客戶掃碼→`/api/auth/retail/qr.ts`驗證jti+換發`user_type='wholesale'`嘅session，**注意呢個endpoint路徑叫`retail/qr`但實際發嘅係`wholesale` session，命名同語意唔一致**）
@@ -122,6 +124,25 @@ match_confidence text default 'unmatched', tenant_id, created_at
 
 **競品分析結論**：澳門本地暫時搵唔到深度追得上稻荷嘅直接競品；香港**FoodBuyer**（App+AI格價）明確講3年內擴展嚟澳門/大灣區，係最具體嘅未來威脅信號，記入觀察名單。
 
+**Joe拍板+已執行（2026-07-23）**：兩組修復+`/retail`廢除已一併commit `d69e19e`+已push origin/main（觸發Vercel auto-deploy）。
+
 ## 十、⚠️發現同今次任務無關嘅pre-existing未commit狀態（07-23，唔係我改嘅，特此記錄）
 
 `git status`顯示`src/pages/api/login.ts`/`src/pages/login.astro`/`src/pages/api/orders/[id]/confirm.ts`喺working tree顯示為「已刪除/已改」但從未commit——呢啲檔案喺磁碟上已經唔存在，但`git log`最後commit(`833ed37`前)仲有佢哋。時間點同`UAT_CHECKLIST.md`記錄嘅commit`0afdd3d`(「auth.js改讀真實session」)、`fdca65f`(「Task B UAT最終確認成功」)提到嘅清理工作吻合，估計係之前一個session做咗刪除但漏咗commit。**建議下次git commit時一併處理（同今日B2B/B2C改動一齊定分開commit，睇Joe意願），唔好誤刪或者忽略。**
+
+## 十三、07-23 第三輪 /omni-audit：商城圖片讀取失敗 + 燃料庫(彈藥庫)商品混入
+
+**Joe要求**：商城不能讀取資料庫商品圖片；應該只顯示「有在銷售」嘅武器庫商品，唔好顯示燃料庫（未賣候選）商品。
+
+**根因①圖片**：`/api/products/catalog.ts`+`/api/order/catalog.ts`嘅`select=`從未帶`image_url`；`shop/catalog.astro`+`order/index.astro`嘅卡片渲染函數一直用emoji圖示（🐟🦔🐚），設計上就冇`<img>`——唔係「讀取失敗」，係從未讀過。`inari_products.image_url`實際798筆有570筆有圖（見[[inari_product_image_sku_quote_audit_2026-07-22]]）。
+
+**根因②燃料庫混入**：catalog API淨係濾`is_active=eq.true`，冇濾「有冇真實銷售」。按`~/inari-web`兩層SKU架構（`v_arsenal`武器庫=有sd/qb銷售／`v_ammo`彈藥庫=供應商未賣候選，見`tools/qnl/SKU_BUILD_SOP.md`），親自查證：目前商城顯示嘅332件active商品中，只有203件屬武器庫，其餘129件係彈藥庫候選貨（從未賣過）混入。
+
+**已修復（2026-07-23，Joe拍板兩個一齊修+push）**：
+1. 新建DB view `v_shop_catalog`（`supabase/migrations/20260723b_shop_catalog_arsenal_view.sql`）= `inari_products` WHERE `is_active` AND (有sd銷售 OR 有qb_sales)，帶`image_url`；已apply production+已登記入`inari_schema_registry`（唔改`v_arsenal`本身，避免影響SKU_BUILD/成本會計用途，商城前台獨立開一個view）。REST核實：203筆，129筆有image_url。
+2. `/api/products/catalog.ts`(B2B)+`/api/order/catalog.ts`(B2C guest)改查`v_shop_catalog`（原本查`inari_products?is_active=eq.true`），select加`image_url`。
+3. `shop/catalog.astro`+`order/index.astro`嘅`renderProductCard()`：`.thumb`(CSS `display:grid`)入面glyph同`<img>`用`grid-area:1/1`疊埋同一格，有`image_url`就img蓋住glyph，`onerror`令img `display:none`令glyph透返出嚟做fallback——冇圖仍然睇到emoji佔位，唔會爛圖示。
+4. `npm run build`通過；`curl /api/order/catalog`已核實真實回傳`image_url`(如KK0001)。因Playwright瀏覽器profile畀另一個進行中session佔用，未做視覺截圖驗證，改以API層+build層驗證。
+
+**Why**：兩層SKU架構(`v_arsenal`/`v_ammo`)本身07-20已建好，但商城前台一直冇接線去用，淨係直查`inari_products`；圖片render用emoji屬於最初設計選擇，一直冇跟返`admin/products.astro`已有嘅`image_url`寫法。
+**How to apply**：下次商城任何列商品嘅新頁面（例如`/wholesale`、`/retail`如重啟），一律查`v_shop_catalog`唔好直查`inari_products`；新增display fields要記得帶入呢個view嘅select list。`ProductCard.astro`/`CatalogList.astro`發現係死代碼（冇任何頁面import使用），今次冇動，如果將來要複用記得一併補image_url邏輯。

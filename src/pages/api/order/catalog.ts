@@ -30,7 +30,8 @@ export const GET: APIRoute = async ({ url }) => {
   const limit = Math.min(48, parseInt(url.searchParams.get('limit') || '24'));
   const offset = (page - 1) * limit;
 
-  let baseFilter = `${SUPABASE_URL}/rest/v1/inari_products?is_active=eq.true`;
+  // v_shop_catalog = 武器庫(有sd/qb銷售)∩is_active，唔再直查inari_products（會漏濾彈藥庫候選貨）
+  let baseFilter = `${SUPABASE_URL}/rest/v1/v_shop_catalog?id=not.is.null`;
   if (category) baseFilter += `&category=eq.${encodeURIComponent(category)}`;
   if (q) baseFilter += `&or=(name.ilike.%25${encodeURIComponent(q)}%25,sku.ilike.%25${encodeURIComponent(q)}%25)`;
 
@@ -38,12 +39,12 @@ export const GET: APIRoute = async ({ url }) => {
   const productUrl =
     baseFilter +
     `&order=category.asc,name.asc&limit=${limit}&offset=${offset}` +
-    `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight`;
+    `&select=id,sku,name,category,unit,sales_price,storage_type,is_air_freight,image_url`;
 
   const [prodResp, catResp] = await Promise.all([
     fetch(productUrl, { headers: { ...sbHeaders, Prefer: 'count=exact' } }),
     page === 1
-      ? fetch(`${SUPABASE_URL}/rest/v1/inari_products?is_active=eq.true&select=category`, { headers: sbHeaders })
+      ? fetch(`${SUPABASE_URL}/rest/v1/v_shop_catalog?select=category`, { headers: sbHeaders })
       : Promise.resolve(null),
   ]);
 
