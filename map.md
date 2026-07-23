@@ -86,7 +86,9 @@ match_confidence text default 'unmatched', tenant_id, created_at
 
 | Loop | 觸發 | 做乜 | 輸出 |
 |---|---|---|---|
-| `ai.inari.ops-monitor`（見UAT_CHECKLIST H項） | 每日08:30 | Telegram報告`/brand`、`/wholesale/`、`/api/seasonal`健康狀態 | Telegram |
+| `ai.inari.ops-monitor`（見UAT_CHECKLIST H項，2026-07-23跨系統完整性審計真正落地——之前只規劃過從未部署） | 每日08:30 | 唯讀curl`/brand`/`/wholesale/`/`/api/seasonal`,狀態碼唔啱預期先Telegram警示,健康時靜默 | log`~/.openclaw/logs/inari-shop-ops-monitor.log`；異常Telegram |
+
+**⚠️ 07-23前狀態記錄（歷史對照）**：`map.md`本身07-23第一輪建立時已經寫低呢個loop，但實際`ai.inari.ops-monitor` LaunchAgent由頭到尾未部署（`UAT_CHECKLIST.md`對應checkbox一直未打勾，本機LaunchAgents搵唔到對應plist）——即係話商城之前處於「文件講有監察，實際零監察」嘅落差，直到07-23跨系統完整性審計先發現並補建。腳本`~/.openclaw/workspace/scripts/inari_shop_ops_monitor.py`。
 
 ## 七、報告存底
 - 07-23 B2B/B2C商城結構審計+schema設計：`~/.openclaw/reports/omni-audit-inari-shop-b2b-b2c-2026-07-23/`（待Phase5補完）

@@ -57,7 +57,7 @@
 
 ## H. 監控（T12+T13）
 
-- [ ] `ai.inari.ops-monitor` 每日08:30 Telegram報告有包含 `/brand`、`/wholesale/`、`/api/seasonal` 狀態
+- [x] `ai.inari.ops-monitor` 每日08:30 Telegram報告有包含 `/brand`、`/wholesale/`、`/api/seasonal` 狀態（2026-07-23跨系統完整性審計真正落地：`~/.openclaw/workspace/scripts/inari_shop_ops_monitor.py`+同名LaunchAgent，全部endpoint健康時靜默唔發送,異常先Telegram，已手動跑一次確認全部200正常）
 - [ ] `/admin/catalog` 商品卡（ProductCard組件）顯示正常
 
 ---
