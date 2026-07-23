@@ -7,6 +7,7 @@
 // 規矩:客戶提交後只落draft,要職員喺/admin/orders人手核對先可以confirm,唔會未經核實就扣庫存
 // (見 shop/checkout.astro 註解、supabase/migrations/20260526_order_fulfillment_trigger.sql)。
 import type { APIRoute } from 'astro';
+import { createOrder } from '../../../lib/order-service';
 
 const SUPABASE_URL = 'https://cqartwwsbxnjjatmndtt.supabase.co';
 const TENANT_ID = 'b15d5a02-764c-4353-ad40-07b901d9f321';
@@ -22,15 +23,12 @@ function sbHeaders(key: string) {
   return { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=representation' };
 }
 
-function generateOrderNo() {
-  const d = new Date();
-  const datePart = d.toISOString().slice(0, 10).replace(/-/g, '');
-  const code = 'B2C' + Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `ORD-${datePart}-${code}`;
-}
-
 function jsonError(msg: string, status = 400) {
   return new Response(JSON.stringify({ error: msg }), { status, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } });
+}
+
+function postgrestValue(value: string) {
+  return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 }
 
 export const OPTIONS: APIRoute = async () => new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -76,88 +74,99 @@ export const POST: APIRoute = async ({ request }) => {
   if (!GUEST_PAYMENT_METHODS.has(paymentMethod)) return jsonError('付款方式只支援「現金」或「銀行轉帳」');
   if (items.length === 0) return jsonError('訂單明細不能為空');
 
-  const orderNo = generateOrderNo();
   const headers = sbHeaders(serviceKey);
-
-  const orderPayload: Record<string, unknown> = {
-    order_no: orderNo,
-    order_type: 'b2c',
-    customer_code: null,
-    customer_name: guestName,
-    guest_name: guestName,
-    guest_phone: guestPhone,
-    guest_delivery_address: guestAddress,
-    order_date: new Date().toISOString().slice(0, 10),
-    source: 'web',
-    status: 'draft',
-    payment_method: paymentMethod,
-    ...(deliveryDate ? { delivery_date: deliveryDate } : {}),
-    ...(notes ? { notes } : {}),
-    ...(receiptUrl ? { payment_receipt_url: receiptUrl } : {}),
-    tenant_id: TENANT_ID,
-  };
-
-  const orderResp = await fetch(`${SUPABASE_URL}/rest/v1/inari_customer_orders`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(orderPayload),
-  });
-
-  if (!orderResp.ok) {
-    const errText = await orderResp.text();
-    return jsonError('建立訂單失敗:' + errText, 500);
-  }
-
-  const [newOrder] = await orderResp.json();
-  const orderId = newOrder.id;
-
-  const itemPayloads = items.map((item: Record<string, unknown>) => {
-    const qty = Number(item.qty) || 0;
-    const unitPrice = Number(item.unit_price) || 0;
+  const itemRefs = items.map((item) => {
+    const row = item && typeof item === 'object' ? item as Record<string, unknown> : {};
     return {
-      order_id: orderId,
-      order_no: orderNo,
-      product_id: item.product_id || null,
-      product_code: item.sku || item.product_code || null,
-      product_name: item.product_name || null,
-      qty,
-      unit: item.unit || null,
-      unit_price: unitPrice,
-      // amount 係DB generated column(qty*unit_price,GENERATED ALWAYS),唔可以手動insert
-      // (07-23 E2E測試揪到嘅P0 regression:插呢個值會撞428C9,令B2C下單100%失敗)。
-      // match_confidence CHECK 約束只准 exact/alias/fuzzy/unmatched/history/keyword,
-      // 'catalog' 唔喺呢個列表入面(23514違反)——guest 直接喺catalog撳實件貨,冇任何模糊
-      // 配對,語意上等同order-engine.ts嘅完全命中,用'exact'。
-      match_confidence: 'exact',
-      tenant_id: TENANT_ID,
+      item: row,
+      productId: String(row.product_id || '').trim(),
+      sku: String(row.sku || row.product_code || '').trim(),
     };
   });
 
-  const itemsResp = await fetch(`${SUPABASE_URL}/rest/v1/inari_customer_order_items`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(itemPayloads),
+  if (itemRefs.some(({ productId, sku }) => !productId && !sku)) {
+    return jsonError('訂單商品資料不完整');
+  }
+
+  // 價錢必須同公開商品目錄用同一權威來源。request 入面嘅 unit_price/line_total
+  // 只係前台顯示快照，絕對唔可以直接落單。
+  const catalogFilters = [
+    ...new Set(itemRefs.flatMap(({ productId, sku }) => [
+      ...(productId ? [`id.eq.${postgrestValue(productId)}`] : []),
+      ...(sku ? [`sku.eq.${postgrestValue(sku)}`] : []),
+    ])),
+  ];
+  const catalogParams = new URLSearchParams({
+    select: 'id,sku,name,unit,sales_price',
+    or: `(${catalogFilters.join(',')})`,
+  });
+  const catalogResp = await fetch(
+    `${SUPABASE_URL}/rest/v1/v_shop_catalog?${catalogParams}`,
+    { headers },
+  );
+
+  if (!catalogResp.ok) {
+    const errText = await catalogResp.text();
+    console.error('B2C authoritative catalog lookup failed:', errText);
+    return jsonError('讀取商品價格失敗，請稍後再試', 502);
+  }
+
+  const catalogRows = await catalogResp.json() as Record<string, unknown>[];
+  const catalogById = new Map(
+    catalogRows.map((row) => [String(row.id), row]),
+  );
+  const catalogBySku = new Map(
+    catalogRows.map((row) => [String(row.sku), row]),
+  );
+  const pricedItems = itemRefs.map(({ item, productId, sku }) => {
+    const product = catalogById.get(productId) || catalogBySku.get(sku);
+    const qty = Number(item.qty);
+    const unitPrice = Number(product?.sales_price);
+    return { item, product, qty, unitPrice };
   });
 
-  if (!itemsResp.ok) {
-    const errText = await itemsResp.text();
-    console.error('B2C order items insert failed:', errText);
-    try {
-      const deleteResp = await fetch(
-        `${SUPABASE_URL}/rest/v1/inari_customer_orders?id=eq.${orderId}`,
-        { method: 'DELETE', headers: sbHeaders(serviceKey) }
-      );
-      if (!deleteResp.ok) {
-        const deleteErrText = await deleteResp.text();
-        console.error('B2C order header cleanup failed:', deleteErrText);
-      }
-    } catch (deleteError) {
-      console.error('B2C order header cleanup failed:', deleteError);
-    }
+  if (pricedItems.some(({ product }) => !product)) {
+    return jsonError('訂單內有商品已下架或不存在');
+  }
+  if (pricedItems.some(({ qty }) => !Number.isFinite(qty) || qty <= 0)) {
+    return jsonError('商品數量必須大於 0');
+  }
+  if (pricedItems.some(({ unitPrice }) => !Number.isFinite(unitPrice) || unitPrice < 0)) {
+    return jsonError('訂單內有商品暫未設定有效售價');
+  }
+
+  const result = await createOrder({
+    serviceKey,
+    orderType: 'b2c',
+    customerCode: null,
+    customerName: guestName,
+    items: pricedItems.map(({ product, qty, unitPrice }) => ({
+      productId: product!.id,
+      productCode: product!.sku,
+      productName: product!.name,
+      qty,
+      unit: product!.unit,
+      unitPrice,
+    })),
+    paymentMethod,
+    deliveryDate,
+    notes,
+    guestInfo: {
+      name: guestName,
+      phone: guestPhone,
+      deliveryAddress: guestAddress,
+      paymentReceiptUrl: receiptUrl,
+    },
+  });
+
+  if (!result.ok && result.stage === 'header') {
+    return jsonError('建立訂單失敗:' + result.detail, 500);
+  }
+  if (!result.ok) {
     return jsonError('訂單明細建立失敗，請重新落單或聯絡客服', 500);
   }
 
-  return new Response(JSON.stringify({ ok: true, order_no: orderNo, order_id: orderId }), {
+  return new Response(JSON.stringify({ ok: true, order_no: result.orderNo, order_id: result.orderId }), {
     status: 201,
     headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
   });

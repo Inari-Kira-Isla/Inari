@@ -2,6 +2,7 @@
 // GET  /api/orders — list orders (staff: all, b2b: own only)
 
 import type { APIRoute } from 'astro';
+import { createOrder } from '../../../lib/order-service';
 
 const SUPABASE_URL = 'https://cqartwwsbxnjjatmndtt.supabase.co';
 const TENANT_ID = 'b15d5a02-764c-4353-ad40-07b901d9f321';
@@ -19,18 +20,6 @@ function sbHeaders(key: string) {
     'Content-Type': 'application/json',
     Prefer: 'return=representation',
   };
-}
-
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function generateOrderNo(customerCode: string | null) {
-  const d = new Date();
-  const datePart = d.toISOString().slice(0, 10).replace(/-/g, '');
-  const raw = (customerCode || 'STA').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  const code = (raw.slice(0, 4) || 'STA') + Math.random().toString(36).slice(2, 4).toUpperCase();
-  return `ORD-${datePart}-${code}`;
 }
 
 export const OPTIONS: APIRoute = async () => {
@@ -86,7 +75,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
   const isStaff = userType === 'staff' || userType === 'manager';
   const customerCode = (isStaff && body.customer_code) ? body.customer_code : (locals.customerCode || 'UNKNOWN');
   const customerName = (isStaff && body.customer_name) ? body.customer_name : customerCode;
-  const orderDate = body.order_date || todayStr();
+  const orderDate = body.order_date;
   const items = body.items || [];
   const rawText = body.raw_text || '';
   const source = body.source || 'web';
@@ -98,81 +87,36 @@ export const POST: APIRoute = async ({ locals, request }) => {
     });
   }
 
-  const orderNo = generateOrderNo(customerCode);
-  const headers = sbHeaders(serviceKey);
-
-  // Insert order header
-  const orderPayload: Record<string, unknown> = {
-    order_no: orderNo,
-    customer_code: customerCode,
-    customer_name: customerName,
-    order_date: orderDate,
+  const result = await createOrder({
+    serviceKey,
+    orderType: 'b2b',
+    customerCode,
+    customerName,
+    items: items.map((item: Record<string, unknown>) => ({
+      productId: item.product_id,
+      productCode: item.product_code,
+      productName: item.product_name || item.raw,
+      rawText: item.raw,
+      qty: item.qty,
+      unit: item.suggested_unit || item.unit,
+      unitPrice: item.suggested_price || item.unit_price,
+      matchConfidence: item.match_confidence,
+    })),
+    orderDate,
     source,
-    status: 'draft',
-    raw_text: rawText,
-    tenant_id: TENANT_ID,
-    ...(body.payment_method ? { payment_method: body.payment_method } : {}),
-    ...(body.delivery_date ? { delivery_date: body.delivery_date } : {}),
-    ...(body.notes ? { notes: body.notes } : {}),
-  };
-
-  const orderResp = await fetch(`${SUPABASE_URL}/rest/v1/inari_customer_orders`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(orderPayload),
+    rawText,
+    paymentMethod: body.payment_method,
+    deliveryDate: body.delivery_date,
+    notes: body.notes,
   });
 
-  if (!orderResp.ok) {
-    const errText = await orderResp.text();
-    return new Response(JSON.stringify({ error: '建立訂單失敗', detail: errText }), {
+  if (!result.ok && result.stage === 'header') {
+    return new Response(JSON.stringify({ error: '建立訂單失敗', detail: result.detail }), {
       status: 500,
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     });
   }
-
-  const [newOrder] = await orderResp.json();
-  const orderId = newOrder.id;
-
-  // Insert order items
-  const itemPayloads = items.map((item: Record<string, unknown>) => {
-    const qty = item.qty || 0;
-    const unit_price = item.suggested_price || item.unit_price || null;
-    return {
-      order_id: orderId,
-      order_no: orderNo,
-      product_id: item.product_id || null,
-      product_code: item.product_code || null,
-      product_name: item.product_name || item.raw || null,
-      raw_text: item.raw || null,
-      qty,
-      unit: item.suggested_unit || item.unit || null,
-      unit_price,
-      match_confidence: item.match_confidence || 'unmatched',
-      tenant_id: TENANT_ID,
-    };
-  });
-
-  const itemsResp = await fetch(`${SUPABASE_URL}/rest/v1/inari_customer_order_items`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(itemPayloads),
-  });
-
-  if (!itemsResp.ok) {
-    const errText = await itemsResp.text();
-    console.error('Items insert failed:', errText);
-    try {
-      const deleteResp = await fetch(
-        `${SUPABASE_URL}/rest/v1/inari_customer_orders?id=eq.${orderId}`,
-        { method: 'DELETE', headers: sbHeaders(serviceKey) }
-      );
-      if (!deleteResp.ok) {
-        const deleteErrText = await deleteResp.text();
-        console.error('Order header cleanup failed:', deleteErrText);
-      }
-    } catch (deleteError) {
-      console.error('Order header cleanup failed:', deleteError);
-    }
+  if (!result.ok) {
     return new Response(
       JSON.stringify({ error: '訂單明細建立失敗，請重新落單或聯絡客服' }),
       {
@@ -183,7 +127,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
   }
 
   return new Response(
-    JSON.stringify({ ok: true, order_no: orderNo, order_id: orderId }),
+    JSON.stringify({ ok: true, order_no: result.orderNo, order_id: result.orderId }),
     { status: 201, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
   );
 };

@@ -19,6 +19,14 @@ const validGuestOrder = {
   ],
 };
 
+const validCatalogProduct = {
+  id: 'product-1',
+  sku: 'SALMON-01',
+  name: '三文魚',
+  unit: '條',
+  sales_price: 88,
+};
+
 function postContext(body: unknown) {
   return {
     request: new Request('http://localhost/api/order', {
@@ -86,6 +94,7 @@ describe('B2C guest order API', () => {
   it('POST header 同 items 都建立成功 → 201 同有效 order_no', async () => {
     const fetchMock = vi
       .fn()
+      .mockResolvedValueOnce(jsonResponse([validCatalogProduct]))
       .mockResolvedValueOnce(jsonResponse([{ id: 'order-success-1' }], 201))
       .mockResolvedValueOnce(jsonResponse([], 201));
     vi.stubGlobal('fetch', fetchMock);
@@ -96,19 +105,79 @@ describe('B2C guest order API', () => {
     expect(response.status).toBe(201);
     expect(result).toMatchObject({ ok: true, order_id: 'order-success-1' });
     expect(result.order_no).toMatch(/^ORD-\d{8}-B2C[A-Z0-9]{4}$/);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(fetchMock.mock.calls[0][0]).toContain(
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[0][0]).toContain('/rest/v1/v_shop_catalog');
+    expect(fetchMock.mock.calls[1][0]).toContain(
       '/rest/v1/inari_customer_orders',
     );
-    expect(fetchMock.mock.calls[1][0]).toContain(
+    expect(fetchMock.mock.calls[2][0]).toContain(
       '/rest/v1/inari_customer_order_items',
     );
+  });
+
+  it('POST client 偽造低價 → 用 v_shop_catalog 權威價建立 items', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse([validCatalogProduct]))
+      .mockResolvedValueOnce(jsonResponse([{ id: 'order-priced-1' }], 201))
+      .mockResolvedValueOnce(jsonResponse([], 201));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await POST(
+      postContext({
+        ...validGuestOrder,
+        items: [
+          {
+            ...validGuestOrder.items[0],
+            product_id: undefined,
+            unit_price: 0.01,
+            line_total: 0.02,
+          },
+        ],
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[0][0]).toContain('/rest/v1/v_shop_catalog');
+    expect(decodeURIComponent(String(fetchMock.mock.calls[0][0]))).toContain(
+      'sku.eq."SALMON-01"',
+    );
+
+    const insertedItems = JSON.parse(
+      String(fetchMock.mock.calls[2][1]?.body),
+    );
+    expect(insertedItems).toEqual([
+      expect.objectContaining({
+        product_id: 'product-1',
+        product_code: 'SALMON-01',
+        qty: 2,
+        unit_price: 88,
+        match_confidence: 'exact',
+      }),
+    ]);
+    expect(insertedItems[0]).not.toHaveProperty('line_total');
+    expect(insertedItems[0]).not.toHaveProperty('amount');
+  });
+
+  it('POST 商品唔喺權威 catalog → 400 且唔建立 order header', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse([]));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await POST(postContext(validGuestOrder));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: '訂單內有商品已下架或不存在',
+    });
   });
 
   it('POST items insert 失敗 → DELETE header 補償並回 500', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const fetchMock = vi
       .fn()
+      .mockResolvedValueOnce(jsonResponse([validCatalogProduct]))
       .mockResolvedValueOnce(jsonResponse([{ id: 'orphan-header-1' }], 201))
       .mockResolvedValueOnce(new Response('unauthorized', { status: 401 }))
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
@@ -116,11 +185,11 @@ describe('B2C guest order API', () => {
 
     const response = await POST(postContext(validGuestOrder));
 
-    expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[2][0]).toContain(
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(fetchMock.mock.calls[3][0]).toContain(
       '/rest/v1/inari_customer_orders?id=eq.orphan-header-1',
     );
-    expect(fetchMock.mock.calls[2][1]).toMatchObject({ method: 'DELETE' });
+    expect(fetchMock.mock.calls[3][1]).toMatchObject({ method: 'DELETE' });
     expect(response.status).toBe(500);
     await expect(response.json()).resolves.toEqual({
       error: '訂單明細建立失敗，請重新落單或聯絡客服',
@@ -190,6 +259,14 @@ describe('B2B order transaction safety', () => {
     const response = await postB2BOrder(context);
 
     expect(fetchMock).toHaveBeenCalledTimes(3);
+    const insertedItems = JSON.parse(
+      String(fetchMock.mock.calls[1][1]?.body),
+    );
+    expect(insertedItems[0]).toMatchObject({
+      product_code: 'P-1',
+      match_confidence: 'unmatched',
+    });
+    expect(insertedItems[0]).not.toHaveProperty('amount');
     expect(fetchMock.mock.calls[2][0]).toContain(
       '/rest/v1/inari_customer_orders?id=eq.b2b-orphan-header-1',
     );

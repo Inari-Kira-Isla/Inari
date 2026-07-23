@@ -90,6 +90,10 @@ match_confidence text default 'unmatched', tenant_id, created_at
 
 **⚠️ 07-23前狀態記錄（歷史對照）**：`map.md`本身07-23第一輪建立時已經寫低呢個loop，但實際`ai.inari.ops-monitor` LaunchAgent由頭到尾未部署（`UAT_CHECKLIST.md`對應checkbox一直未打勾，本機LaunchAgents搵唔到對應plist）——即係話商城之前處於「文件講有監察，實際零監察」嘅落差，直到07-23跨系統完整性審計先發現並補建。腳本`~/.openclaw/workspace/scripts/inari_shop_ops_monitor.py`。
 
+## 十七、07-23 Fable架構優化omni-audit：新增P0偵測工具（commit `a2cafae`）
+
+新增`scripts/check-public-js-imports.js`（`npm run check:imports`）：掃描`src/pages/**/*.astro`嘅`import {...} from '/js/xxx.js'`語句,比對`public/js/xxx.js`實際named export,防止第十五節果類「死import令成個script唔執行」bug回歸。已真實跑過,現存code乾淨通過。**建議push前跑一次**，此check未接入CI，暫時人手執行。
+
 ## 七、報告存底
 - 07-23 B2B/B2C商城結構審計+schema設計：`~/.openclaw/reports/omni-audit-inari-shop-b2b-b2c-2026-07-23/`（待Phase5補完）
 
