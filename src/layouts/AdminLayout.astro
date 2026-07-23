@@ -1,7 +1,7 @@
 ---
 interface Props {
   title: string;
-  active: 'dashboard' | 'orders' | 'customers' | 'products' | 'uni' | 'uni-prices' | 'knowledge' | 'users' | 'analytics' | 'suppliers' | 'sales' | 'inventory' | 'collections';
+  active: 'dashboard' | 'orders' | 'customers' | 'products' | 'uni' | 'uni-prices' | 'knowledge' | 'conversations' | 'users' | 'analytics' | 'suppliers' | 'sales' | 'inventory' | 'collections';
   pageTitle: string;
   pageSubtitle?: string;
 }
@@ -138,6 +138,15 @@ const username = Astro.locals.username || '管理員';
                   <i class="ti ti-book"></i>
                 </span>
                 <span class="nav-link-title">知識庫</span>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class:list={["nav-link", { active: active === 'conversations' }]} href="/admin/conversations">
+                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                  <i class="ti ti-messages"></i>
+                </span>
+                <span class="nav-link-title">對話記錄</span>
               </a>
             </li>
 

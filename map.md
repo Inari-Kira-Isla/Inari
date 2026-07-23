@@ -106,7 +106,7 @@ match_confidence text default 'unmatched', tenant_id, created_at
 - **B2C 訂單一樣要人工審**：同B2B同一條規矩，`status='draft'`，職員喺`/admin/orders`人手confirm先算，唔會guest提交就自動扣庫存
 - **已知follow-up（未做，MVP範圍之外）**：guest下單endpoint冇rate limit/防灌單機制（現時靠人工審單擋住垃圾單變成真訂單，但admin queue本身可能被灌爆，長遠需要）；商城首頁(`src/pages/index.astro`,B2B trade行銷向Tailwind站)未加`/order`入口連結（品牌調性唔啱，建議另外用QR/社交媒體推廣，唔好夾硬拉落黎）
 
-## 九、07-23 B2B 3個bug已修（code done，未push）
+## 九、07-23 B2B 3個bug已修（已commit `427f24d`+已push origin/main，07-23稍後核實：本節標題舊字「未push」已過時）
 
 1. `inari_customer_orders`加`total_amount`（見上面migration）+`/api/orders`GET改用PostgREST embed(`select=*,items:inari_customer_order_items(*)`)+`shop/orders.astro`改讀`o.total_amount`
 2. `shop/orders.astro`嘅死link（連去唔存在嘅`/shop/orders/{id}`）改做原地展開accordion（同`/account`頁一致嘅UX pattern），用返上面嘅items embed顯示明細
@@ -116,7 +116,7 @@ match_confidence text default 'unmatched', tenant_id, created_at
 
 **⚠️核心發現**：直接查production DB核實，`inari_customer_orders`/`inari_customer_order_items` 兩表**0行**，即使 `inari_schema_registry` 寫住「live/api/orders live寫入」。B2B自助下單套系統code完整已deploy，但從未有一張訂單真正成功落地過——下次任何商城任務見到「live」標記，記得呢個係「code已通」唔等於「已有人用」，兩者要分開驗證。
 
-**本次新揪到並已修復（code done，未commit）**：
+**本次新揪到並已修復（已commit `d69e19e`+已push origin/main，07-23稍後核實：本節標題舊字「未commit」已過時）**：
 1. **訂單建立冇transaction保護**（`src/pages/api/orders/index.ts`+`src/pages/api/order/index.ts`）：items insert失敗只log,仍回201成功,產生孤兒訂單頭。已加DELETE補償清理+改回500。已用codex exec修+獨立deep-reasoner覆核(CONFIRMED,無阻塞問題)。
 2. **搜尋頁`shop/search.astro`假「最近搜尋」demo資料**：5個關鍵字+4個寫死價格(MOP550/1280/285/92)全部demo,非真實。已改標題做「熱門搜尋」+移除假價格。
 
@@ -146,3 +146,88 @@ match_confidence text default 'unmatched', tenant_id, created_at
 
 **Why**：兩層SKU架構(`v_arsenal`/`v_ammo`)本身07-20已建好，但商城前台一直冇接線去用，淨係直查`inari_products`；圖片render用emoji屬於最初設計選擇，一直冇跟返`admin/products.astro`已有嘅`image_url`寫法。
 **How to apply**：下次商城任何列商品嘅新頁面（例如`/wholesale`、`/retail`如重啟），一律查`v_shop_catalog`唔好直查`inari_products`；新增display fields要記得帶入呢個view嘅select list。`ProductCard.astro`/`CatalogList.astro`發現係死代碼（冇任何頁面import使用），今次冇動，如果將來要複用記得一併補image_url邏輯。
+
+> ⚠️**2026-07-23第五輪更正**：第4點「已修復」結論本身DB/API層冇問題，但**從未真正喺瀏覽器跑過**——見下面十五節，`shop/catalog.astro`有一個獨立、無關嘅壞import bug令成個`<script>`一行都執行唔到，令呢個image修復完全冇機會生效。「API層+build層驗證」≠「功能已生效」，冇瀏覽器實測嘅結論下次要標明「未視覺驗證」風險等級，唔可以當「已修好」寫入memory。
+
+## 十四、07-23 第四輪 /omni-audit：功能完整性測試現況 + 三系統拆分架構確認
+
+**Joe要求**：驗證商城各功能完整性測試有冇問題、分析商城是否一個拆分子系統、列出邊啲系統可以獨立修改擴充。純分析，未拍板任何修復範圍，本輪未改任何code。
+
+**A. 測試現況（`npm test` = vitest，07-23實測57 tests全過，2個檔案）**：
+- `tests/security.test.ts`（JWT簽名round-trip、篡改payload/錯secret/過期token拒收、middleware唔可回歸偽造漏洞、orders POST customer_code鎖定）
+- `tests/order-engine.test.ts`（語音/文字下單解析：中文數量轉換、size碼、相似度比對、gold set回歸）
+- **覆蓋缺口**：全部57條測試集中喺「auth安全」+「order-engine文字解析」兩個模組，**checkout/cart/B2C guest下單/admin人手confirm/圖片顯示/QR端對端流程全部零自動化測試**——呢啲流程目前僅靠UAT_CHECKLIST.md人手勾選（而家A-H八組入面淨係H項小部分`[x]`，其餘全部`[ ]`未勾，即正式UAT從未跑完一輪；Task B QR流程07-23有做過一次真機人手驗證並記錄喺UAT_CHECKLIST，但呢個唔算入自動化test suite）。
+- **已知未修build警告**（`npm run build`實測仍在，UAT_CHECKLIST「已知待處理」列出但長期未修）：`/admin`同時撞`admin.astro`+`admin/index.astro`；`/salmon/storage`同時撞`storage.astro`+`storage/index.astro`——Astro官方警告「未來版本會變hard error」，屬技術債，唔阻現時運作。
+- 冇Playwright/E2E test，`playwright.config`唔存在於呢個repo（Playwright MCP有裝但07-23審計因瀏覽器profile被佔用未做視覺驗證，一直靠API curl+build替代）。
+
+**B. 拆分子系統分析（結論：係，而且係三向拆分，唔止商城vs會計兩個）**：
+獨立repo/獨立部署/獨立技術棧，三者**只共用同一個Supabase project**（`cqartwwsbxnjjatmndtt`）做整合點，冇任何code-level import/依賴：
+| 系統 | repo | 部署 | 技術棧 | 角色 |
+|---|---|---|---|---|
+| `inari-web` | `~/inari-web` | GitHub Pages | 純SPA(單一`index.html`巨檔+`js/`模組) | 內部會計/入庫/銷售/收款/庫存 |
+| **商城(INARI)** | `~/Projects/INARI` | Vercel(Astro SSR) | Astro+自建JWT(唔用Supabase Auth) | 對外B2B自助下單(`/shop`,`/wholesale`)+B2C訪客下單(`/order`) |
+| `inari-agent` | `~/inari-agent` | Cloudflare Worker | 三段式agentic loop | AI助手(Telegram Router,唔屬前台商城) |
+grep核實：`inari-web`code(非文檔)零引用`Projects/INARI`；`Projects/INARI`零引用`inari-agent`；三者互相唔知對方存在，純粹靠共享DB整合（"shared database" integration pattern，唔係microservice API呼叫）。商城內部再細分一層：`/shop`+`/wholesale`(B2B,要login) vs `/order`(B2C guest,免密碼)——兩條命名空間刻意隔離(獨立cart storage key/獨立API prefix)，Joe07-23已拍板呢個設計。
+
+**C. 可獨立修改擴充嘅系統清單（改一個唔會影響其他兩個，前提係唔改共用DB schema）**：
+1. **`inari-web`（會計/內部營運）**——獨立GH Pages部署，改佢完全唔影響商城/AI助手，只要唔碰commerce_products/inari_customer_orders等共用表結構。
+2. **`Projects/INARI` B2B商城**（`/shop`,`/wholesale`,`/admin`）——獨立Vercel部署，可單獨加功能（發票下載/price_tier接通/主動通知，見[[inari_shop_feature_competitive_audit_2026-07-23]]功能缺口清單）。
+3. **`Projects/INARI` B2C訪客下單**（`/order/*`）——同一repo但獨立命名空間，可獨立加rate limit/首頁推廣連結，唔影響B2B。
+4. **`inari-agent`（AI助手）**——獨立Cloudflare Worker，改RBAC/搜尋功能唔影響商城或會計前端（見memory index「AI助手07-22擴充系列」）。
+5. **共用DB schema/view層**（`inari_products`/`v_shop_catalog`/`v_arsenal`/`v_arsenal`等）——**呢層唔獨立**，三個系統都讀，改呢層任何一個表結構要三邊逐一check會唔會炸，屬唯一嘅硬耦合點。
+
+**How to apply**：日後想單獨開發/擴充商城任何一邊，先睇上面B部三系統表確認邊個repo，唔使擔心波及其他兩個前端；但凡改動涉及`inari_customer_orders`/`inari_products`/`inari_customers`等共用表結構，一律當高風險，三repo都要search一次引用先落手。想補齊自動化測試覆蓋缺口(checkout/cart/B2C/QR端對端)，屬新開發範圍，留待Joe拍板優先序。
+
+## 十五、07-23 第五輪 /omni-audit：商城圖片依然唔顯示嘅真正根因（同07-23第三輪image修復完全無關）
+
+**Joe觀察**：手機截圖顯示`/shop/catalog`（B2B「商品目錄」頁）成頁卡喺灰色skeleton loading，永久唔resolve；同時問「加一個快取資料表」係咪可以順便加速。
+
+**真正根因（3個subagent交叉驗證+主session親自confirm）**：`src/pages/shop/catalog.astro:132`有一句
+`import { addToCart, getCart, getCartTotal, updateCartItem, removeCartItem } from '/js/cart.js';`
+`cart.js`實際export係`updateQty`/`removeFromCart`，冇`updateCartItem`/`removeCartItem`；而且成句import嘅5個名呢個檔案從來冇用過（純死code，cart邏輯全部靠inline嘅`getLocalCart()`/`saveLocalCart()`/`window.cartInc`等）。ES module遇到唔存在嘅named export會喺**link階段**直接throw，令成個`<script type="module">`一行都冇執行過——包括頂部嘅`getAuth()`登入檢查、底部嘅`loadProducts()`——所以server端寫死嘅4張skeleton卡片永久冇被覆蓋，連錯誤訊息都唔會顯示（因為錯誤處理邏輯都喺同一個死咗嘅script入面）。呢個bug由更早嘅redesign commit `e7f3f05`引入，**同07-23第三輪嘅`v_shop_catalog`/image_url修復完全冇關係**——嗰個修復本身冇問題，但由頭到尾冇機會喺瀏覽器跑到。
+
+**排除嘅假設**（一併記錄，避免下次重新排查）：
+- DB view `v_shop_catalog`存在、有204行(130張有圖)、curl即刻回應——唔係「查太慢」。
+- API層極resilient：`v_shop_catalog`就算炸咗，`prodResp.ok ? await prodResp.json() : []`都會回200 `{items:[]}`，前端會顯示「無符合的商品」文字，唔會卡skeleton。
+- CORS header兩個catalog API都齊全（`Access-Control-Allow-Origin:*`+`OPTIONS` handler），前端用same-origin相對路徑，唔涉跨域。
+- B2C guest版`/order`用獨立`guest-cart.js`（export名全部合法），唔受影響，運作正常（已用curl核實200+真實image_url）。
+
+**已修復（2026-07-23，Joe拍板：刪走死+壞import並push，commit `90c4c71`）**：
+1. `src/pages/shop/catalog.astro:132` 成句import已刪除（改前已備份、build通過、production部署後grep確認`updateCartItem`/`removeCartItem`已喺live HTML消失）。
+2. Vercel已重新deploy（`inari-henna.vercel.app` alias已指向新版本，deployment `dpl_5KNpXCssBUDeFGUfKV8e74gRi5SA`）。
+3. ⚠️**未完成**：因本機Playwright瀏覽器profile再次被佔用（同07-23第三輪一樣嘅環境問題），未能做登入後嘅真實視覺截圖驗證，淨係驗證咗「壞import字串已喺production HTML消失」+「build/syntax通過」。**下次Joe用手機開返個頁面就係最終驗證**，如果仲卡skeleton要即刻反饋。
+
+**Joe提出嘅「加快取資料表」判斷（3個subagent一致）**：**唔對症，唔建議加**。204行view規模極細，curl即刻回應，冇「查太慢」呢個問題；加cache table對而家呢類「script link error令API根本冇被call」嘅bug完全冇幫助，仲有機會遮蓋類似bug令下次更難發現。如果純粹想長遠慳Supabase讀取次數/加快TTFB（同今次bug分開嘅獨立優化），已加`Cache-Control`header：`/api/order/catalog.ts`用`public, s-maxage=300, stale-while-revalidate=600`（B2C公開資料，食Vercel Edge CDN，已驗證`x-vercel-cache: HIT`生效）；`/api/products/catalog.ts`用`private, max-age=120`（B2B auth-gated，唔畀CDN層跨用戶共享，只做browser-side cache）。**未開新DB表，亦冇必要開**。
+
+**Why**：Astro嘅`<script type="module">`入面import自`public/js/*.js`（絕對路徑）嘅statement，Vite/Astro build**唔會bundle/tree-shake去驗證export是否存在**——build/`npm run build`一律通過，呢類壞import只會喺真實瀏覽器執行時先曝光，`node --check`都查唔到（syntax valid，只係runtime/link error）。
+**How to apply**：日後商城任何頁面新增/修改`import ... from '/js/*.js'`呢類public路徑import，一律先`grep "^export" <目標js檔>`核實每個named import真係存在，唔可以淨靠`npm run build`過就當有效——build過只證明syntax啱，證明唔到module能唔能夠喺瀏覽器真正執行。任何「已修復」結論如果冇真實瀏覽器（登入後）視覺驗證，一律要喺memory/report標明「未視覺驗證，僅API/build層核實」呢個風險等級，唔可以直接寫「已修好」。
+
+## 十六、07-23 第六輪：修復路由撞名+補測試覆蓋缺口，過程中揪到兩個現正影響production嘅P0 bug
+
+**Joe拍板**：「可以全部修復優化嗎？」——確認範圍(AskUserQuestion)：路由撞名直接查邊個真正用緊刪走另一個；測試補齊vitest單元/整合+Playwright端對端兩者都要；驗證通過就直接push。
+
+**A. 路由撞名已修**：
+1. `/salmon/storage`：`storage/index.astro`(19行粗糙草稿,3條FAQ)已刪，保留`storage.astro`(282行完整版,5條FAQ schema,跟返其他salmon頁嘅設計語言)。
+2. `/admin`：`admin.astro`(舊版847行自建HTML shell)已刪，`admin/index.astro`(新版AdminLayout dashboard)保留做canonical。但`admin.astro`有個新系統冇對應嘅「對話記錄」tab(睇/刪AI對話session,接`/api/conversations.ts`)——已移植去新建嘅`src/pages/admin/conversations.astro`(用AdminLayout包住)+喺`AdminLayout.astro`側欄nav加返個連結，功能保持一致，冇silent regression。
+3. `npm run build`已確認冇再出現route collision warning。
+
+**B. 測試覆蓋已補**：
+- **vitest**：新增`tests/order-api.test.ts`(12條)，用`vi.stubGlobal('fetch',...)`mock走Supabase REST call(跟返現有「純函式測試唔打真DB」慣例)，覆蓋B2C/B2B訂單建立嘅驗證邏輯+**items insert失敗嘅補償性DELETE regression test**(07-23第二輪先啱fix嗰個transaction-safety邏輯)。連現有57條，全部**69條通過**。
+- **Playwright E2E**：新增`playwright.config.ts`+`tests/e2e/`四個spec——`catalog-image-display`(✓通過,證實`v_shop_catalog`圖片修復喺真瀏覽器work)、`b2b-login-order`(✓通過)、`b2c-guest-checkout`(✓通過,見下面P0#2)、`qr-login`(合理skip,詳細comment解釋依賴JWT_SECRET/已註冊jti/production forwarded-host行為,唔係靜默漏測)。資料隔離重用現有`scripts/uat_test_fixture_seed.sql`/`cleanup.sql`(customer_code=`TEST-UAT`)呢套慣例。**四個spec全部真正跑過本機dev server驗證，唔係淨係寫低就當過**。
+
+**C. ⚠️過程中揪到兩個現正影響production嘅P0 bug（唔喺原本審計範圍，係跑E2E測試時真實撞到，已修復+已驗證）**：
+
+1. **`/api/orders`(B2B訂單API)被middleware誤判做public路由，成個B2B訂單功能一直401**：`middleware.ts`嘅`PUBLIC_PREFIXES`原本有裸字串`'/api/order'`(打算做B2C白名單)，但`'/api/orders'.startsWith('/api/order')`都係`true`——B2C prefix意外連B2B都cover埋。Middleware早退令`locals.userType`永遠冇被注入，`/api/orders`嘅GET/POST handler自己嘅auth check見到`userType==='unknown'`就回401。**影響**：B2B客戶登入後開`/shop/orders`永遠顯示「0張訂單」(唔會報錯,silent)，新增訂單都會401。呢個regression由07-23 B2C launch(commit`427f24d`)引入，一直冇被發現，因為之前嘅UAT/驗證從未實際完整跑過「登入→開訂單頁」呢條路徑（Task B UAT focus係QR登入本身，唔係登入後嘅訂單API）。**已修**：`'/api/order'`改做`'/api/order/'`(trailing slash prefix，只cover`/api/order/catalog`+`/api/order/receipt`)，裸`/api/order`(B2C下單本身)改放入`PUBLIC_EXACT` Set精確比對，唔會再誤配`/api/orders`。獨立deep-reasoner覆核已CONFIRMED呢個fix冇引入新碰撞、B2C sub-route全部仍然覆蓋到。
+
+2. **B2C guest下單100%失敗(500)，`amount`欄已變成DB generated column但code仲手動insert值**：`src/pages/api/order/index.ts`原本insert明細時set`amount: qty*unitPrice`，但直接查production DB(`information_schema.columns`)證實`inari_customer_order_items.amount`已經係`GENERATED ALWAYS AS (qty*unit_price) STORED`，手動insert呢個值會撞Postgres`428C9`。修埋呢個之後仲揪到第二層錯誤：`match_confidence`原本set做`'catalog'`，但DB CHECK約束(`20260719_order_fulfillment_uat_bugfixes.sql`)淨係准`exact/alias/fuzzy/unmatched/history/keyword`，`'catalog'`唔喺入面撞`23514`。**已修**：刪走手動`amount`(交返DB自動算)+`match_confidence`改做`'exact'`(guest直接喺catalog撳實件貨=完全命中,語意啱)。**呢個bug完全解釋咗07-23第二輪審計嘅懸案**——`inari_customer_orders`/`_items`兩表production 0行，之前記錄係「Joe刻意未開放」，而家證實**技術上根本冇一張訂單有可能成功建立過**，兩個原因並存(刻意未推廣 + 客觀上壞咗)。已用真實Playwright瀏覽器完整跑一次guest下單→確認頁→用order_no+電話反查，成功後手動清走測試訂單(id=62)冇留低污染數據。
+
+3. **順手補嘅defense-in-depth**（獨立deep-reasoner覆核揪到，同今次改動直接相關）：`/api/conversations.ts`原本完全冇auth check(唔喺`PUBLIC_PREFIXES`亦唔喺`ROUTE_GUARDS`，middleware會放行但唔block)——現時因為Vercel冇persist store(comment自己都寫明`Note: Originally used Cloudflare D1... not persisted (stateless)`)所以無害,但一旦future回復真實儲存就會變成任何人都可以GET全部客戶對話/DELETE任意session。已補`if (!locals.isStaff) return 401`,GET/DELETE兩個handler都加咗，已用curl驗證(無cookie→401,manager cookie→200)。
+
+**D. 已知但未修嘅新發現（超出今次授權範圍，記低留畀Joe拍板，冇擅自改）**：
+- **`/api/order`(B2C POST)信任client送嚟嘅`unit_price`，理論上可以落MOP 0.01嘅單**——現有`status='draft'`+職員`/admin/orders`人手confirm有緩解，但若職員信任畫面顯示金額直接confirm就會蝕價出貨。建議：server-side用`product_id`/`sku`喺`v_shop_catalog`重新查價覆寫client送嚟嘅`unit_price`，唔好直接信任body。
+- **「對話記錄」tab移植咗但功能本身係空殼**——`/api/conversations`喺Vercel冇persist store,永遠得空list,呢個唔係今次改動造成(舊`admin.astro`一樣係咁)，純粹如實記低。
+
+**驗證方法**：全程用真實Playwright瀏覽器(唔止curl)跑過4條E2E spec；`npx vitest run`69/69通過；`npm run build`冇route collision warning；獨立deep-reasoner對middleware/API/AdminLayout三組核心改動做咗對抗覆核(CONFIRMED三個fix全部正確，額外揪到上面C3同D兩點)。
+
+**Why**：呢次示範咗「E2E測試唔止係補缺口，仲會揪到靠code review/curl永遠揪唔到嘅真實regression」——middleware prefix碰撞同DB generated column衝突,兩個都要「真係喺瀏覽器行完成個登入→操作流程」先會現形,單獨睇任何一個檔案嘅diff都睇唔出。
+**How to apply**：日後`PUBLIC_PREFIXES`呢類prefix-based白名單，新增項目前一定要`grep`一次確認冇其他真實路由會被呢個prefix意外cover到(尤其複數/單數字詞好似`order`/`orders`呢類)；DB欄位如果由其他session/migration改成`GENERATED`，code層面insert payload要同步檢查，`information_schema.columns`嘅`is_generated`係最快確認方法。四個Playwright spec已留喺repo，日後任何middleware/checkout改動，建議先手動`npm run dev`+跑一次`npx playwright test`先push，唔好淨係跑`npm run build`就當安全。

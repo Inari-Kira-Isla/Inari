@@ -28,3 +28,9 @@ pnpm-debug.log*
 
 # QR token PNG(含bearer token)絕不入repo
 scripts/qr_out/
+
+# Playwright run artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

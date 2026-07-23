@@ -20,8 +20,11 @@ const PUBLIC_PREFIXES = [
   '/api/brand',
   '/api/products/search',
   // B2C guest 下單(2026-07-23新增,Joe拍板:免密碼,完全獨立命名空間,同 /shop 嘅B2B app無關)
+  // ⚠️ '/api/order' 用trailing slash prefix,唔可以裸字串——'/api/orders'(B2B訂單API)都係以
+  // '/api/order'開頭,裸prefix會令成個B2B訂單API被誤判做public,middleware完全唔驗證身份,
+  // 令handler自己嘅locals.userType check永遠攞唔到值→永遠401(07-23 E2E測試揪到嘅P0 regression)。
   '/order',
-  '/api/order',
+  '/api/order/',
   '/brand',
   '/knowledge',
   '/market',
@@ -32,7 +35,7 @@ const PUBLIC_PREFIXES = [
   '/_astro',
 ];
 
-const PUBLIC_EXACT = new Set(['/', '/login']);
+const PUBLIC_EXACT = new Set(['/', '/login', '/api/order']);
 
 // Route → minimum user_type(s) required.
 // More specific (longer) prefixes MUST come BEFORE shorter ones since the

@@ -15,7 +15,15 @@ export const OPTIONS: APIRoute = async () => {
   return new Response(null, { status: 204, headers: CORS_HEADERS });
 };
 
-export const GET: APIRoute = async ({ url }) => {
+function unauthorized() {
+  return new Response(JSON.stringify({ error: '未登入' }), {
+    status: 401,
+    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+  });
+}
+
+export const GET: APIRoute = async ({ url, locals }) => {
+  if (!locals.isStaff) return unauthorized();
   const sessionId = url.searchParams.get('session_id');
 
   if (sessionId) {
@@ -31,7 +39,8 @@ export const GET: APIRoute = async ({ url }) => {
   }
 };
 
-export const DELETE: APIRoute = async ({ url }) => {
+export const DELETE: APIRoute = async ({ url, locals }) => {
+  if (!locals.isStaff) return unauthorized();
   const sessionId = url.searchParams.get('session_id');
 
   if (!sessionId) {

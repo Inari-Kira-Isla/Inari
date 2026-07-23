@@ -123,8 +123,12 @@ export const POST: APIRoute = async ({ request }) => {
       qty,
       unit: item.unit || null,
       unit_price: unitPrice,
-      amount: qty * unitPrice,
-      match_confidence: 'catalog',
+      // amount 係DB generated column(qty*unit_price,GENERATED ALWAYS),唔可以手動insert
+      // (07-23 E2E測試揪到嘅P0 regression:插呢個值會撞428C9,令B2C下單100%失敗)。
+      // match_confidence CHECK 約束只准 exact/alias/fuzzy/unmatched/history/keyword,
+      // 'catalog' 唔喺呢個列表入面(23514違反)——guest 直接喺catalog撳實件貨,冇任何模糊
+      // 配對,語意上等同order-engine.ts嘅完全命中,用'exact'。
+      match_confidence: 'exact',
       tenant_id: TENANT_ID,
     };
   });
