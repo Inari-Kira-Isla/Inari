@@ -38,8 +38,15 @@ All commands are run from the root of the project, from a terminal:
 | `npm run dev`             | Starts local dev server at `localhost:4321`      |
 | `npm run build`           | Build your production site to `./dist/`          |
 | `npm run preview`         | Preview your build locally, before deploying     |
+| `npm run check:imports`   | Validate named imports from `public/js`           |
 | `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `npm run astro -- --help` | Get help using the Astro CLI                     |
+
+### Public JavaScript import check
+
+Astro's build does not validate named imports that use `/js/*.js` public paths.
+Run `npm run check:imports` before pushing to catch missing exports that would
+otherwise stop the browser module from executing.
 
 ## 👀 Want to learn more?
 
