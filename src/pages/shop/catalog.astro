@@ -129,7 +129,6 @@
 
     <script type="module">
       import { getAuth } from '/js/auth.js';
-      import { addToCart, getCart, getCartTotal, updateCartItem, removeCartItem } from '/js/cart.js';
 
       const auth = await getAuth();
       if (!auth.isLoggedIn) { window.location.href = '/shop/login'; }

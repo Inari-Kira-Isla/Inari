@@ -62,6 +62,12 @@ export const GET: APIRoute = async ({ url }) => {
 
   return new Response(
     JSON.stringify({ items, categories, total, page, limit, has_more: offset + items.length < total }),
-    { headers: { ...CORS, 'Content-Type': 'application/json' } }
+    {
+      headers: {
+        ...CORS,
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+      },
+    }
   );
 };
